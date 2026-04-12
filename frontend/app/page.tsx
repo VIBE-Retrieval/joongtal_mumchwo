@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LandingFeatureCards } from "@/components/landing-feature-cards"
 
 const features = [
   {
@@ -53,8 +54,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 h-16 shrink-0 border-b border-border/50 bg-card/50 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <span className="text-lg">🎯</span>
@@ -67,57 +68,59 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground leading-tight text-balance">
-            AI 기반 학생 위험 관리 시스템
+      {/* Hero — 첫 화면: 헤더 제외 나머지 뷰포트만 사용 (아래 섹션 노출 방지) */}
+      <section
+        className="min-h-[calc(100dvh-4rem)] flex flex-col justify-center px-6 py-10 md:py-12 box-border"
+        aria-label="소개"
+      >
+        <div className="max-w-4xl mx-auto w-full text-center space-y-6">
+          <h1 className="font-paperozi-hero text-4xl md:text-5xl text-foreground leading-tight text-balance">
+            놓치기 전에, 먼저 발견하세요
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
-            학생의 중도 탈락을 예측하고, 적시에 개입하여 
-            모든 학생이 성공적으로 학업을 마칠 수 있도록 지원합니다.
+          <p className="font-paperozi-subtitle text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
+            학생의 중탈 신호를 AI로 예측하고, 적시에 개입합니다
           </p>
-          <div className="flex gap-4 justify-center pt-4">
+          <div className="flex flex-wrap gap-4 justify-center pt-4">
             <Link href="/login">
               <Button size="lg" className="px-8">
                 시작하기
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="px-8">
-              더 알아보기
+            <Button size="lg" variant="outline" className="px-8" asChild>
+              <a href="#features">더 알아보기</a>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-6 bg-muted/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-semibold mb-3">핵심 기능</h2>
+      {/* Features */}
+      <section
+        id="features"
+        className="min-h-screen flex flex-col justify-center px-6 py-12 md:py-16 bg-muted/30 border-t border-border/40 box-border"
+        aria-labelledby="features-heading"
+      >
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="text-center mb-10 md:mb-12">
+            <h2 id="features-heading" className="text-2xl font-semibold mb-3">
+              핵심 기능
+            </h2>
             <p className="text-muted-foreground">데이터 기반의 스마트한 학생 관리</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, i) => (
-              <Card key={i} className="border-0 shadow-sm bg-card/80 backdrop-blur-sm">
-                <CardContent className="pt-6 text-center">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">{feature.icon}</span>
-                  </div>
-                  <h3 className="font-medium mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <LandingFeatureCards features={features} />
         </div>
       </section>
 
-      {/* Roles Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-semibold mb-3">역할별 맞춤 인터페이스</h2>
+      {/* Roles */}
+      <section
+        id="roles"
+        className="min-h-screen flex flex-col justify-center px-6 py-12 md:py-16 border-t border-border/40 box-border"
+        aria-labelledby="roles-heading"
+      >
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="text-center mb-10 md:mb-12">
+            <h2 id="roles-heading" className="text-2xl font-semibold mb-3">
+              역할별 맞춤 인터페이스
+            </h2>
             <p className="text-muted-foreground">각 역할에 최적화된 도구와 화면을 제공합니다</p>
           </div>
           <div className="grid lg:grid-cols-3 gap-6">
@@ -136,7 +139,7 @@ export default function LandingPage() {
                   <ul className="space-y-2">
                     {role.features.map((feature, j) => (
                       <li key={j} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                         {feature}
                       </li>
                     ))}
@@ -148,31 +151,34 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6 bg-gradient-to-br from-primary/5 to-transparent">
-        <div className="max-w-2xl mx-auto text-center space-y-6">
-          <h2 className="text-2xl font-semibold">지금 바로 시작하세요</h2>
-          <p className="text-muted-foreground">
-            학생의 성공을 위한 첫 걸음을 내딛으세요
-          </p>
-          <Link href="/login">
-            <Button size="lg" className="px-10">
-              로그인
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-border/50">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🎯</span>
-            <span>학생 인사이트</span>
+      {/* CTA + Footer — 한 화면 단위 */}
+      <section
+        className="min-h-screen flex flex-col px-6 bg-gradient-to-br from-primary/5 to-transparent border-t border-border/40 box-border"
+        aria-labelledby="cta-heading"
+      >
+        <div className="flex-1 flex flex-col items-center justify-center py-12 md:py-16 min-h-0">
+          <div className="max-w-2xl mx-auto w-full text-center space-y-6">
+            <h2 id="cta-heading" className="text-2xl font-semibold">
+              지금 바로 시작하세요
+            </h2>
+            <p className="text-muted-foreground">학생의 성공을 위한 첫 걸음을 내딛으세요</p>
+            <Link href="/login">
+              <Button size="lg" className="px-10">
+                로그인
+              </Button>
+            </Link>
           </div>
-          <p>AI 기반 학생 위험 관리 시스템</p>
         </div>
-      </footer>
+        <footer className="shrink-0 py-8 border-t border-border/50">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground px-0">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🎯</span>
+              <span>학생 인사이트</span>
+            </div>
+            <p>AI 기반 학생 위험 관리 시스템</p>
+          </div>
+        </footer>
+      </section>
     </div>
   )
 }

@@ -3,6 +3,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: 'Paperozi';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-9Black.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperozi';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-3Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+
 :root {
   --background: oklch(0.98 0.002 240);
   --foreground: oklch(0.25 0.015 250);
@@ -146,6 +160,16 @@
 }
 
 @layer utilities {
+  .font-paperozi-hero {
+    font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 900;
+  }
+
+  .font-paperozi-subtitle {
+    font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 300;
+  }
+
   .grid-background {
     background-image: 
       linear-gradient(to right, oklch(0.90 0.005 240 / 0.5) 1px, transparent 1px),
