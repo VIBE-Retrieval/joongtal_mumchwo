@@ -24,6 +24,9 @@ frontend/next.user-config.*
 .DS_Store
 Thumbs.db
 
+# Python
+__pycache__/
+
 # 로컬 SQLite (백엔드 개발 DB)
 backend/app.db
 
