@@ -9,39 +9,18 @@ interface User {
   id: string
   name: string
   email: string
+  birthDate: string
   role: UserRole
 }
 
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (email: string, password: string, role: UserRole) => Promise<boolean>
+  login: (email: string, birthDate: string, role: UserRole) => Promise<boolean>
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// Demo users for each role
-const demoUsers: Record<UserRole, User> = {
-  student: {
-    id: "student-1",
-    name: "김민수",
-    email: "student@example.com",
-    role: "student"
-  },
-  interviewer: {
-    id: "interviewer-1", 
-    name: "박지훈",
-    email: "interviewer@example.com",
-    role: "interviewer"
-  },
-  mentor: {
-    id: "mentor-1",
-    name: "이서연",
-    email: "mentor@example.com", 
-    role: "mentor"
-  }
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -61,21 +40,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // Demo login - in production, validate against backend
-    if (password.length >= 4) {
-      const user = { ...demoUsers[role], email }
-      setUser(user)
-      localStorage.setItem("auth-user", JSON.stringify(user))
-      
-      // Redirect to role-specific dashboard
-      router.push(`/${role}`)
-      return true
+  const login = async (email: string, birthDate: string, role: UserRole): Promise<boolean> => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, birth_date: birthDate, role }),
+      })
+
+      const json = await res.json()
+
+      if (json.code === 200) {
+        const user: User = {
+          id: json.data.user.id,
+          name: json.data.user.name,
+          email,
+          birthDate,
+          role,
+        }
+        setUser(user)
+        localStorage.setItem("auth-user", JSON.stringify(user))
+        router.push(`/${role}`)
+        return true
+      }
+      return false
+    } catch {
+      return false
     }
-    return false
   }
 
   const logout = () => {

@@ -2,13 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-
-type UserRole = "student" | "interviewer" | "mentor"
+import { AuthProvider, useAuth, type UserRole } from "@/contexts/auth-context"
 
 const roleConfig: Record<UserRole, { icon: string; label: string; description: string }> = {
   student: {
@@ -28,11 +26,17 @@ const roleConfig: Record<UserRole, { icon: string; label: string; description: s
   }
 }
 
-export default function LoginPage() {
-  const router = useRouter()
+const roleDefaults: Record<UserRole, { email: string; birthDate: string }> = {
+  student:     { email: "student@test.com",     birthDate: "20000101" },
+  interviewer: { email: "interviewer@test.com",  birthDate: "19900615" },
+  mentor:      { email: "mentor@test.com",       birthDate: "19850320" },
+}
+
+function LoginPageInner() {
+  const { login } = useAuth()
   const [selectedRole, setSelectedRole] = useState<UserRole>("student")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail]         = useState(roleDefaults["student"].email)
+  const [birthDate, setBirthDate] = useState(roleDefaults["student"].birthDate)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -40,32 +44,18 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
     
-    if (!email || !password) {
-      setError("이메일과 비밀번호를 입력해주세요.")
-      return
-    }
-
-    if (password.length < 4) {
-      setError("비밀번호는 4자 이상이어야 합니다.")
+    if (!email || !birthDate) {
+      setError("이메일과 생년월일을 입력해주세요.")
       return
     }
 
     setIsLoading(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // Store user in localStorage for demo
-    const user = {
-      id: `${selectedRole}-1`,
-      name: selectedRole === "student" ? "김민수" : selectedRole === "interviewer" ? "박지훈" : "이서연",
-      email,
-      role: selectedRole
+    const ok = await login(email, birthDate, selectedRole)
+    setIsLoading(false)
+
+    if (!ok) {
+      setError("이메일과 생년월일을 입력해주세요.")
     }
-    localStorage.setItem("auth-user", JSON.stringify(user))
-    
-    // Redirect to role-specific dashboard
-    router.push(`/${selectedRole}`)
   }
 
   return (
@@ -104,7 +94,11 @@ export default function LoginPage() {
                       <button
                         key={role}
                         type="button"
-                        onClick={() => setSelectedRole(role)}
+                        onClick={() => {
+                          setSelectedRole(role)
+                          setEmail(roleDefaults[role].email)
+                          setBirthDate(roleDefaults[role].birthDate)
+                        }}
                         className={cn(
                           "p-4 rounded-xl border-2 transition-all text-center",
                           isSelected
@@ -140,14 +134,13 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Password Input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">비밀번호</label>
+                <label className="text-sm font-medium">생년월일</label>
                 <Input
                   type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="생년월일 8자리 (예: 19900101)"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
                   className="bg-muted/50 border-0"
                 />
               </div>
@@ -169,12 +162,20 @@ export default function LoginPage() {
 
               {/* Demo Hint */}
               <p className="text-xs text-muted-foreground text-center">
-                데모: 아무 이메일과 4자 이상 비밀번호로 로그인 가능
+                데모: 아무 이메일과 생년월일을 입력하면 로그인 가능
               </p>
             </form>
           </CardContent>
         </Card>
       </main>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <AuthProvider>
+      <LoginPageInner />
+    </AuthProvider>
   )
 }

@@ -3,7 +3,22 @@
     "allow": [
       "mcp__code-review-graph__list_graph_stats_tool",
       "mcp__code-review-graph__build_or_update_graph_tool",
-      "WebFetch(domain:arxiv.org)"
+      "WebFetch(domain:arxiv.org)",
+      "Bash(python -c \":*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/docs)",
+      "Bash(curl -s -X OPTIONS http://localhost:8000/auth/login -H \"Origin: http://localhost:3000\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: Content-Type\" -v)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":8000\")",
+      "Bash(taskkill /PID 24968 /F)",
+      "Bash(taskkill /PID 24780 /F)",
+      "Bash(cmd /c \"taskkill /PID 24968 /F & taskkill /PID 24780 /F\")",
+      "Bash(cmd /c \"taskkill /F /PID 24968\")",
+      "Bash(cmd /c \"taskkill /F /PID 24780\")",
+      "Bash(cmd /c \"taskkill /F /PID 24968 2>&1\")",
+      "Bash(cmd /c \"taskkill /F /PID 24780 2>&1\")",
+      "Bash(powershell -Command \"Stop-Process -Id 24968 -Force -ErrorAction SilentlyContinue; Stop-Process -Id 24780 -Force -ErrorAction SilentlyContinue; Write-Host ''Done''\")",
+      "Bash(uvicorn backend.main:app --host 0.0.0.0 --port 8000)",
+      "Bash(curl -s -X OPTIONS http://localhost:8000/auth/login -H \"Origin: http://localhost:3000\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: Content-Type\" -D -)"
     ]
   }
 }

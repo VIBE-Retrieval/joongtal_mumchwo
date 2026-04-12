@@ -25,6 +25,29 @@ class Student(Base):
     __tablename__ = "students"
 
     student_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    email: Mapped[str] = mapped_column(String(128), nullable=False, default="", unique=True)
+    birth_date: Mapped[str] = mapped_column(String(8), nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class Mentor(Base):
+    __tablename__ = "mentors"
+
+    mentor_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    email: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    birth_date: Mapped[str] = mapped_column(String(8), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class Interviewer(Base):
+    __tablename__ = "interviewers"
+
+    interviewer_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    email: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    birth_date: Mapped[str] = mapped_column(String(8), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
