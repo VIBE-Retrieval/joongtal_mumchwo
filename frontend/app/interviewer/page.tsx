@@ -27,10 +27,6 @@ export default function InterviewerDashboard() {
     
     try {
       const parsed = JSON.parse(storedUser)
-      if (parsed.role !== "interviewer") {
-        router.push(`/${parsed.role}`)
-        return
-      }
       setUser(parsed)
     } catch {
       router.push("/login")

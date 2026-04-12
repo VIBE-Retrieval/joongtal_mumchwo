@@ -63,6 +63,10 @@ function mapRiskLevel(level: string): RiskLevel {
 function mapToStudent(item: {
   student_id: string
   student_name: string
+  birth_date: string
+  phone: string | null
+  email: string
+  course_name: string | null
   risk_score: number
   risk_level: string
   risk_trend: string
@@ -73,10 +77,10 @@ function mapToStudent(item: {
   return {
     id: item.student_id,
     name: item.student_name,
-    birthDate: "",
-    phone: "",
-    email: "",
-    courseName: "",
+    birthDate: item.birth_date ?? "",
+    phone: item.phone ?? "",
+    email: item.email ?? "",
+    courseName: item.course_name ?? "",
     targetJob: undefined,
     currentWeek: 1,
     educationLevel: "기타",

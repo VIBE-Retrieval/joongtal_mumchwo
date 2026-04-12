@@ -26,6 +26,8 @@ class RegisterStudentBody(BaseModel):
     name: str = Field(min_length=1)
     email: str = Field(min_length=1)
     birth_date: str = Field(min_length=8, max_length=8)
+    phone: str | None = None
+    course_name: str | None = None
 
     @field_validator("birth_date")
     @classmethod
@@ -33,6 +35,14 @@ class RegisterStudentBody(BaseModel):
         if not v.isdigit():
             raise ValueError("birth_date must be 8 digits YYYYMMDD")
         return v
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        digits = v.replace("-", "").replace(" ", "")
+        return digits
 
 
 @router.post("")
@@ -43,6 +53,8 @@ def register_student(body: RegisterStudentBody, db: Session = Depends(get_db)):
             name=body.name,
             email=body.email,
             birth_date=body.birth_date,
+            phone=body.phone,
+            course_name=body.course_name,
         )
     except ValueError as e:
         return JSONResponse(

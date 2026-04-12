@@ -240,7 +240,8 @@ export function StudentMode() {
       .then(res => res.json())
       .then(json => {
         if (json.code === 200 && json.data) {
-          const today = new Date().toISOString().slice(0, 10)
+          const d = new Date()
+          const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
           const raw = Array.isArray(json.data.history) ? json.data.history : []
           const mapped: SurveyRecord[] = raw.map((h: {
             survey_date: string
@@ -254,7 +255,7 @@ export function StudentMode() {
             relationship: h.relationship_score,
           }))
           setSurveyHistory(mapped)
-          setTodaySurveyCompleted(mapped.length > 0 && mapped[0].date === today)
+          setTodaySurveyCompleted(mapped.some(r => r.date === today))
           setEmotionState(json.data.emotion_state)
           setEmotionLabel(json.data.emotion_label)
         }
@@ -265,7 +266,7 @@ export function StudentMode() {
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${sid}/care-message`)
           .then(res => res.json())
           .then(json => {
-            if (json.code === 200 && json.data?.message) {
+            if (json.code === 200 && json.data?.has_message === true) {
               setCareMessage(json.data.message)
             }
           })
@@ -578,12 +579,19 @@ export function StudentMode() {
                 }
               </p>
             </div>
-            <Button asChild size="lg" className="gap-2">
-              <Link href="/student/survey">
+            {todaySurveyCompleted ? (
+              <Button size="lg" disabled className="gap-2">
                 <ClipboardList className="w-5 h-5" />
-                설문 하러가기
-              </Link>
-            </Button>
+                설문 완료
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="gap-2">
+                <Link href="/student/survey">
+                  <ClipboardList className="w-5 h-5" />
+                  설문 하러가기
+                </Link>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -93,6 +93,8 @@ export default function AddApplicantPage() {
           name,
           email,
           birth_date: birthDateFormatted,
+          phone,
+          course_name: appliedCourse,
         }),
       })
 

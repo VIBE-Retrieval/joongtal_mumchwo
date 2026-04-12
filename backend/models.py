@@ -28,6 +28,8 @@ class Student(Base):
     name: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     email: Mapped[str] = mapped_column(String(128), nullable=False, default="", unique=True)
     birth_date: Mapped[str] = mapped_column(String(8), nullable=False, default="")
+    phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    course_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 

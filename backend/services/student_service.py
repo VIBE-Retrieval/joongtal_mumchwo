@@ -131,23 +131,41 @@ def list_students(session: Session) -> dict:
     return {
         "students": [
             {
-                "student_id": r.student_id,
-                "name": r.name,
-                "email": r.email,
-                "birth_date": r.birth_date,
-                "created_at": r.created_at.isoformat(),
+                "student_id": row["student"].student_id,
+                "name": row["student"].name,
+                "email": row["student"].email,
+                "birth_date": row["student"].birth_date,
+                "phone": row["student"].phone,
+                "course_name": row["student"].course_name,
+                "created_at": row["student"].created_at.isoformat(),
+                "has_interview": row["has_interview"],
             }
-            for r in rows
+            for row in rows
         ]
     }
 
 
-def register_student(session: Session, name: str, email: str, birth_date: str) -> dict:
+def register_student(
+    session: Session,
+    name: str,
+    email: str,
+    birth_date: str,
+    phone: str | None = None,
+    course_name: str | None = None,
+) -> dict:
     existing = student_repository.get_student_by_email(session, email)
     if existing:
         raise ValueError("이미 등록된 이메일입니다.")
 
     student_id = "STU-" + uuid.uuid4().hex[:8].upper()
-    student = student_repository.create_student(session, student_id, name, email, birth_date)
+    student = student_repository.create_student(
+        session,
+        student_id,
+        name,
+        email,
+        birth_date,
+        phone=phone,
+        course_name=course_name,
+    )
     session.commit()
     return {"student_id": student.student_id}

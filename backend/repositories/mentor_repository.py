@@ -3,7 +3,13 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.models import InterventionHistory, InterviewRiskHistory, ProcessRiskHistory, Student
+from backend.models import (
+    InterventionHistory,
+    InterviewAssessment,
+    InterviewRiskHistory,
+    ProcessRiskHistory,
+    Student,
+)
 
 
 def get_latest_process_risk_per_student(session: Session) -> list[ProcessRiskHistory]:
@@ -44,8 +50,21 @@ def get_all_students_with_risk(session: Session) -> list[dict]:
     """
     students 전체를 기준으로 최신 process_risk / interview_risk를 LEFT JOIN 형태로 병합.
     """
+    interviewed_ids = {
+        student_id
+        for student_id in session.scalars(
+            select(InterviewAssessment.student_id).distinct()
+        ).all()
+    }
+    if not interviewed_ids:
+        return []
+
     students = list(
-        session.scalars(select(Student).order_by(Student.created_at.desc())).all()
+        session.scalars(
+            select(Student)
+            .where(Student.student_id.in_(interviewed_ids))
+            .order_by(Student.created_at.desc())
+        ).all()
     )
     process_by_sid: dict[str, ProcessRiskHistory] = {}
     for r in get_latest_process_risk_per_student(session):
@@ -61,6 +80,10 @@ def get_all_students_with_risk(session: Session) -> list[dict]:
             {
                 "student_id": s.student_id,
                 "name": s.name,
+                "birth_date": s.birth_date,
+                "phone": s.phone,
+                "email": s.email,
+                "course_name": s.course_name,
                 "process_risk_score": pr.risk_score if pr is not None else None,
                 "process_risk_level": pr.risk_level if pr is not None else None,
                 "process_risk_trend": pr.risk_trend if pr is not None else None,

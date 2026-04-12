@@ -160,10 +160,6 @@ function LoginPageInner() {
                 {isLoading ? "로그인 중..." : "로그인"}
               </Button>
 
-              {/* Demo Hint */}
-              <p className="text-xs text-muted-foreground text-center">
-                데모: 아무 이메일과 생년월일을 입력하면 로그인 가능
-              </p>
             </form>
           </CardContent>
         </Card>

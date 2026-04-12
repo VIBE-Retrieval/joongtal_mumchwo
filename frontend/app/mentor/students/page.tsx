@@ -28,10 +28,6 @@ export default function MentorStudentsPage() {
     
     try {
       const parsed = JSON.parse(storedUser)
-      if (parsed.role !== "mentor") {
-        router.push(`/${parsed.role}`)
-        return
-      }
       setUser(parsed)
     } catch {
       router.push("/login")

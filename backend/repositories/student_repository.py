@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from backend.models import (
     DailySurvey,
     InterventionHistory,
+    InterviewAssessment,
     InterviewRiskHistory,
     ProcessRiskHistory,
     Student,
@@ -94,12 +95,22 @@ def get_daily_surveys_recent_7_days(
     return list(session.scalars(stmt).all())
 
 
-def create_student(session: Session, student_id: str, name: str, email: str, birth_date: str) -> Student:
+def create_student(
+    session: Session,
+    student_id: str,
+    name: str,
+    email: str,
+    birth_date: str,
+    phone: str | None = None,
+    course_name: str | None = None,
+) -> Student:
     student = Student(
         student_id=student_id,
         name=name,
         email=email,
         birth_date=birth_date,
+        phone=phone,
+        course_name=course_name,
     )
     session.add(student)
     session.flush()
@@ -111,6 +122,16 @@ def get_student_by_email(session: Session, email: str) -> Student | None:
     return session.scalar(stmt)
 
 
-def get_all_students(session: Session) -> list[Student]:
+def get_all_students(session: Session) -> list[dict]:
     stmt = select(Student).order_by(Student.created_at.desc())
-    return list(session.scalars(stmt).all())
+    students = list(session.scalars(stmt).all())
+    interviewed_ids = {
+        student_id for student_id in session.scalars(select(InterviewAssessment.student_id).distinct()).all()
+    }
+    return [
+        {
+            "student": student,
+            "has_interview": student.student_id in interviewed_ids,
+        }
+        for student in students
+    ]
