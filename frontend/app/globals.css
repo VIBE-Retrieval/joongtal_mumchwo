@@ -160,16 +160,6 @@
 }
 
 @layer utilities {
-  .font-paperozi-hero {
-    font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
-    font-weight: 900;
-  }
-
-  .font-paperozi-subtitle {
-    font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
-    font-weight: 300;
-  }
-
   .grid-background {
     background-image: 
       linear-gradient(to right, oklch(0.90 0.005 240 / 0.5) 1px, transparent 1px),
@@ -183,4 +173,47 @@
       linear-gradient(to bottom, oklch(0.30 0.015 250 / 0.3) 1px, transparent 1px);
     background-size: 24px 24px;
   }
+}
+
+/* 랜딩(/) — Paperlogy 3 Light(300) 본문 · 9 Black(900) 제목·CTA (font-face는 상단 @font-face 참고) */
+.landing-paperozi {
+  font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.landing-paperozi :is(h1, h2, h3) {
+  font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 900 !important;
+}
+
+.landing-paperozi div[data-slot='card-title'].font-semibold {
+  font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 900 !important;
+}
+
+.landing-paperozi [data-slot='button'] {
+  font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 900 !important;
+}
+
+.landing-paperozi [data-slot='card-description'],
+.landing-paperozi [role='tab'] {
+  font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 300 !important;
+}
+
+.landing-paperozi .text-muted-foreground {
+  font-weight: 300 !important;
+}
+
+.landing-paperozi header .landing-brand-title {
+  font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 900 !important;
+}
+
+.landing-paperozi footer .landing-footer-title {
+  font-family: 'Paperozi', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 900 !important;
 }
