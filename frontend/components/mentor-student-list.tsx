@@ -157,7 +157,7 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
                   <span className="font-medium text-foreground">{student.birthDate}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block mb-1">��락처</span>
+                  <span className="text-muted-foreground block mb-1">연락처</span>
                   <span className="font-medium text-foreground">{student.phone}</span>
                 </div>
                 <div>
@@ -541,7 +541,7 @@ export function MentorStudentList() {
         <div className="relative max-w-2xl mx-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="수강생 이름, 이메일, 과정명 검��"
+            placeholder="수강생 이름, 이메일, 과정명 검색"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             className="pl-12 h-14 text-lg bg-background rounded-2xl border-2 shadow-sm"

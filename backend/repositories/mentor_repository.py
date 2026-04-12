@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.models import InterventionHistory, ProcessRiskHistory, Student
+from backend.models import InterventionHistory, InterviewRiskHistory, ProcessRiskHistory, Student
 
 
 def get_latest_process_risk_per_student(session: Session) -> list[ProcessRiskHistory]:
@@ -21,6 +21,53 @@ def get_latest_process_risk_per_student(session: Session) -> list[ProcessRiskHis
         & (ProcessRiskHistory.date == sub.c.max_date),
     )
     return list(session.scalars(stmt).all())
+
+
+def _latest_interview_risk_by_student(session: Session) -> dict[str, InterviewRiskHistory]:
+    sub = (
+        select(
+            InterviewRiskHistory.student_id.label("sid"),
+            func.max(InterviewRiskHistory.created_at).label("max_created"),
+        )
+        .group_by(InterviewRiskHistory.student_id)
+    ).subquery()
+
+    stmt = select(InterviewRiskHistory).join(
+        sub,
+        (InterviewRiskHistory.student_id == sub.c.sid)
+        & (InterviewRiskHistory.created_at == sub.c.max_created),
+    )
+    return {r.student_id: r for r in session.scalars(stmt).all()}
+
+
+def get_all_students_with_risk(session: Session) -> list[dict]:
+    """
+    students 전체를 기준으로 최신 process_risk / interview_risk를 LEFT JOIN 형태로 병합.
+    """
+    students = list(
+        session.scalars(select(Student).order_by(Student.created_at.desc())).all()
+    )
+    process_by_sid: dict[str, ProcessRiskHistory] = {}
+    for r in get_latest_process_risk_per_student(session):
+        process_by_sid.setdefault(r.student_id, r)
+
+    interview_by_sid = _latest_interview_risk_by_student(session)
+
+    out: list[dict] = []
+    for s in students:
+        pr = process_by_sid.get(s.student_id)
+        ir = interview_by_sid.get(s.student_id)
+        out.append(
+            {
+                "student_id": s.student_id,
+                "name": s.name,
+                "process_risk_score": pr.risk_score if pr is not None else None,
+                "process_risk_level": pr.risk_level if pr is not None else None,
+                "process_risk_trend": pr.risk_trend if pr is not None else None,
+                "interview_risk_score": ir.dropout_risk_score if ir is not None else None,
+            }
+        )
+    return out
 
 
 def get_latest_intervention_by_student(session: Session) -> dict[str, InterventionHistory]:

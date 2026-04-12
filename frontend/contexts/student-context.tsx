@@ -78,7 +78,7 @@ function mapToStudent(item: {
     email: "",
     courseName: "",
     targetJob: undefined,
-    currentWeek: 0,
+    currentWeek: 1,
     educationLevel: "기타",
     major: undefined,
     riskLevel,

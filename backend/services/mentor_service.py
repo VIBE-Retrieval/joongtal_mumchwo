@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from AI.utils.risk_utils import get_risk_level
 from backend.repositories import mentor_repository
 
 _LEVEL_RANK = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
@@ -9,23 +10,35 @@ _PRIORITY_RANK = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
 
 def list_student_risks(session: Session) -> dict:
-    rows = mentor_repository.get_latest_process_risk_per_student(session)
+    rows = mentor_repository.get_all_students_with_risk(session)
     latest_inv = mentor_repository.get_latest_intervention_by_student(session)
 
-    student_ids = list({r.student_id for r in rows})
-    student_names = mentor_repository.get_student_names_by_ids(session, student_ids)
-
     items = []
-    for r in rows:
-        inv = latest_inv.get(r.student_id)
+    for row in rows:
+        sid = row["student_id"]
+        inv = latest_inv.get(sid)
         recommended = inv.action_type if inv is not None else "NONE"
+
+        if row["process_risk_score"] is not None:
+            risk_score = row["process_risk_score"]
+            risk_level = row["process_risk_level"]
+            risk_trend = row["process_risk_trend"]
+        elif row["interview_risk_score"] is not None:
+            risk_score = float(row["interview_risk_score"])
+            risk_level = get_risk_level(risk_score)
+            risk_trend = "STABLE"
+        else:
+            risk_score = 0.0
+            risk_level = "LOW"
+            risk_trend = "STABLE"
+
         items.append(
             {
-                "student_id": r.student_id,
-                "student_name": student_names.get(r.student_id, r.student_id),
-                "risk_score": r.risk_score,
-                "risk_level": r.risk_level,
-                "risk_trend": r.risk_trend,
+                "student_id": sid,
+                "student_name": row["name"] or sid,
+                "risk_score": risk_score,
+                "risk_level": risk_level,
+                "risk_trend": risk_trend,
                 "recommended_action": recommended,
             }
         )
