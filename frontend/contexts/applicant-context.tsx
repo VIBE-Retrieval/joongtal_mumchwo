@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, ReactNode, useMemo } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useMemo } from "react"
 import { type Student, type EducationLevel } from "./student-context"
 
 export type ApplicantStatus = "PENDING_INTERVIEW" | "PASSED" | "FAILED" | "HOLD"
@@ -55,72 +55,57 @@ interface ApplicantContextType {
 
 const ApplicantContext = createContext<ApplicantContextType | null>(null)
 
-// Initial sample data (applicants registered by mentor waiting for interview)
-const initialApplicants: Applicant[] = [
-  {
-    id: "applicant-1",
-    name: "김민준",
-    birthDate: "1998-03-15",
-    phone: "010-1234-5678",
-    email: "minjun.kim@email.com",
-    appliedCourse: "풀스택 개발자 과정",
-    educationLevel: "대졸",
-    major: "컴퓨터공학",
-    targetJob: "백엔드 개발자",
+function birthDateFromYyyymmdd(v: string): string {
+  if (v.length === 8 && /^\d{8}$/.test(v)) {
+    return `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}`
+  }
+  return v
+}
+
+function mapStudentRowToApplicant(row: {
+  student_id: string
+  name: string
+  email: string
+  birth_date: string
+  created_at: string
+}): Applicant {
+  return {
+    id: row.student_id,
+    name: row.name,
+    email: row.email,
+    birthDate: birthDateFromYyyymmdd(row.birth_date),
+    phone: "",
+    appliedCourse: "",
+    educationLevel: "기타",
+    major: undefined,
+    targetJob: undefined,
     status: "PENDING_INTERVIEW",
-    registeredAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    registeredBy: "mentor-1",
-    studentId: undefined,
+    registeredAt: new Date(row.created_at),
+    registeredBy: "",
+    studentId: row.student_id,
     evaluation: {
       achievement: { answer: "", rating: 3 },
       adaptability: { answer: "", rating: 3 },
       relationship: { answer: "", rating: 3 },
-    }
-  },
-  {
-    id: "applicant-2",
-    name: "이서연",
-    birthDate: "2000-07-22",
-    phone: "010-2345-6789",
-    email: "seoyeon.lee@email.com",
-    appliedCourse: "데이터 분석가 과정",
-    educationLevel: "대졸",
-    major: "통계학",
-    targetJob: "데이터 분석가",
-    status: "PENDING_INTERVIEW",
-    registeredAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    registeredBy: "mentor-1",
-    studentId: undefined,
-    evaluation: {
-      achievement: { answer: "", rating: 3 },
-      adaptability: { answer: "", rating: 3 },
-      relationship: { answer: "", rating: 3 },
-    }
-  },
-  {
-    id: "applicant-3",
-    name: "박지훈",
-    birthDate: "1999-11-08",
-    phone: "010-3456-7890",
-    email: "jihun.park@email.com",
-    appliedCourse: "UX/UI 디자이너 과정",
-    educationLevel: "전문대졸",
-    major: "시각디자인",
-    targetJob: "UX 디자이너",
-    status: "PENDING_INTERVIEW",
-    registeredAt: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-    registeredBy: "mentor-1",
-    studentId: undefined,
-    evaluation: {
-      achievement: { answer: "", rating: 3 },
-      adaptability: { answer: "", rating: 3 },
-      relationship: { answer: "", rating: 3 },
-    }
-  },
-]
+    },
+  }
+}
 
 export function ApplicantProvider({ children }: { children: ReactNode }) {
-  const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants)
+  const [applicants, setApplicants] = useState<Applicant[]>([])
+
+  useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_API_URL
+    if (!base) return
+    fetch(`${base}/students`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.code === 200 && Array.isArray(json.data?.students)) {
+          setApplicants(json.data.students.map(mapStudentRowToApplicant))
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Mentor: Register new applicant
   const registerApplicant = useCallback((

@@ -109,3 +109,8 @@ def create_student(session: Session, student_id: str, name: str, email: str, bir
 def get_student_by_email(session: Session, email: str) -> Student | None:
     stmt = select(Student).where(Student.email == email)
     return session.scalar(stmt)
+
+
+def get_all_students(session: Session) -> list[Student]:
+    stmt = select(Student).order_by(Student.created_at.desc())
+    return list(session.scalars(stmt).all())

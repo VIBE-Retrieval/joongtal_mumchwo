@@ -55,6 +55,12 @@ def register_student(body: RegisterStudentBody, db: Session = Depends(get_db)):
     )
 
 
+@router.get("")
+def list_students(db: Session = Depends(get_db)):
+    data = student_service.list_students(db)
+    return _ok(data)
+
+
 @router.get("/{student_id}/process-risk")
 def get_process_risk(student_id: str, db: Session = Depends(get_db)):
     data = student_service.get_process_risk(db, student_id)

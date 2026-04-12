@@ -126,6 +126,22 @@ def get_care_message(session: Session, student_id: str) -> dict:
     }
 
 
+def list_students(session: Session) -> dict:
+    rows = student_repository.get_all_students(session)
+    return {
+        "students": [
+            {
+                "student_id": r.student_id,
+                "name": r.name,
+                "email": r.email,
+                "birth_date": r.birth_date,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in rows
+        ]
+    }
+
+
 def register_student(session: Session, name: str, email: str, birth_date: str) -> dict:
     existing = student_repository.get_student_by_email(session, email)
     if existing:
