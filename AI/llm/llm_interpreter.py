@@ -7,18 +7,21 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
+load_dotenv(_PROJECT_ROOT / ".env")
+
 try:
-    from anthropic import Anthropic
+    from openai import OpenAI
 except Exception:  # pragma: no cover - environment-dependent import
-    Anthropic = None
+    OpenAI = None
 
 
-MODEL_NAME = "claude-haiku-4-5-20251001"
+MODEL_NAME = "gpt-4o-mini"
 ALLOWED_RISK_TYPES = {
     "achievement_decline",
     "adaptation_breakdown",
@@ -88,24 +91,24 @@ def _validate_and_normalize_result(data: dict[str, Any]) -> dict[str, str]:
 
 
 def _call_llm(system_prompt: str, user_prompt: str) -> str:
-    if Anthropic is None:
-        raise RuntimeError("anthropic package is not installed.")
+    if OpenAI is None:
+        raise RuntimeError("openai package is not installed.")
 
-    api_key = os.environ["ANTHROPIC_API_KEY"]
-    client = Anthropic(api_key=api_key)
-    resp = client.messages.create(
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    if not api_key or api_key == "your_openai_api_key_here":
+        raise RuntimeError("OPENAI_API_KEY is not set in .env")
+
+    client = OpenAI(api_key=api_key)
+    resp = client.chat.completions.create(
         model=MODEL_NAME,
         max_tokens=300,
         temperature=0,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
     )
-
-    parts = []
-    for item in resp.content:
-        if getattr(item, "type", None) == "text":
-            parts.append(item.text)
-    return "\n".join(parts).strip()
+    return resp.choices[0].message.content.strip()
 
 
 def interpret(ml_result: dict) -> dict:
