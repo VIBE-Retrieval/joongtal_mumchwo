@@ -35,30 +35,19 @@ interface MessageContextType {
 
 const MessageContext = createContext<MessageContextType | null>(null)
 
-// Initial test data for student-2 (김서연)
-const INITIAL_MESSAGES: EncouragementMessage[] = [
-  {
-    id: "msg-initial-1",
-    studentId: "student-2",
-    mentorId: "mentor-1",
-    mentorName: "김멘토",
-    message: "최근 힘들 수 있지만 잘 하고 있어요. 계속 노력해봅시다!",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30분 전
-    isRead: false
-  },
-  {
-    id: "msg-initial-2",
-    studentId: "student-2",
-    mentorId: "mentor-1",
-    mentorName: "김멘토",
-    message: "어려운 시기를 잘 이겨내고 있어요. 항상 응원합니다!",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2시간 전
-    isRead: true
+function getStoredUser(): { id: string; name: string } | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = localStorage.getItem("auth-user")
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
   }
-]
+}
 
 export function MessageProvider({ children }: { children: ReactNode }) {
-  const [messages, setMessages] = useState<EncouragementMessage[]>(INITIAL_MESSAGES)
+  const [messages, setMessages] = useState<EncouragementMessage[]>([])
 
   const getMessagesForStudent = useCallback((studentId: string) => {
     return messages
@@ -72,15 +61,28 @@ export function MessageProvider({ children }: { children: ReactNode }) {
 
   const sendEncouragementMessage = useCallback((studentId: string, customMessage?: string) => {
     const messageText = customMessage || ENCOURAGEMENT_TEMPLATES[Math.floor(Math.random() * ENCOURAGEMENT_TEMPLATES.length)]
-    
+    const storedUser = getStoredUser()
+
+    // Call real API
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/encouragement`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: studentId,
+        message: messageText,
+        mentor_id: storedUser?.id ?? null,
+      }),
+    }).catch(() => {})
+
+    // Optimistic UI update
     const newMessage: EncouragementMessage = {
       id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       studentId,
-      mentorId: "mentor-1",
-      mentorName: "김멘토",
+      mentorId: storedUser?.id ?? "unknown",
+      mentorName: storedUser?.name ?? "멘토",
       message: messageText,
       timestamp: new Date(),
-      isRead: false
+      isRead: false,
     }
 
     setMessages(prev => [newMessage, ...prev])

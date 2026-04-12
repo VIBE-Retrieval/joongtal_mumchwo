@@ -123,3 +123,22 @@ class InterventionHistory(Base):
     llm_summary: Mapped[str] = mapped_column(String(1024), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="PENDING")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class Meeting(Base):
+    __tablename__ = "meetings"
+
+    meeting_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    student_id: Mapped[str] = mapped_column(String(64), ForeignKey("students.student_id"), index=True)
+    mentor_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    mentor_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    student_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    purpose: Mapped[str] = mapped_column(String(128), nullable=False)
+    message: Mapped[str] = mapped_column(String(512), nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending_availability")
+    proposed_slots: Mapped[list] = mapped_column(JSON, nullable=False)
+    selected_slots: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    confirmed_slot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    student_notified: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    mentor_notified: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
