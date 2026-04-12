@@ -377,7 +377,7 @@ export function InterviewerMode() {
     }
   }, [currentCandidate, ctxUpdateEvaluation, ctxSaveEvaluation])
 
-  const handleDecision = useCallback((decision: "PASSED" | "FAILED" | "HOLD") => {
+  const handleDecision = useCallback(async (decision: "PASSED" | "FAILED" | "HOLD") => {
     if (!currentCandidate) return
     const id = currentCandidate.id
 
@@ -386,7 +386,10 @@ export function InterviewerMode() {
     updateInterviewResult(id, decision)
 
     if (decision === "PASSED") {
-      const student = convertToStudent(id)
+      if (currentCandidate.studentId) {
+        await handleSave()
+      }
+      const student = convertToStudent(id, currentCandidate.evaluation)
       if (student) addStudent(student)
     }
 
@@ -394,7 +397,7 @@ export function InterviewerMode() {
     // Navigate: stay at same index (next candidate slides in) or step back if at end
     setCurrentIndex(prev => Math.max(0, Math.min(prev, candidates.length - 2)))
     setSaveStatus("idle")
-  }, [currentCandidate, candidates.length, ctxUpdateEvaluation, updateInterviewResult, convertToStudent, addStudent])
+  }, [currentCandidate, candidates.length, ctxUpdateEvaluation, updateInterviewResult, convertToStudent, addStudent, handleSave])
 
   const goToPrevious = () => {
     if (safeIndex > 0) {

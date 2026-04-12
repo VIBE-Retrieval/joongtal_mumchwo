@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { cn, formatPhone } from "@/lib/utils"
 import { Search, ChevronLeft, ChevronRight, MessageCircle, Calendar, FileText, User, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Clock, X } from "lucide-react"
 import { useStudents, getKoreanInitial, KOREAN_INITIALS, type Student, type RiskLevel } from "@/contexts/student-context"
 import { useMessages } from "@/contexts/message-context"
@@ -158,7 +158,7 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
                 </div>
                 <div>
                   <span className="text-muted-foreground block mb-1">연락처</span>
-                  <span className="font-medium text-foreground">{student.phone}</span>
+                  <span className="font-medium text-foreground">{formatPhone(student.phone)}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block mb-1">이메일</span>

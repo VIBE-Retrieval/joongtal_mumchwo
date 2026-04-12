@@ -36,6 +36,10 @@ def list_student_risks(session: Session) -> dict:
             {
                 "student_id": sid,
                 "student_name": row["name"] or sid,
+                "birth_date": row["birth_date"],
+                "phone": row["phone"],
+                "email": row["email"],
+                "course_name": row["course_name"],
                 "risk_score": risk_score,
                 "risk_level": risk_level,
                 "risk_trend": risk_trend,

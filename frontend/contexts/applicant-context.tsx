@@ -50,7 +50,7 @@ interface ApplicantContextType {
   saveEvaluation: (applicantId: string) => void
   // For passed applicants - convert to student
   getPassedApplicants: () => Applicant[]
-  convertToStudent: (applicantId: string) => Student | null
+  convertToStudent: (applicantId: string, evaluation?: ApplicantEvaluation) => Student | null
 }
 
 const ApplicantContext = createContext<ApplicantContextType | null>(null)
@@ -67,19 +67,22 @@ function mapStudentRowToApplicant(row: {
   name: string
   email: string
   birth_date: string
+  phone: string | null
+  course_name: string | null
   created_at: string
+  has_interview: boolean
 }): Applicant {
   return {
     id: row.student_id,
     name: row.name,
     email: row.email,
     birthDate: birthDateFromYyyymmdd(row.birth_date),
-    phone: "",
-    appliedCourse: "",
+    phone: row.phone ?? "",
+    appliedCourse: row.course_name ?? "",
     educationLevel: "기타",
     major: undefined,
     targetJob: undefined,
-    status: "PENDING_INTERVIEW",
+    status: row.has_interview ? "PASSED" : "PENDING_INTERVIEW",
     registeredAt: new Date(row.created_at),
     registeredBy: "",
     studentId: row.student_id,
@@ -171,16 +174,17 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
     return applicants.filter(a => a.status === "PASSED")
   }, [applicants])
 
-  // Convert passed applicant to student
-  const convertToStudent = useCallback((applicantId: string): Student | null => {
-    const applicant = applicants.find(a => a.id === applicantId && a.status === "PASSED")
+  // Convert applicant to student
+  const convertToStudent = useCallback((applicantId: string, evaluation?: ApplicantEvaluation): Student | null => {
+    const applicant = applicants.find(a => a.id === applicantId)
     if (!applicant) return null
+    const sourceEvaluation = evaluation ?? applicant.evaluation
 
     // Calculate risk score from evaluation
     const avgRating = (
-      applicant.evaluation.achievement.rating +
-      applicant.evaluation.adaptability.rating +
-      applicant.evaluation.relationship.rating
+      sourceEvaluation.achievement.rating +
+      sourceEvaluation.adaptability.rating +
+      sourceEvaluation.relationship.rating
     ) / 3
     const riskScore = Math.round(Math.max(0, Math.min(100, (5 - avgRating) * 25)))
     const riskLevel = riskScore > 65 ? "high" : riskScore > 35 ? "medium" : "low"
@@ -204,7 +208,7 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
       recentChange: 0,
       trend: Array.from({ length: 14 }, () => Math.floor(Math.random() * 20) + 40),
       aiSummary: "신규 입과 학생입니다. 면접 평가 결과에 따른 초기 위험도가 설정되었습니다. 첫 2주간 적응 기간에 대한 모니터링을 권장합니다.",
-      mentorNotes: `면접 합격 후 입과. 초기 평가: 성취도 ${applicant.evaluation.achievement.rating}/5, 적응력 ${applicant.evaluation.adaptability.rating}/5, 인간관계 ${applicant.evaluation.relationship.rating}/5`,
+      mentorNotes: `면접 합격 후 입과. 초기 평가: 성취도 ${sourceEvaluation.achievement.rating}/5, 적응력 ${sourceEvaluation.adaptability.rating}/5, 인간관계 ${sourceEvaluation.relationship.rating}/5`,
       interventions: [{
         date: dateStr,
         type: "note",
