@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Users, AlertTriangle, Bell, CheckCircle, User, X, ChevronRight } from "lucide-react"
+import { Users, AlertTriangle, Bell, CheckCircle, User, X, ChevronRight, UserPlus } from "lucide-react"
 import { useStudents, type Student } from "@/contexts/student-context"
 import { useNotifications } from "@/contexts/notification-context"
 import { cn } from "@/lib/utils"
@@ -310,6 +310,12 @@ export default function MentorDashboard() {
 
             <div className="flex items-center gap-4">
               <NotificationBell />
+              <Link href="/mentor/add-applicant">
+                <Button size="sm" className="gap-1.5">
+                  <UserPlus className="w-4 h-4" />
+                  신규 지원자 등록
+                </Button>
+              </Link>
               <span className="text-sm text-muted-foreground">{user.name}</span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 로그아웃
