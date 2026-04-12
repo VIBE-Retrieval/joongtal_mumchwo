@@ -1,39 +1,234 @@
-# Frontend Agent
+# FRONTEND AGENT
 
-## Purpose
+## 학생/멘토 UI 및 사용자 경험 담당 에이전트
 
-Manages frontend development, UI/UX implementation, and client-side logic.
+---
 
-## Responsibilities
+# 1. 역할 정의
 
-- Frontend architecture and design
-- Component development
-- State management
-- User interface implementation
-- Frontend testing and quality assurance
-- Performance optimization
+Frontend Agent는 다음을 책임진다.
 
-## Scope
+- 학생 UI
+- 멘토 대시보드
+- 입력 인터페이스
+- 상태 시각화
+- 감정 기반 표현
 
-- Frontend application code
-- UI/UX components
-- Client-side logic
-- Frontend dependencies and configuration
+---
 
-## Key Functions
+# 2. 핵심 원칙
 
-- [ ] Component development
-- [ ] State management
-- [ ] UI implementation
-- [ ] Frontend testing
-- [ ] Performance optimization
+## 2.1 프론트는 계산하지 않는다
 
-## Dependencies
+- risk_score 계산 금지
+- trend 계산 금지
+- 판단 로직 금지
 
-- Backend Agent (API integration)
-- Documentation Agent (UI documentation)
+모든 판단은 backend / AI에서 온다.
 
-## Configuration
+---
 
-- Location: AGENTS/frontend-agent.md
-- Active: true
+## 2.2 프론트는 “표현”만 한다
+
+- 데이터 표시
+- 상태 시각화
+- 사용자 경험 설계
+
+---
+
+## 2.3 API 중심 구조
+
+모든 데이터는 backend API를 통해 가져온다.
+
+직접 DB 접근 금지
+
+---
+
+# 3. 주요 화면 구성
+
+---
+
+## 3.1 학생 화면
+
+### 1) 일일 설문
+
+입력:
+
+- 성취도
+- 적응도
+- 인간관계
+
+형식:
+
+- 1~5 점 선택 (버튼 또는 슬라이더)
+
+---
+
+### 2) 나의 변화
+
+출력:
+
+- 설문 히스토리 (슬라이더/그래프)
+- 감정 상태
+
+---
+
+### 감정 상태 규칙
+
+- HIGH + UP → 😟 주의
+- MEDIUM → 😐 보통
+- LOW → 🙂 안정
+
+---
+
+### 3) 케어 메시지
+
+출력:
+
+- 격려 메시지
+- 위로 메시지
+
+---
+
+## 3.2 멘토 화면
+
+---
+
+### 1) 위험 학생 목록
+
+출력:
+
+- 학생 이름
+- risk_score
+- risk_level
+- risk_trend
+- 추천 action
+
+---
+
+### 2) 학생 상세
+
+출력:
+
+- 설문 추이
+- 위험 변화
+- LLM 요약
+- Agent 판단 결과
+
+---
+
+### 3) 알림
+
+출력:
+
+- 상담 요청
+- 경고 알림
+
+---
+
+### 4) 상담 기록
+
+입력:
+
+- 상담 내용
+- 실제 위험 여부
+- 개입 효과
+
+---
+
+# 4. UI 설계 규칙
+
+---
+
+## 4.1 상태 색상 규칙
+
+- LOW → 초록
+- MEDIUM → 노랑
+- HIGH → 빨강
+
+---
+
+## 4.2 감정 UI
+
+- 🙂 안정
+- 😐 보통
+- 😟 주의
+
+---
+
+## 4.3 그래프
+
+- 최근 7일 추이 필수
+- 3축 각각 표시
+
+---
+
+# 5. API 연결 규칙
+
+---
+
+## 5.1 학생
+
+- POST /surveys/daily
+- GET /students/{id}/progress
+- GET /students/{id}/care-message
+
+---
+
+## 5.2 멘토
+
+- GET /mentor/students/risks
+- GET /mentor/alerts
+- GET /students/{id}
+- POST /consultings
+
+---
+
+# 6. 금지 사항
+
+- ML 계산 로직 구현 금지
+- risk_score 직접 계산 금지
+- API 없이 데이터 생성 금지
+- 상태를 하드코딩하지 말 것
+
+---
+
+# 7. UX 핵심 목표
+
+---
+
+## 7.1 학생
+
+- 부담 없이 입력
+- 쉽게 이해
+- 감정적으로 공감
+
+---
+
+## 7.2 멘토
+
+- 빠르게 위험 파악
+- 즉시 행동 가능
+- 정보 과부하 방지
+
+---
+
+# 8. 데이터 흐름
+
+프론트는 항상 아래 흐름을 따른다.
+
+입력 → API 요청 → 응답 → UI 반영
+
+---
+
+# 9. 최종 정의
+
+Frontend Agent는
+
+"AI가 만든 판단을 사람이 이해할 수 있게 바꾸는 계층"
+
+이다.
+
+---
+
+# END
