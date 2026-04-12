@@ -4,12 +4,14 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from backend.controllers.interview_controller import router as interview_router
 from backend.controllers.survey_controller import router as survey_router
 from backend.database import init_db
 
 app = FastAPI(title="joongtal mumchwo API")
 
 app.include_router(survey_router)
+app.include_router(interview_router)
 
 
 @app.exception_handler(RequestValidationError)

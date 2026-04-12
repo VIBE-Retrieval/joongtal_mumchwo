@@ -44,6 +44,27 @@ class ProcessRiskHistory(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+class InterviewAssessment(Base):
+    __tablename__ = "interview_assessment"
+
+    interview_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    student_id: Mapped[str] = mapped_column(String(64), ForeignKey("students.student_id"), index=True)
+    achievement_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    achievement_problem_solving: Mapped[int] = mapped_column(Integer, nullable=False)
+    achievement_self_learning: Mapped[int] = mapped_column(Integer, nullable=False)
+    achievement_process_clarity: Mapped[int] = mapped_column(Integer, nullable=False)
+    adaptation_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    adaptation_accepts_difficulty: Mapped[int] = mapped_column(Integer, nullable=False)
+    adaptation_persistence: Mapped[int] = mapped_column(Integer, nullable=False)
+    adaptation_strategy_variety: Mapped[int] = mapped_column(Integer, nullable=False)
+    relationship_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    relationship_collaboration: Mapped[int] = mapped_column(Integer, nullable=False)
+    relationship_conflict_handling: Mapped[int] = mapped_column(Integer, nullable=False)
+    relationship_help_exchange: Mapped[int] = mapped_column(Integer, nullable=False)
+    note: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 class InterviewRiskHistory(Base):
     __tablename__ = "interview_risk_history"
 
