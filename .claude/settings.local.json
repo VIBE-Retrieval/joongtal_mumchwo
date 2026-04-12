@@ -18,7 +18,9 @@
       "Bash(cmd /c \"taskkill /F /PID 24780 2>&1\")",
       "Bash(powershell -Command \"Stop-Process -Id 24968 -Force -ErrorAction SilentlyContinue; Stop-Process -Id 24780 -Force -ErrorAction SilentlyContinue; Write-Host ''Done''\")",
       "Bash(uvicorn backend.main:app --host 0.0.0.0 --port 8000)",
-      "Bash(curl -s -X OPTIONS http://localhost:8000/auth/login -H \"Origin: http://localhost:3000\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: Content-Type\" -D -)"
+      "Bash(curl -s -X OPTIONS http://localhost:8000/auth/login -H \"Origin: http://localhost:3000\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: Content-Type\" -D -)",
+      "Bash(pip freeze:*)",
+      "Bash(pip3 freeze:*)"
     ]
   }
 }
