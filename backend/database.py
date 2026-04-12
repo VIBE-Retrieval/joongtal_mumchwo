@@ -29,7 +29,16 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_engine(_build_database_url(), pool_pre_ping=True)
+import ssl as _ssl
+_ssl_ctx = _ssl.SSLContext(_ssl.PROTOCOL_TLS_CLIENT)
+_ssl_ctx.check_hostname = False
+_ssl_ctx.verify_mode = _ssl.CERT_NONE
+
+engine = create_engine(
+    _build_database_url(),
+    connect_args={"ssl": _ssl_ctx},
+    pool_pre_ping=True,
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
