@@ -132,6 +132,7 @@ interface StudentContextType {
   totalStudents: number
   careNeededCount: number
   newRiskCount: number
+  addStudent: (student: Student) => void
   completeCare: (studentId: string) => void
   getStudentById: (studentId: string) => Student | undefined
 }
@@ -150,6 +151,10 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     students.filter(s => s.isNewRiskToday), 
     [students]
   )
+
+  const addStudent = useCallback((student: Student) => {
+    setStudents(prev => [student, ...prev])
+  }, [])
 
   const completeCare = useCallback((studentId: string) => {
     setStudents(prev => prev.map(student => {
@@ -195,6 +200,7 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     totalStudents: students.length,
     careNeededCount: careNeededStudents.length,
     newRiskCount: newRiskStudents.length,
+    addStudent,
     completeCare,
     getStudentById
   }

@@ -1,91 +1,22 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, Save, CheckCircle2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Save, CheckCircle2, ThumbsUp, ThumbsDown, Clock } from "lucide-react"
+import { useApplicants } from "@/contexts/applicant-context"
+import { useStudents } from "@/contexts/student-context"
 
 type RiskLevel = "LOW" | "MEDIUM" | "HIGH"
 
-interface Candidate {
-  id: string
-  name: string
-  birthDate: string
-  appliedCourse: string
-  evaluation: {
-    achievement: { answer: string; rating: number }
-    adaptability: { answer: string; rating: number }
-    relationship: { answer: string; rating: number }
-  }
-  isSaved: boolean
+interface LocalEvaluation {
+  achievement: { answer: string; rating: number }
+  adaptability: { answer: string; rating: number }
+  relationship: { answer: string; rating: number }
 }
-
-// Sample candidates data
-const initialCandidates: Candidate[] = [
-  {
-    id: "1",
-    name: "김민준",
-    birthDate: "1998-03-15",
-    appliedCourse: "풀스택 개발자 과정",
-    evaluation: {
-      achievement: { answer: "", rating: 3 },
-      adaptability: { answer: "", rating: 3 },
-      relationship: { answer: "", rating: 3 },
-    },
-    isSaved: false,
-  },
-  {
-    id: "2",
-    name: "이서연",
-    birthDate: "2000-07-22",
-    appliedCourse: "데이터 분석가 과정",
-    evaluation: {
-      achievement: { answer: "", rating: 3 },
-      adaptability: { answer: "", rating: 3 },
-      relationship: { answer: "", rating: 3 },
-    },
-    isSaved: false,
-  },
-  {
-    id: "3",
-    name: "박지훈",
-    birthDate: "1999-11-08",
-    appliedCourse: "UX/UI 디자이너 과정",
-    evaluation: {
-      achievement: { answer: "", rating: 3 },
-      adaptability: { answer: "", rating: 3 },
-      relationship: { answer: "", rating: 3 },
-    },
-    isSaved: false,
-  },
-  {
-    id: "4",
-    name: "최수아",
-    birthDate: "2001-05-30",
-    appliedCourse: "풀스택 개발자 과정",
-    evaluation: {
-      achievement: { answer: "", rating: 3 },
-      adaptability: { answer: "", rating: 3 },
-      relationship: { answer: "", rating: 3 },
-    },
-    isSaved: false,
-  },
-  {
-    id: "5",
-    name: "정다은",
-    birthDate: "1997-09-12",
-    appliedCourse: "AI 엔지니어 과정",
-    evaluation: {
-      achievement: { answer: "", rating: 3 },
-      adaptability: { answer: "", rating: 3 },
-      relationship: { answer: "", rating: 3 },
-    },
-    isSaved: false,
-  },
-]
 
 const evaluationCategories = [
   {
@@ -146,14 +77,13 @@ interface RiskAnalysis {
   explanation: string
 }
 
-function calculateRiskAnalysis(evaluation: Candidate["evaluation"]): RiskAnalysis {
+function calculateRiskAnalysis(evaluation: LocalEvaluation): RiskAnalysis {
   const avgRating = (
     evaluation.achievement.rating +
     evaluation.adaptability.rating +
     evaluation.relationship.rating
   ) / 3
 
-  // Higher rating = lower risk
   const riskScore = Math.round(Math.max(0, Math.min(100, (5 - avgRating) * 25)))
 
   let riskLevel: RiskLevel = "LOW"
@@ -250,14 +180,12 @@ function EvaluationCard({
         <p className="text-sm text-primary font-medium mt-1">{category.subtitle}</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Question */}
         <div className="bg-muted/50 rounded-lg p-3 border-l-2 border-primary">
           <p className="text-sm text-foreground leading-relaxed">
             {category.question}
           </p>
         </div>
 
-        {/* Text Input */}
         <div className="space-y-2">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             평가 의견
@@ -270,7 +198,6 @@ function EvaluationCard({
           />
         </div>
 
-        {/* Checklist (Visual Guide) */}
         <div className="bg-muted/30 rounded-lg p-3">
           <p className="text-xs font-medium text-muted-foreground mb-2">면접관 체크 항목</p>
           <ul className="space-y-1.5">
@@ -283,7 +210,6 @@ function EvaluationCard({
           </ul>
         </div>
 
-        {/* Rating Slider */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -299,7 +225,6 @@ function EvaluationCard({
             step={1}
             className="w-full"
           />
-          {/* Rating Criteria */}
           <div className="grid grid-cols-3 gap-2 text-xs">
             <div className={cn(
               "text-center p-2 rounded-md transition-all",
@@ -330,62 +255,106 @@ function EvaluationCard({
 }
 
 export function InterviewerMode() {
-  const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates)
+  const {
+    applicants,
+    updateEvaluation: ctxUpdateEvaluation,
+    updateInterviewResult,
+    saveEvaluation: ctxSaveEvaluation,
+    convertToStudent,
+  } = useApplicants()
+  const { addStudent } = useStudents()
+
+  // Local evaluation overrides keyed by applicant ID (tracks in-progress edits)
+  const [localEvaluations, setLocalEvaluations] = useState<Record<string, LocalEvaluation>>({})
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [decidedIds, setDecidedIds] = useState<Set<string>>(new Set())
   const [currentIndex, setCurrentIndex] = useState(0)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
 
-  const currentCandidate = candidates[currentIndex]
+  // Pending candidates derived from applicant context (reactive to new registrations)
+  const candidates = useMemo(() => {
+    return applicants
+      .filter(a => (a.status === "PENDING_INTERVIEW" || a.status === "HOLD") && !decidedIds.has(a.id))
+      .map(a => ({
+        id: a.id,
+        name: a.name,
+        birthDate: a.birthDate,
+        appliedCourse: a.appliedCourse,
+        evaluation: localEvaluations[a.id] ?? a.evaluation,
+        isSaved: savedIds.has(a.id),
+        status: a.status,
+      }))
+  }, [applicants, localEvaluations, savedIds, decidedIds])
+
+  // Clamp currentIndex when candidates list shrinks
+  const safeIndex = Math.min(currentIndex, Math.max(0, candidates.length - 1))
+  const currentCandidate = candidates[safeIndex]
 
   const analysis = useMemo(
-    () => calculateRiskAnalysis(currentCandidate.evaluation),
-    [currentCandidate.evaluation]
+    () => currentCandidate ? calculateRiskAnalysis(currentCandidate.evaluation) : null,
+    [currentCandidate]
   )
 
-  const updateEvaluation = (
-    category: keyof Candidate["evaluation"],
+  const updateEvaluationLocal = useCallback((
+    category: keyof LocalEvaluation,
     field: "answer" | "rating",
     value: string | number
   ) => {
-    setCandidates((prev) =>
-      prev.map((c, i) =>
-        i === currentIndex
-          ? {
-              ...c,
-              evaluation: {
-                ...c.evaluation,
-                [category]: { ...c.evaluation[category], [field]: value },
-              },
-              isSaved: false,
-            }
-          : c
-      )
-    )
+    if (!currentCandidate) return
+    const id = currentCandidate.id
+    setLocalEvaluations(prev => {
+      const current = prev[id] ?? currentCandidate.evaluation
+      return {
+        ...prev,
+        [id]: {
+          ...current,
+          [category]: { ...current[category], [field]: value },
+        },
+      }
+    })
+    setSavedIds(prev => { const next = new Set(prev); next.delete(id); return next })
     setSaveStatus("idle")
-  }
+  }, [currentCandidate])
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
+    if (!currentCandidate) return
     setSaveStatus("saving")
+    const id = currentCandidate.id
+    const evaluation = currentCandidate.evaluation
+    ctxUpdateEvaluation(id, evaluation)
+    ctxSaveEvaluation(id)
     setTimeout(() => {
-      setCandidates((prev) =>
-        prev.map((c, i) => (i === currentIndex ? { ...c, isSaved: true } : c))
-      )
+      setSavedIds(prev => new Set(prev).add(id))
       setSaveStatus("saved")
       setTimeout(() => setSaveStatus("idle"), 2000)
-    }, 500)
-  }
+    }, 400)
+  }, [currentCandidate, ctxUpdateEvaluation, ctxSaveEvaluation])
+
+  const handleDecision = useCallback((decision: "PASSED" | "FAILED" | "HOLD") => {
+    if (!currentCandidate) return
+    const id = currentCandidate.id
+
+    // Sync local evaluation to context first
+    ctxUpdateEvaluation(id, currentCandidate.evaluation)
+    updateInterviewResult(id, decision)
+
+    if (decision === "PASSED") {
+      const student = convertToStudent(id)
+      if (student) addStudent(student)
+    }
+
+    setDecidedIds(prev => new Set(prev).add(id))
+    // Navigate: stay at same index (next candidate slides in) or step back if at end
+    setCurrentIndex(prev => Math.max(0, Math.min(prev, candidates.length - 2)))
+    setSaveStatus("idle")
+  }, [currentCandidate, candidates.length, ctxUpdateEvaluation, updateInterviewResult, convertToStudent, addStudent])
 
   const goToPrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-      setSaveStatus("idle")
-    }
+    if (safeIndex > 0) { setCurrentIndex(safeIndex - 1); setSaveStatus("idle") }
   }
 
   const goToNext = () => {
-    if (currentIndex < candidates.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-      setSaveStatus("idle")
-    }
+    if (safeIndex < candidates.length - 1) { setCurrentIndex(safeIndex + 1); setSaveStatus("idle") }
   }
 
   const riskLevelLabels: Record<RiskLevel, string> = {
@@ -400,12 +369,32 @@ export function InterviewerMode() {
     { id: "C", label: "집중 지원 필요" },
   ]
 
+  const completedCount = applicants.filter(
+    a => a.status === "PASSED" || a.status === "FAILED"
+  ).length
+
+  // Empty state
+  if (candidates.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <p className="text-lg font-medium text-foreground">대기 중인 지원자가 없습니다</p>
+          <p className="text-sm text-muted-foreground">멘토가 신규 지원자를 등록하면 여기에 표시됩니다.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!currentCandidate || !analysis) return null
+
   return (
     <div className="h-full flex flex-col">
       {/* TOP: Candidate Info + Navigation */}
       <div className="flex-shrink-0 border-b bg-card/50 px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Candidate Info */}
           <div className="flex items-center gap-6">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-lg font-semibold text-primary">
@@ -415,6 +404,11 @@ export function InterviewerMode() {
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-foreground">{currentCandidate.name}</h2>
+                {currentCandidate.status === "HOLD" && (
+                  <span className="text-xs bg-risk-medium/15 text-risk-medium px-2 py-0.5 rounded-full font-medium">
+                    보류
+                  </span>
+                )}
                 {currentCandidate.isSaved && (
                   <span className="text-xs text-risk-low flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
@@ -436,22 +430,22 @@ export function InterviewerMode() {
               variant="outline"
               size="sm"
               onClick={goToPrevious}
-              disabled={currentIndex === 0}
+              disabled={safeIndex === 0}
               className="gap-1"
             >
               <ChevronLeft className="w-4 h-4" />
               이전 지원자
             </Button>
-            
+
             <div className="px-3 py-1 rounded-md bg-muted text-sm font-medium">
-              {currentIndex + 1} / {candidates.length}
+              {safeIndex + 1} / {candidates.length}
             </div>
 
             <Button
               variant="outline"
               size="sm"
               onClick={goToNext}
-              disabled={currentIndex === candidates.length - 1}
+              disabled={safeIndex === candidates.length - 1}
               className="gap-1"
             >
               다음 지원자
@@ -483,7 +477,7 @@ export function InterviewerMode() {
               key={category.key}
               category={category}
               value={currentCandidate.evaluation[category.key]}
-              onChange={(field, val) => updateEvaluation(category.key, field, val as string & number)}
+              onChange={(field, val) => updateEvaluationLocal(category.key, field, val as string & number)}
             />
           ))}
         </div>
@@ -591,26 +585,53 @@ export function InterviewerMode() {
       <div className="flex-shrink-0 border-t bg-card/50 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            평가 진행: <span className="font-medium text-foreground">{candidates.filter(c => c.isSaved).length}</span> / {candidates.length} 명 완료
+            평가 완료:{" "}
+            <span className="font-medium text-foreground">{completedCount}</span>{" "}
+            / {applicants.length} 명
           </div>
+
           <div className="flex items-center gap-3">
             <Button
-              variant="default"
+              variant="secondary"
+              size="sm"
               onClick={handleSave}
               disabled={saveStatus === "saving"}
               className="gap-1.5"
             >
               <Save className="w-4 h-4" />
-              저장하기
+              {saveStatus === "saving" ? "저장 중..." : "임시 저장"}
             </Button>
+
+            <div className="w-px h-8 bg-border" />
+
+            {/* Decision buttons */}
             <Button
               variant="outline"
-              onClick={goToNext}
-              disabled={currentIndex === candidates.length - 1}
-              className="gap-1"
+              size="sm"
+              onClick={() => handleDecision("HOLD")}
+              className="gap-1.5 border-risk-medium/50 text-risk-medium hover:bg-risk-medium/10"
             >
-              다음 지원자
-              <ChevronRight className="w-4 h-4" />
+              <Clock className="w-4 h-4" />
+              보류
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDecision("FAILED")}
+              className="gap-1.5 border-risk-high/50 text-risk-high hover:bg-risk-high/10"
+            >
+              <ThumbsDown className="w-4 h-4" />
+              불합격
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={() => handleDecision("PASSED")}
+              className="gap-1.5 bg-risk-low text-white hover:bg-risk-low/90"
+            >
+              <ThumbsUp className="w-4 h-4" />
+              합격
             </Button>
           </div>
         </div>
