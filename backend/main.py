@@ -9,6 +9,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from backend.controllers.interview_controller import router as interview_router
+from backend.controllers.mentor_controller import router as mentor_router
+from backend.controllers.student_controller import router as student_router
 from backend.controllers.survey_controller import router as survey_router
 from backend.database import init_db
 
@@ -16,6 +18,8 @@ app = FastAPI(title="joongtal mumchwo API")
 
 app.include_router(survey_router)
 app.include_router(interview_router)
+app.include_router(student_router)
+app.include_router(mentor_router)
 
 
 @app.exception_handler(RequestValidationError)
