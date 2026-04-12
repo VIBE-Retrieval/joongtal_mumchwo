@@ -5,6 +5,8 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
+from AI.agent.agent_service import decide
+from AI.llm.llm_interpreter import interpret
 from backend.ai_module.process_ml_service import run_process_ml
 from backend.repositories import survey_repository
 
@@ -69,6 +71,46 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
         model_version="process_ml_v1",
     )
 
+    llm_input = {
+        "risk_score": ml_result["risk_score"],
+        "risk_level": ml_result["risk_level"],
+        "risk_trend": ml_result["risk_trend"],
+        "feature_snapshot": ml_result["feature_snapshot"],
+    }
+    llm_result = interpret(llm_input)
+
+    feedback_stats = survey_repository.get_feedback_stats(session, payload.student_id)
+    agent_input = {
+        "interview_risk_score": survey_repository.get_latest_interview_risk_score(
+            session, payload.student_id
+        ),
+        "process_risk_score": ml_result["risk_score"],
+        "risk_level": ml_result["risk_level"],
+        "risk_trend": ml_result["risk_trend"],
+        "consecutive_risk_days": survey_repository.get_consecutive_risk_days(
+            session, payload.student_id, payload.survey_date
+        ),
+        "state_summary": llm_result["state_summary"],
+        "risk_reason": llm_result["risk_reason"],
+        "risk_type": llm_result["risk_type"],
+        "past_high_risk_count": survey_repository.get_past_high_risk_count(
+            session, payload.student_id
+        ),
+        "avg_recovery_days": feedback_stats["avg_recovery_days"],
+        "false_alarm_rate": feedback_stats["false_alarm_rate"],
+        "last_action_type": survey_repository.get_last_action_type(session, payload.student_id),
+        "action_effective_rate": feedback_stats["action_effective_rate"],
+    }
+    agent_result = decide(agent_input)
+
+    survey_repository.save_intervention_history(
+        session,
+        student_id=payload.student_id,
+        record_date=payload.survey_date,
+        agent_result=agent_result,
+        llm_summary=llm_result["state_summary"],
+    )
+
     session.commit()
 
     return {
@@ -77,4 +119,7 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
         "risk_score": ml_result["risk_score"],
         "risk_level": ml_result["risk_level"],
         "risk_trend": ml_result["risk_trend"],
+        "action_type": agent_result["action_type"],
+        "priority": agent_result["priority"],
+        "state_summary": llm_result["state_summary"],
     }

@@ -3,10 +3,17 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import Any, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.models import DailySurvey, ProcessRiskHistory, Student
+from backend.models import (
+    DailySurvey,
+    InterventionFeedback,
+    InterventionHistory,
+    InterviewRiskHistory,
+    ProcessRiskHistory,
+    Student,
+)
 
 
 def ensure_student(session: Session, student_id: str) -> None:
@@ -126,6 +133,103 @@ def upsert_process_risk_history(
         risk_trend=risk_trend,
         feature_snapshot=feature_snapshot,
         model_version=model_version,
+    )
+    session.add(row)
+    session.flush()
+    return row
+
+
+def get_past_high_risk_count(session: Session, student_id: str) -> int:
+    n = session.scalar(
+        select(func.count())
+        .select_from(ProcessRiskHistory)
+        .where(
+            ProcessRiskHistory.student_id == student_id,
+            ProcessRiskHistory.risk_level == "HIGH",
+        )
+    )
+    return int(n or 0)
+
+
+def get_consecutive_risk_days(session: Session, student_id: str, today: date) -> int:
+    stmt = (
+        select(ProcessRiskHistory.risk_level)
+        .where(
+            ProcessRiskHistory.student_id == student_id,
+            ProcessRiskHistory.date < today,
+        )
+        .order_by(ProcessRiskHistory.date.desc())
+    )
+    levels = session.scalars(stmt).all()
+    consecutive = 0
+    for level in levels:
+        if level == "HIGH":
+            consecutive += 1
+        else:
+            break
+    return consecutive
+
+
+def get_last_action_type(session: Session, student_id: str) -> str:
+    stmt = (
+        select(InterventionHistory.action_type)
+        .where(InterventionHistory.student_id == student_id)
+        .order_by(InterventionHistory.created_at.desc())
+        .limit(1)
+    )
+    row = session.scalar(stmt)
+    return str(row) if row is not None else "NONE"
+
+
+def get_feedback_stats(session: Session, student_id: str) -> dict[str, float]:
+    stmt = select(InterventionFeedback).where(InterventionFeedback.student_id == student_id)
+    rows = session.scalars(stmt).all()
+    if not rows:
+        return {
+            "avg_recovery_days": 0.0,
+            "false_alarm_rate": 0.0,
+            "action_effective_rate": 0.0,
+        }
+    n = len(rows)
+    recovery_vals = [r.recovery_days for r in rows if r.recovery_days is not None]
+    avg_recovery = float(sum(recovery_vals) / len(recovery_vals)) if recovery_vals else 0.0
+    false_n = sum(1 for r in rows if r.mentor_feedback == "false_alarm")
+    effective_n = sum(1 for r in rows if r.action_effective == 1)
+    return {
+        "avg_recovery_days": avg_recovery,
+        "false_alarm_rate": false_n / float(n),
+        "action_effective_rate": effective_n / float(n),
+    }
+
+
+def get_latest_interview_risk_score(session: Session, student_id: str) -> float:
+    stmt = (
+        select(InterviewRiskHistory.dropout_risk_score)
+        .where(InterviewRiskHistory.student_id == student_id)
+        .order_by(InterviewRiskHistory.created_at.desc())
+        .limit(1)
+    )
+    row = session.scalar(stmt)
+    return float(row) if row is not None else 0.5
+
+
+def save_intervention_history(
+    session: Session,
+    *,
+    student_id: str,
+    record_date: date,
+    agent_result: dict[str, Any],
+    llm_summary: str,
+) -> InterventionHistory:
+    ensure_student(session, student_id)
+    row = InterventionHistory(
+        student_id=student_id,
+        date=record_date.isoformat(),
+        action_type=str(agent_result["action_type"]),
+        priority=str(agent_result["priority"]),
+        action_reason=str(agent_result["action_reason"]),
+        llm_summary=llm_summary,
+        status="PENDING",
     )
     session.add(row)
     session.flush()

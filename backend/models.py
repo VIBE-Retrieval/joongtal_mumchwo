@@ -42,3 +42,40 @@ class ProcessRiskHistory(Base):
     feature_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
     model_version: Mapped[str] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class InterviewRiskHistory(Base):
+    __tablename__ = "interview_risk_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    student_id: Mapped[str] = mapped_column(String(64), ForeignKey("students.student_id"), index=True)
+    interview_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    dropout_risk_score: Mapped[float] = mapped_column(Float, nullable=False)
+    model_version: Mapped[str] = mapped_column(String(64), nullable=False, default="interview_ml_v1")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class InterventionFeedback(Base):
+    __tablename__ = "intervention_feedback"
+
+    feedback_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    student_id: Mapped[str] = mapped_column(String(64), ForeignKey("students.student_id"), index=True)
+    intervention_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    recovery_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    mentor_feedback: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    action_effective: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class InterventionHistory(Base):
+    __tablename__ = "intervention_history"
+
+    intervention_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    student_id: Mapped[str] = mapped_column(String(64), ForeignKey("students.student_id"), index=True)
+    date: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    action_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    priority: Mapped[str] = mapped_column(String(16), nullable=False)
+    action_reason: Mapped[str] = mapped_column(String(512), nullable=False)
+    llm_summary: Mapped[str] = mapped_column(String(1024), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="PENDING")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
