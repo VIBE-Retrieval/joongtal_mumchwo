@@ -1,24 +1,35 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-_BACKEND_DIR = Path(__file__).resolve().parent
-_DEFAULT_SQLITE = _BACKEND_DIR / "app.db"
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-DATABASE_URL = f"sqlite:///{_DEFAULT_SQLITE}"
+
+def _build_database_url() -> str:
+    host     = os.environ.get("DB_HOST", "")
+    port     = os.environ.get("DB_PORT", "3306")
+    name     = os.environ.get("DB_NAME", "")
+    user     = os.environ.get("DB_USER", "")
+    password = os.environ.get("DB_PASSWORD", "")
+
+    if not all([host, name, user, password]):
+        raise RuntimeError(
+            "DB 환경변수가 설정되지 않았습니다. "
+            ".env 파일에 DB_HOST, DB_NAME, DB_USER, DB_PASSWORD를 입력하세요."
+        )
+    return f"mysql+pymysql://{user}:{password}@{host}:{port}/{name}?charset=utf8mb4"
 
 
 class Base(DeclarativeBase):
     pass
 
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
-)
+engine = create_engine(_build_database_url(), pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -32,5 +43,4 @@ def get_db():
 
 def init_db() -> None:
     from backend import models  # noqa: F401
-
     Base.metadata.create_all(bind=engine)
