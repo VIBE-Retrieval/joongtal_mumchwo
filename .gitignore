@@ -1,2 +1,31 @@
+# Secrets (템플릿은 .env.example)
 .env
+
+# 로컬 환경 변수 (Next.js 등 — 원래 frontend/.gitignore)
+.env*.local
+
+# Frontend — Next.js (frontend/.gitignore 통합, 경로는 frontend/ 기준)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/.turbo/
+frontend/.DS_Store
+
+# v0 sandbox / Vercel (원래 frontend/.gitignore)
+frontend/__v0_runtime_loader.js
+frontend/__v0_devtools.tsx
+frontend/__v0_jsx-dev-runtime.ts
+frontend/.snowflake/
+frontend/.v0-trash/
+frontend/next.user-config.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로컬 SQLite (백엔드 개발 DB)
+backend/app.db
+
+# 기존 항목 유지
 sql
