@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,18 +11,12 @@ import { useMeetings, type TimeSlot } from "@/contexts/meeting-context"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
-// Mock survey data - in real app this would come from database
-const surveyHistory = [
-  { date: "2026-04-12", achievement: 4, adaptability: 3, relationship: 5 },
-  { date: "2026-04-11", achievement: 3, adaptability: 3, relationship: 4 },
-  { date: "2026-04-10", achievement: 4, adaptability: 4, relationship: 4 },
-  { date: "2026-04-09", achievement: 3, adaptability: 2, relationship: 4 },
-  { date: "2026-04-08", achievement: 4, adaptability: 3, relationship: 5 },
-  { date: "2026-04-07", achievement: 5, adaptability: 4, relationship: 5 },
-  { date: "2026-04-06", achievement: 4, adaptability: 4, relationship: 4 },
-]
-
-const todaySurveyCompleted = true // In real app, check if today's survey exists
+interface SurveyRecord {
+  date: string
+  achievement: number
+  adaptability: number
+  relationship: number
+}
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr)
@@ -40,7 +34,7 @@ function getScoreLabel(score: number) {
 }
 
 // Calculate averages from recent data
-function calculateAverages(data: typeof surveyHistory) {
+function calculateAverages(data: SurveyRecord[]) {
   if (data.length === 0) return { achievement: 0, adaptability: 0, relationship: 0 }
   const recent = data.slice(0, 7)
   return {
@@ -51,7 +45,7 @@ function calculateAverages(data: typeof surveyHistory) {
 }
 
 // Calculate trend (comparing recent 3 days vs previous 3 days)
-function calculateTrend(data: typeof surveyHistory, key: keyof Omit<typeof surveyHistory[0], 'date'>) {
+function calculateTrend(data: SurveyRecord[], key: keyof Omit<SurveyRecord, "date">) {
   if (data.length < 4) return 'stable'
   const recent = data.slice(0, 3).reduce((sum, d) => sum + d[key], 0) / 3
   const previous = data.slice(3, 6).reduce((sum, d) => sum + d[key], 0) / Math.min(3, data.slice(3, 6).length)
@@ -83,17 +77,18 @@ function TrendIcon({ trend }: { trend: 'up' | 'down' | 'stable' }) {
   return <Minus className="w-4 h-4 text-muted-foreground" />
 }
 
-function TrendChart({ data }: { data: typeof surveyHistory }) {
+function TrendChart({ data }: { data: SurveyRecord[] }) {
   const recent7 = data.slice(0, 7).reverse()
-  
+  const xDenom = Math.max(1, recent7.length - 1)
+
   const getY = (value: number) => {
     // Scale 1-5 to 10-90 (inverted for SVG)
     return 90 - ((value - 1) / 4) * 80
   }
 
-  const createPath = (key: keyof Omit<typeof surveyHistory[0], 'date'>) => {
+  const createPath = (key: keyof Omit<SurveyRecord, "date">) => {
     return recent7.map((d, i) => {
-      const x = (i / (recent7.length - 1)) * 100
+      const x = (i / xDenom) * 100
       const y = getY(d[key])
       return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
     }).join(' ')
@@ -149,7 +144,7 @@ function TrendChart({ data }: { data: typeof surveyHistory }) {
           
           {/* Data points */}
           {recent7.map((d, i) => {
-            const x = (i / (recent7.length - 1)) * 100
+            const x = (i / xDenom) * 100
             return (
               <g key={i}>
                 <circle cx={x} cy={getY(d.achievement)} r="2.5" fill="oklch(0.60 0.10 250)" />
@@ -194,9 +189,6 @@ function TrendChart({ data }: { data: typeof surveyHistory }) {
   )
 }
 
-// Mock student ID - in real app this would come from auth
-const CURRENT_STUDENT_ID = "student-2" // 김서연
-
 function formatMessageTime(date: Date) {
   const now = new Date()
   const diff = now.getTime() - date.getTime()
@@ -213,6 +205,61 @@ function formatMessageTime(date: Date) {
 export function StudentMode() {
   const [showAllHistory, setShowAllHistory] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
+  const [surveyHistory, setSurveyHistory] = useState<SurveyRecord[]>([])
+  const [todaySurveyCompleted, setTodaySurveyCompleted] = useState(false)
+  const [emotionState, setEmotionState] = useState("보통")
+  const [emotionLabel, setEmotionLabel] = useState("😐")
+  const [isLoading, setIsLoading] = useState(true)
+  const [studentId, setStudentId] = useState("")
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("auth-user")
+    if (!storedUser) {
+      setIsLoading(false)
+      return
+    }
+
+    let user: { id?: string }
+    try {
+      user = JSON.parse(storedUser)
+    } catch {
+      setIsLoading(false)
+      return
+    }
+    const sid = user.id ?? ""
+    setStudentId(sid)
+
+    if (!sid) {
+      setIsLoading(false)
+      return
+    }
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${sid}/progress`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.code === 200 && json.data) {
+          const today = new Date().toISOString().slice(0, 10)
+          const raw = Array.isArray(json.data.history) ? json.data.history : []
+          const mapped: SurveyRecord[] = raw.map((h: {
+            survey_date: string
+            achievement_score: number
+            adaptation_score: number
+            relationship_score: number
+          }) => ({
+            date: h.survey_date,
+            achievement: h.achievement_score,
+            adaptability: h.adaptation_score,
+            relationship: h.relationship_score,
+          }))
+          setSurveyHistory(mapped)
+          setTodaySurveyCompleted(mapped.length > 0 && mapped[0].date === today)
+          setEmotionState(json.data.emotion_state)
+          setEmotionLabel(json.data.emotion_label)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false))
+  }, [])
   
   const { getMessagesForStudent, getUnreadCountForStudent, markAsRead, markAllAsReadForStudent } = useMessages()
   const { 
@@ -224,15 +271,15 @@ export function StudentMode() {
     getUnreadCountForStudent: getMeetingUnreadCount
   } = useMeetings()
   
-  const messages = getMessagesForStudent(CURRENT_STUDENT_ID)
-  const unreadCount = getUnreadCountForStudent(CURRENT_STUDENT_ID)
-  const meetingUnreadCount = getMeetingUnreadCount(CURRENT_STUDENT_ID)
+  const messages = getMessagesForStudent(studentId)
+  const unreadCount = getUnreadCountForStudent(studentId)
+  const meetingUnreadCount = getMeetingUnreadCount(studentId)
   const totalUnread = unreadCount + meetingUnreadCount
   const latestMessage = messages[0]
   
-  const pendingMeetingRequests = getPendingRequestsForStudent(CURRENT_STUDENT_ID)
-  const confirmedMeetings = getConfirmedMeetingsForStudent(CURRENT_STUDENT_ID)
-  const allMeetings = getMeetingsForStudent(CURRENT_STUDENT_ID)
+  const pendingMeetingRequests = getPendingRequestsForStudent(studentId)
+  const confirmedMeetings = getConfirmedMeetingsForStudent(studentId)
+  const allMeetings = getMeetingsForStudent(studentId)
   
   // Availability selection modal
   const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false)
@@ -246,7 +293,7 @@ export function StudentMode() {
   }
   
   const handleMarkAllRead = () => {
-    markAllAsReadForStudent(CURRENT_STUDENT_ID)
+    markAllAsReadForStudent(studentId)
   }
   
   const handleOpenAvailabilityModal = (meetingId: string) => {
@@ -302,7 +349,15 @@ export function StudentMode() {
     <div className="max-w-3xl mx-auto space-y-6 p-6">
       {/* Header with Notification Bell */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">나의 대시보드</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-foreground">나의 대시보드</h1>
+          {!isLoading && (
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <span className="text-lg leading-none" aria-hidden>{emotionLabel}</span>
+              <span>{emotionState}</span>
+            </p>
+          )}
+        </div>
         
         {/* Notification Bell */}
         <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
@@ -512,43 +567,47 @@ export function StudentMode() {
           <CardDescription>최근 7일간의 평균 점수</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-6">
-            {/* Achievement */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">성취도</span>
-                <TrendIcon trend={achievementTrend} />
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-6">로딩 중...</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-6">
+              {/* Achievement */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">성취도</span>
+                  <TrendIcon trend={achievementTrend} />
+                </div>
+                <MetricDots value={averages.achievement} />
+                <span className="text-xs text-muted-foreground">
+                  평균 {averages.achievement.toFixed(1)}점
+                </span>
               </div>
-              <MetricDots value={averages.achievement} />
-              <span className="text-xs text-muted-foreground">
-                평균 {averages.achievement.toFixed(1)}점
-              </span>
-            </div>
-            
-            {/* Adaptability */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">적응도</span>
-                <TrendIcon trend={adaptabilityTrend} />
+              
+              {/* Adaptability */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">적응도</span>
+                  <TrendIcon trend={adaptabilityTrend} />
+                </div>
+                <MetricDots value={averages.adaptability} />
+                <span className="text-xs text-muted-foreground">
+                  평균 {averages.adaptability.toFixed(1)}점
+                </span>
               </div>
-              <MetricDots value={averages.adaptability} />
-              <span className="text-xs text-muted-foreground">
-                평균 {averages.adaptability.toFixed(1)}점
-              </span>
-            </div>
-            
-            {/* Relationship */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">인간관계</span>
-                <TrendIcon trend={relationshipTrend} />
+              
+              {/* Relationship */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">인간관계</span>
+                  <TrendIcon trend={relationshipTrend} />
+                </div>
+                <MetricDots value={averages.relationship} />
+                <span className="text-xs text-muted-foreground">
+                  평균 {averages.relationship.toFixed(1)}점
+                </span>
               </div>
-              <MetricDots value={averages.relationship} />
-              <span className="text-xs text-muted-foreground">
-                평균 {averages.relationship.toFixed(1)}점
-              </span>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -559,7 +618,13 @@ export function StudentMode() {
           <CardDescription>지난 일주일간의 변화 그래프</CardDescription>
         </CardHeader>
         <CardContent className="pl-8">
-          <TrendChart data={surveyHistory} />
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-6">로딩 중...</p>
+          ) : surveyHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">아직 설문 데이터가 없습니다</p>
+          ) : (
+            <TrendChart data={surveyHistory} />
+          )}
         </CardContent>
       </Card>
 
@@ -570,63 +635,71 @@ export function StudentMode() {
           <CardDescription>과거 설문 응답 내역</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">날짜</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">성취도</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">적응도</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">인간관계</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayedHistory.map((record, index) => (
-                  <tr key={record.date} className={cn("border-b last:border-0", index === 0 && "bg-primary/5")}>
-                    <td className="py-3 px-2 text-foreground">
-                      {formatFullDate(record.date)}
-                      {index === 0 && <span className="ml-2 text-xs text-primary font-medium">오늘</span>}
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="font-medium">{record.achievement}</span>
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                          ({getScoreLabel(record.achievement)})
-                        </span>
-                      </span>
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="font-medium">{record.adaptability}</span>
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                          ({getScoreLabel(record.adaptability)})
-                        </span>
-                      </span>
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="font-medium">{record.relationship}</span>
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                          ({getScoreLabel(record.relationship)})
-                        </span>
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {surveyHistory.length > 5 && (
-            <div className="mt-4 text-center">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setShowAllHistory(!showAllHistory)}
-              >
-                {showAllHistory ? "접기" : `더 보기 (${surveyHistory.length - 5}개)`}
-              </Button>
-            </div>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-6">로딩 중...</p>
+          ) : surveyHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">아직 설문 데이터가 없습니다</p>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">날짜</th>
+                      <th className="text-center py-3 px-2 font-medium text-muted-foreground">성취도</th>
+                      <th className="text-center py-3 px-2 font-medium text-muted-foreground">적응도</th>
+                      <th className="text-center py-3 px-2 font-medium text-muted-foreground">인간관계</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedHistory.map((record, index) => (
+                      <tr key={record.date} className={cn("border-b last:border-0", index === 0 && "bg-primary/5")}>
+                        <td className="py-3 px-2 text-foreground">
+                          {formatFullDate(record.date)}
+                          {index === 0 && <span className="ml-2 text-xs text-primary font-medium">오늘</span>}
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="font-medium">{record.achievement}</span>
+                            <span className="text-xs text-muted-foreground hidden sm:inline">
+                              ({getScoreLabel(record.achievement)})
+                            </span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="font-medium">{record.adaptability}</span>
+                            <span className="text-xs text-muted-foreground hidden sm:inline">
+                              ({getScoreLabel(record.adaptability)})
+                            </span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="font-medium">{record.relationship}</span>
+                            <span className="text-xs text-muted-foreground hidden sm:inline">
+                              ({getScoreLabel(record.relationship)})
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {surveyHistory.length > 5 && (
+                <div className="mt-4 text-center">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setShowAllHistory(!showAllHistory)}
+                  >
+                    {showAllHistory ? "접기" : `더 보기 (${surveyHistory.length - 5}개)`}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

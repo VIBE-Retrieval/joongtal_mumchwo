@@ -71,6 +71,7 @@ export default function SurveyPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState("")
   
   const [achievement, setAchievement] = useState<number | null>(null)
   const [adaptability, setAdaptability] = useState<number | null>(null)
@@ -99,23 +100,39 @@ export default function SurveyPage() {
   }, [router])
 
   const handleSubmit = async () => {
-    if (!isComplete) return
-    
+    if (!isComplete || !user) return
+
     setIsSubmitting(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // In real app, save to database here
-    console.log("Survey submitted:", { achievement, adaptability, relationship })
-    
-    setIsSubmitting(false)
-    setIsSubmitted(true)
-    
-    // Redirect after showing success
-    setTimeout(() => {
-      router.push("/student")
-    }, 1500)
+
+    const today = new Date()
+    const surveyDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surveys/daily`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: user.id,
+          survey_date: surveyDate,
+          achievement_score: achievement,
+          adaptation_score: adaptability,
+          relationship_score: relationship,
+        }),
+      })
+
+      const json = await res.json()
+
+      if (json.code === 200) {
+        setIsSubmitted(true)
+        setTimeout(() => router.push("/student"), 1500)
+      } else {
+        setError(json.message ?? "제출에 실패했습니다. 다시 시도해 주세요.")
+      }
+    } catch {
+      setError("서버에 연결할 수 없습니다.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (isLoading) {
@@ -232,6 +249,10 @@ export default function SurveyPage() {
                   }
                 </p>
                 
+                {error && (
+                  <p className="text-sm text-destructive text-center">{error}</p>
+                )}
+
                 <Button 
                   className="w-full" 
                   size="lg"
