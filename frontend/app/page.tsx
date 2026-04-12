@@ -52,7 +52,7 @@ const roles = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="landing-paperozi min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 h-16 shrink-0 border-b border-border/50 bg-card/50 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
@@ -60,7 +60,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <span className="text-lg">🎯</span>
             </div>
-            <span className="font-semibold text-lg">학생 인사이트</span>
+            <span className="landing-brand-title text-lg">학생 인사이트</span>
           </div>
           <Link href="/login">
             <Button>로그인</Button>
@@ -74,10 +74,10 @@ export default function LandingPage() {
         aria-label="소개"
       >
         <div className="max-w-4xl mx-auto w-full text-center space-y-6">
-          <h1 className="font-paperozi-hero text-4xl md:text-5xl text-foreground leading-tight text-balance">
+          <h1 className="text-4xl md:text-5xl text-foreground leading-tight text-balance">
             놓치기 전에, 먼저 발견하세요
           </h1>
-          <p className="font-paperozi-subtitle text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
             학생의 중탈 신호를 AI로 예측하고, 적시에 개입합니다
           </p>
           <div className="flex flex-wrap gap-4 justify-center pt-4">
@@ -101,7 +101,7 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto w-full">
           <div className="text-center mb-10 md:mb-12">
-            <h2 id="features-heading" className="text-2xl font-semibold mb-3">
+            <h2 id="features-heading" className="text-2xl mb-3">
               핵심 기능
             </h2>
             <p className="text-muted-foreground">데이터 기반의 스마트한 학생 관리</p>
@@ -118,7 +118,7 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto w-full">
           <div className="text-center mb-10 md:mb-12">
-            <h2 id="roles-heading" className="text-2xl font-semibold mb-3">
+            <h2 id="roles-heading" className="text-2xl mb-3">
               역할별 맞춤 인터페이스
             </h2>
             <p className="text-muted-foreground">각 역할에 최적화된 도구와 화면을 제공합니다</p>
@@ -158,7 +158,7 @@ export default function LandingPage() {
       >
         <div className="flex-1 flex flex-col items-center justify-center py-12 md:py-16 min-h-0">
           <div className="max-w-2xl mx-auto w-full text-center space-y-6">
-            <h2 id="cta-heading" className="text-2xl font-semibold">
+            <h2 id="cta-heading" className="text-2xl">
               지금 바로 시작하세요
             </h2>
             <p className="text-muted-foreground">학생의 성공을 위한 첫 걸음을 내딛으세요</p>
@@ -173,7 +173,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground px-0">
             <div className="flex items-center gap-2">
               <span className="text-lg">🎯</span>
-              <span>학생 인사이트</span>
+              <span className="landing-footer-title">학생 인사이트</span>
             </div>
             <p>AI 기반 학생 위험 관리 시스템</p>
           </div>
