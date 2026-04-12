@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.models import InterventionHistory, ProcessRiskHistory
+from backend.models import InterventionHistory, ProcessRiskHistory, Student
 
 
 def get_latest_process_risk_per_student(session: Session) -> list[ProcessRiskHistory]:
@@ -51,3 +51,13 @@ def get_pending_non_none_alerts(session: Session) -> list[InterventionHistory]:
         .order_by(InterventionHistory.created_at.desc())
     )
     return list(session.scalars(stmt).all())
+
+
+def get_student_names_by_ids(session: Session, student_ids: list[str]) -> dict[str, str]:
+    if not student_ids:
+        return {}
+    stmt = select(Student.student_id, Student.name).where(
+        Student.student_id.in_(student_ids)
+    )
+    rows = session.execute(stmt).all()
+    return {row.student_id: row.name for row in rows}

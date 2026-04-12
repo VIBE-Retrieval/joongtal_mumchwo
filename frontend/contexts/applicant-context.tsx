@@ -32,12 +32,16 @@ export interface Applicant {
   interviewedAt?: Date
   interviewedBy?: string // interviewer ID
   interviewNotes?: string
+  studentId?: string
 }
 
 interface ApplicantContextType {
   applicants: Applicant[]
   // Mentor actions
-  registerApplicant: (data: Omit<Applicant, "id" | "status" | "registeredAt" | "evaluation">) => void
+  registerApplicant: (
+    data: Omit<Applicant, "id" | "status" | "registeredAt" | "evaluation">,
+    studentId?: string
+  ) => void
   // Interviewer actions
   getPendingApplicants: () => Applicant[]
   getApplicantById: (id: string) => Applicant | undefined
@@ -66,6 +70,7 @@ const initialApplicants: Applicant[] = [
     status: "PENDING_INTERVIEW",
     registeredAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
     registeredBy: "mentor-1",
+    studentId: undefined,
     evaluation: {
       achievement: { answer: "", rating: 3 },
       adaptability: { answer: "", rating: 3 },
@@ -85,6 +90,7 @@ const initialApplicants: Applicant[] = [
     status: "PENDING_INTERVIEW",
     registeredAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
     registeredBy: "mentor-1",
+    studentId: undefined,
     evaluation: {
       achievement: { answer: "", rating: 3 },
       adaptability: { answer: "", rating: 3 },
@@ -104,6 +110,7 @@ const initialApplicants: Applicant[] = [
     status: "PENDING_INTERVIEW",
     registeredAt: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
     registeredBy: "mentor-1",
+    studentId: undefined,
     evaluation: {
       achievement: { answer: "", rating: 3 },
       adaptability: { answer: "", rating: 3 },
@@ -116,9 +123,13 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
   const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants)
 
   // Mentor: Register new applicant
-  const registerApplicant = useCallback((data: Omit<Applicant, "id" | "status" | "registeredAt" | "evaluation">) => {
+  const registerApplicant = useCallback((
+    data: Omit<Applicant, "id" | "status" | "registeredAt" | "evaluation">,
+    studentId?: string
+  ) => {
     const newApplicant: Applicant = {
       ...data,
+      studentId,
       id: `applicant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       status: "PENDING_INTERVIEW",
       registeredAt: new Date(),

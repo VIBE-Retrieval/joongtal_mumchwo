@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronLeft, UserPlus, Save } from "lucide-react"
 import { type EducationLevel } from "@/contexts/student-context"
+import { useApplicants } from "@/contexts/applicant-context"
 import { useToast } from "@/hooks/use-toast"
 
 const COURSE_OPTIONS = [
@@ -38,6 +39,7 @@ const TARGET_JOBS = [
 
 export default function AddApplicantPage() {
   const router = useRouter()
+  const { registerApplicant } = useApplicants()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -97,6 +99,20 @@ export default function AddApplicantPage() {
       const json = await res.json()
 
       if (json.code === 201) {
+        registerApplicant(
+          {
+            name,
+            email,
+            birthDate,
+            phone,
+            appliedCourse,
+            educationLevel: educationLevel as EducationLevel,
+            major: major || undefined,
+            targetJob: targetJob || undefined,
+            registeredBy: "mentor-1",
+          },
+          json.data.student_id
+        )
         toast({
           title: "학생 등록 완료",
           description: `${name} 학생이 등록되었습니다.`,

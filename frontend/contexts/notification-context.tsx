@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, ReactNode, useMemo } from "react"
+import { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from "react"
 
 export interface Notification {
   id: string
@@ -23,29 +23,45 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | null>(null)
 
-// Generate initial notifications based on new high-risk students
-const generateInitialNotifications = (): Notification[] => {
-  const newRiskStudents = [
-    { id: "student-2", name: "김서연" },
-    { id: "student-15", name: "이서연" },
-  ]
-  
-  return newRiskStudents.map((student, idx) => ({
-    id: `notif-${idx}`,
-    studentId: student.id,
-    studentName: student.name,
-    message: idx === 0 
-      ? `${student.name} 학생이 오늘 신규 위험군으로 분류되었습니다`
-      : `${student.name} 학생이 HIGH 상태로 전환되었습니다`,
-    type: "new-high-risk" as const,
-    timestamp: new Date(Date.now() - idx * 1000 * 60 * 30), // 30 minutes apart
-    isRead: false
-  }))
+function mapActionTypeToNotificationType(
+  actionType: string
+): Notification["type"] {
+  if (actionType === "ALERT_MENTOR" || actionType === "EMERGENCY") return "new-high-risk"
+  if (actionType === "REQUEST_MEETING") return "risk-increase"
+  return "care-needed"
 }
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<Notification[]>(() => generateInitialNotifications())
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [isBannerDismissed, setIsBannerDismissed] = useState(false)
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/mentor/alerts`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.code === 200 && Array.isArray(json.data?.alerts)) {
+          const mapped: Notification[] = json.data.alerts.map(
+            (a: {
+              student_id: string
+              student_name: string
+              action_type: string
+              llm_summary: string
+              date: string
+            }, idx: number) => ({
+              id: `alert-${idx}-${a.student_id}`,
+              studentId: a.student_id,
+              studentName: a.student_name,
+              message: `[${a.student_name}] ${a.llm_summary}`,
+              type: mapActionTypeToNotificationType(a.action_type),
+              timestamp: new Date(a.date),
+              isRead: false,
+            })
+          )
+          setNotifications(mapped)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const unreadCount = useMemo(() => 
     notifications.filter(n => !n.isRead).length,

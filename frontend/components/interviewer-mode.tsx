@@ -270,6 +270,8 @@ export function InterviewerMode() {
   const [decidedIds, setDecidedIds] = useState<Set<string>>(new Set())
   const [currentIndex, setCurrentIndex] = useState(0)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState("")
 
   // Pending candidates derived from applicant context (reactive to new registrations)
   const candidates = useMemo(() => {
@@ -280,6 +282,7 @@ export function InterviewerMode() {
         name: a.name,
         birthDate: a.birthDate,
         appliedCourse: a.appliedCourse,
+        studentId: a.studentId,
         evaluation: localEvaluations[a.id] ?? a.evaluation,
         isSaved: savedIds.has(a.id),
         status: a.status,
@@ -314,20 +317,64 @@ export function InterviewerMode() {
     })
     setSavedIds(prev => { const next = new Set(prev); next.delete(id); return next })
     setSaveStatus("idle")
+    setSaveError("")
   }, [currentCandidate])
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!currentCandidate) return
+    const studentId = currentCandidate.studentId
+    if (!studentId) {
+      setSaveError("학생 DB 등록 후 면접 평가가 가능합니다.")
+      return
+    }
+
     setSaveStatus("saving")
-    const id = currentCandidate.id
-    const evaluation = currentCandidate.evaluation
-    ctxUpdateEvaluation(id, evaluation)
-    ctxSaveEvaluation(id)
-    setTimeout(() => {
-      setSavedIds(prev => new Set(prev).add(id))
-      setSaveStatus("saved")
-      setTimeout(() => setSaveStatus("idle"), 2000)
-    }, 400)
+    setSaveError("")
+    setIsSaving(true)
+
+    const ev = currentCandidate.evaluation
+    const noteText = [ev.achievement.answer, ev.adaptability.answer, ev.relationship.answer]
+      .filter(Boolean).join("\n") || null
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/interviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: studentId,
+          achievement_score: ev.achievement.rating,
+          achievement_problem_solving: ev.achievement.rating,
+          achievement_self_learning: ev.achievement.rating,
+          achievement_process_clarity: ev.achievement.rating,
+          adaptation_score: ev.adaptability.rating,
+          adaptation_accepts_difficulty: ev.adaptability.rating,
+          adaptation_persistence: ev.adaptability.rating,
+          adaptation_strategy_variety: ev.adaptability.rating,
+          relationship_score: ev.relationship.rating,
+          relationship_collaboration: ev.relationship.rating,
+          relationship_conflict_handling: ev.relationship.rating,
+          relationship_help_exchange: ev.relationship.rating,
+          note: noteText,
+        }),
+      })
+      const json = await res.json()
+      if (json.code === 200) {
+        const id = currentCandidate.id
+        ctxUpdateEvaluation(id, currentCandidate.evaluation)
+        ctxSaveEvaluation(id)
+        setSavedIds(prev => new Set(prev).add(id))
+        setSaveStatus("saved")
+        setTimeout(() => setSaveStatus("idle"), 2000)
+      } else {
+        setSaveError(json.message ?? "저장에 실패했습니다.")
+        setSaveStatus("idle")
+      }
+    } catch {
+      setSaveError("서버에 연결할 수 없습니다.")
+      setSaveStatus("idle")
+    } finally {
+      setIsSaving(false)
+    }
   }, [currentCandidate, ctxUpdateEvaluation, ctxSaveEvaluation])
 
   const handleDecision = useCallback((decision: "PASSED" | "FAILED" | "HOLD") => {
@@ -350,11 +397,19 @@ export function InterviewerMode() {
   }, [currentCandidate, candidates.length, ctxUpdateEvaluation, updateInterviewResult, convertToStudent, addStudent])
 
   const goToPrevious = () => {
-    if (safeIndex > 0) { setCurrentIndex(safeIndex - 1); setSaveStatus("idle") }
+    if (safeIndex > 0) {
+      setCurrentIndex(safeIndex - 1)
+      setSaveStatus("idle")
+      setSaveError("")
+    }
   }
 
   const goToNext = () => {
-    if (safeIndex < candidates.length - 1) { setCurrentIndex(safeIndex + 1); setSaveStatus("idle") }
+    if (safeIndex < candidates.length - 1) {
+      setCurrentIndex(safeIndex + 1)
+      setSaveStatus("idle")
+      setSaveError("")
+    }
   }
 
   const riskLevelLabels: Record<RiskLevel, string> = {
@@ -394,6 +449,7 @@ export function InterviewerMode() {
     <div className="h-full flex flex-col">
       {/* TOP: Candidate Info + Navigation */}
       <div className="flex-shrink-0 border-b bg-card/50 px-6 py-4">
+        <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -458,13 +514,17 @@ export function InterviewerMode() {
               variant="secondary"
               size="sm"
               onClick={handleSave}
-              disabled={saveStatus === "saving"}
+              disabled={saveStatus === "saving" || isSaving}
               className="gap-1.5"
             >
               <Save className="w-4 h-4" />
               {saveStatus === "saving" ? "저장 중..." : saveStatus === "saved" ? "저장됨" : "임시 저장"}
             </Button>
           </div>
+        </div>
+        {saveError && (
+          <p className="text-sm text-destructive text-center">{saveError}</p>
+        )}
         </div>
       </div>
 
@@ -583,6 +643,7 @@ export function InterviewerMode() {
 
       {/* BOTTOM: Actions */}
       <div className="flex-shrink-0 border-t bg-card/50 px-6 py-4">
+        <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             평가 완료:{" "}
@@ -595,7 +656,7 @@ export function InterviewerMode() {
               variant="secondary"
               size="sm"
               onClick={handleSave}
-              disabled={saveStatus === "saving"}
+              disabled={saveStatus === "saving" || isSaving}
               className="gap-1.5"
             >
               <Save className="w-4 h-4" />
@@ -634,6 +695,10 @@ export function InterviewerMode() {
               합격
             </Button>
           </div>
+        </div>
+        {saveError && (
+          <p className="text-sm text-destructive text-center">{saveError}</p>
+        )}
         </div>
       </div>
     </div>

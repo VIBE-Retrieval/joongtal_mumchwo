@@ -20,8 +20,9 @@ function TrendChart({ data, riskLevel }: { data: number[]; riskLevel: RiskLevel 
   const min = Math.min(...data)
   const range = max - min || 1
 
+  const denom = data.length > 1 ? data.length - 1 : 1
   const points = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * 100
+    const x = (i / denom) * 100
     const y = 100 - ((v - min) / range) * 70 - 15
     return `${x},${y}`
   }).join(" ")
@@ -63,7 +64,7 @@ function TrendChart({ data, riskLevel }: { data: number[]; riskLevel: RiskLevel 
         />
         {/* Data points */}
         {data.map((v, i) => {
-          const x = (i / (data.length - 1)) * 100
+          const x = (i / denom) * 100
           const y = 100 - ((v - min) / range) * 70 - 15
           return (
             <circle

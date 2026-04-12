@@ -12,6 +12,9 @@ def list_student_risks(session: Session) -> dict:
     rows = mentor_repository.get_latest_process_risk_per_student(session)
     latest_inv = mentor_repository.get_latest_intervention_by_student(session)
 
+    student_ids = list({r.student_id for r in rows})
+    student_names = mentor_repository.get_student_names_by_ids(session, student_ids)
+
     items = []
     for r in rows:
         inv = latest_inv.get(r.student_id)
@@ -19,6 +22,7 @@ def list_student_risks(session: Session) -> dict:
         items.append(
             {
                 "student_id": r.student_id,
+                "student_name": student_names.get(r.student_id, r.student_id),
                 "risk_score": r.risk_score,
                 "risk_level": r.risk_level,
                 "risk_trend": r.risk_trend,
@@ -48,9 +52,13 @@ def list_alerts(session: Session) -> dict:
         reverse=True,
     )
 
+    student_ids = list({r.student_id for r in rows})
+    student_names = mentor_repository.get_student_names_by_ids(session, student_ids)
+
     alerts = [
         {
             "student_id": r.student_id,
+            "student_name": student_names.get(r.student_id, r.student_id),
             "action_type": r.action_type,
             "priority": r.priority,
             "action_reason": r.action_reason,
