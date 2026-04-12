@@ -5,7 +5,13 @@ from datetime import date, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.models import DailySurvey, InterventionHistory, InterviewRiskHistory, ProcessRiskHistory
+from backend.models import (
+    DailySurvey,
+    InterventionHistory,
+    InterviewRiskHistory,
+    ProcessRiskHistory,
+    Student,
+)
 
 
 def get_latest_process_risk(session: Session, student_id: str) -> ProcessRiskHistory | None:
@@ -56,6 +62,19 @@ def get_latest_intervention(session: Session, student_id: str) -> InterventionHi
     return session.scalar(stmt)
 
 
+def get_latest_encourage_message(session: Session, student_id: str) -> InterventionHistory | None:
+    stmt = (
+        select(InterventionHistory)
+        .where(
+            InterventionHistory.student_id == student_id,
+            InterventionHistory.action_type == "ENCOURAGE_MESSAGE",
+        )
+        .order_by(InterventionHistory.created_at.desc(), InterventionHistory.intervention_id.desc())
+        .limit(1)
+    )
+    return session.scalar(stmt)
+
+
 def get_daily_surveys_recent_7_days(
     session: Session,
     student_id: str,
@@ -73,3 +92,20 @@ def get_daily_surveys_recent_7_days(
         .order_by(DailySurvey.survey_date.asc())
     )
     return list(session.scalars(stmt).all())
+
+
+def create_student(session: Session, student_id: str, name: str, email: str, birth_date: str) -> Student:
+    student = Student(
+        student_id=student_id,
+        name=name,
+        email=email,
+        birth_date=birth_date,
+    )
+    session.add(student)
+    session.flush()
+    return student
+
+
+def get_student_by_email(session: Session, email: str) -> Student | None:
+    stmt = select(Student).where(Student.email == email)
+    return session.scalar(stmt)

@@ -211,6 +211,8 @@ export function StudentMode() {
   const [emotionLabel, setEmotionLabel] = useState("😐")
   const [isLoading, setIsLoading] = useState(true)
   const [studentId, setStudentId] = useState("")
+  const [careMessage, setCareMessage] = useState<string | null>(null)
+  const [careMessageRead, setCareMessageRead] = useState(false)
 
   useEffect(() => {
     const storedUser = localStorage.getItem("auth-user")
@@ -258,7 +260,17 @@ export function StudentMode() {
         }
       })
       .catch(() => {})
-      .finally(() => setIsLoading(false))
+      .finally(() => {
+        setIsLoading(false)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${sid}/care-message`)
+          .then(res => res.json())
+          .then(json => {
+            if (json.code === 200 && json.data?.message) {
+              setCareMessage(json.data.message)
+            }
+          })
+          .catch(() => {})
+      })
   }, [])
   
   const { getMessagesForStudent, getUnreadCountForStudent, markAsRead, markAllAsReadForStudent } = useMessages()
@@ -268,13 +280,10 @@ export function StudentMode() {
     getConfirmedMeetingsForStudent,
     selectSlots: submitSelectedSlots,
     markStudentNotified,
-    getUnreadCountForStudent: getMeetingUnreadCount
   } = useMeetings()
   
   const messages = getMessagesForStudent(studentId)
   const unreadCount = getUnreadCountForStudent(studentId)
-  const meetingUnreadCount = getMeetingUnreadCount(studentId)
-  const totalUnread = unreadCount + meetingUnreadCount
   const latestMessage = messages[0]
   
   const pendingMeetingRequests = getPendingRequestsForStudent(studentId)
@@ -342,7 +351,7 @@ export function StudentMode() {
     if (achievementTrend === 'up' && adaptabilityTrend === 'up') {
       return "전반적으로 좋은 상태를 유지하고 있어요. 잘하고 있습니다!"
     }
-    return "꾸준히 기록하고 있어요. 자기 이해의 첫걸���입니다."
+    return "꾸준히 기록하고 있어요. 자기 이해의 첫걸음입니다."
   }
 
   return (
@@ -369,9 +378,9 @@ export function StudentMode() {
               onClick={handleOpenNotifications}
             >
               <Bell className="w-5 h-5" />
-              {totalUnread > 0 && (
+              {careMessage && !careMessageRead && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-risk-high text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {totalUnread > 9 ? "9+" : totalUnread}
+                  1
                 </span>
               )}
             </Button>
@@ -391,6 +400,25 @@ export function StudentMode() {
               )}
             </div>
             <div className="max-h-80 overflow-y-auto">
+              {careMessage && (
+                <div className="p-3 border-b">
+                  <div
+                    className={cn(
+                      "p-3 rounded-lg border transition-colors cursor-pointer",
+                      careMessageRead ? "bg-muted/30" : "bg-primary/5 border-primary/20"
+                    )}
+                    onClick={() => setCareMessageRead(true)}
+                  >
+                    <div className="flex items-start gap-2">
+                      <Heart className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-xs font-medium text-foreground mb-1">멘토 케어 메시지</p>
+                        <p className="text-xs text-muted-foreground">{careMessage}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Meeting requests */}
               {pendingMeetingRequests.map(meeting => (
                 <div 
@@ -489,7 +517,7 @@ export function StudentMode() {
                 </div>
               ))}
               
-              {messages.length === 0 && pendingMeetingRequests.length === 0 && confirmedMeetings.filter(m => !m.studentNotified).length === 0 && (
+              {!careMessage && messages.length === 0 && pendingMeetingRequests.length === 0 && confirmedMeetings.filter(m => !m.studentNotified).length === 0 && (
                 <div className="p-8 text-center text-muted-foreground text-sm">
                   아직 알림이 없습니다
                 </div>

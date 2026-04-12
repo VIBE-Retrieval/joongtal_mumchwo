@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronLeft, UserPlus, Save } from "lucide-react"
-import { useApplicants } from "@/contexts/applicant-context"
 import { type EducationLevel } from "@/contexts/student-context"
 import { useToast } from "@/hooks/use-toast"
 
@@ -39,10 +38,10 @@ const TARGET_JOBS = [
 
 export default function AddApplicantPage() {
   const router = useRouter()
-  const { registerApplicant } = useApplicants()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState("")
 
   // Form state
   const [name, setName] = useState("")
@@ -75,32 +74,42 @@ export default function AddApplicantPage() {
 
   const isFormValid = name && birthDate && phone && email && appliedCourse && educationLevel
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isFormValid) return
 
     setIsSaving(true)
+    setError("")
 
-    // Register applicant
-    registerApplicant({
-      name,
-      birthDate,
-      phone,
-      email,
-      appliedCourse,
-      educationLevel: educationLevel as EducationLevel,
-      major: major || undefined,
-      targetJob: targetJob || undefined,
-      registeredBy: "mentor-1"
-    })
+    const birthDateFormatted = birthDate.replace(/-/g, "")
 
-    setTimeout(() => {
-      toast({
-        title: "지원자 등록 완료",
-        description: `${name} 지원자가 면접 대기자 목록에 추가되었습니다.`,
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/students`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          birth_date: birthDateFormatted,
+        }),
       })
-      router.push("/mentor")
-    }, 500)
+
+      const json = await res.json()
+
+      if (json.code === 201) {
+        toast({
+          title: "학생 등록 완료",
+          description: `${name} 학생이 등록되었습니다.`,
+        })
+        router.push("/mentor")
+      } else {
+        setError(json.message ?? "등록에 실패했습니다. 다시 시도해 주세요.")
+      }
+    } catch {
+      setError("서버에 연결할 수 없습니다.")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleCancel = () => {
@@ -262,18 +271,23 @@ export default function AddApplicantPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={handleCancel}>
-                  취소
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={!isFormValid || isSaving}
-                  className="gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {isSaving ? "저장 중..." : "저장"}
-                </Button>
+              <div className="space-y-3 pt-4 border-t">
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+                <div className="flex items-center justify-end gap-3">
+                  <Button type="button" variant="outline" onClick={handleCancel}>
+                    취소
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={!isFormValid || isSaving}
+                    className="gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSaving ? "저장 중..." : "저장"}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

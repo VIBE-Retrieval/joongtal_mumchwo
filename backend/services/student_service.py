@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import uuid
 from datetime import date
 
 from sqlalchemy.orm import Session
 
 from AI.utils.risk_utils import get_risk_level
 from backend.repositories import student_repository
+
+DEFAULT_CARE_MESSAGE = "오늘도 충분히 잘하고 있어요. 천천히 나아가도 괜찮습니다."
 
 
 def get_process_risk(session: Session, student_id: str) -> dict | None:
@@ -106,3 +109,29 @@ def get_progress(session: Session, student_id: str) -> dict:
         "emotion_state": emotion_state,
         "emotion_label": emotion_label,
     }
+
+
+def get_care_message(session: Session, student_id: str) -> dict:
+    row = student_repository.get_latest_encourage_message(session, student_id)
+    if row is not None:
+        return {
+            "student_id": student_id,
+            "message": row.llm_summary,
+            "has_message": True,
+        }
+    return {
+        "student_id": student_id,
+        "message": DEFAULT_CARE_MESSAGE,
+        "has_message": False,
+    }
+
+
+def register_student(session: Session, name: str, email: str, birth_date: str) -> dict:
+    existing = student_repository.get_student_by_email(session, email)
+    if existing:
+        raise ValueError("이미 등록된 이메일입니다.")
+
+    student_id = "STU-" + uuid.uuid4().hex[:8].upper()
+    student = student_repository.create_student(session, student_id, name, email, birth_date)
+    session.commit()
+    return {"student_id": student.student_id}
