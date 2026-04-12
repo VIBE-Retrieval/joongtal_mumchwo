@@ -235,7 +235,7 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-primary rounded-full transition-all"
-                    style={{ width: `${(student.assignmentsCompleted / student.totalAssignments) * 100}%` }}
+                    style={{ width: `${student.totalAssignments > 0 ? (student.assignmentsCompleted / student.totalAssignments) * 100 : 0}%` }}
                   />
                 </div>
               </div>
