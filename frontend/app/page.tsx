@@ -248,50 +248,78 @@ export default function LandingPage() {
       </section>
 
       {/* ── Section 5: Stats + CTA + Footer ─────────────────── */}
+      {/* 히어로/피처와 같은 다크 톤으로 마무리 — 페이지 수미상관 */}
       <section
-        className="flex flex-col bg-[#F2EDE6] border-t border-[#E0D8CF]"
+        className="flex flex-col bg-[#13131f]"
         aria-labelledby="cta-heading"
       >
-        {/* Stats */}
+        {/* Stats — 카드 스타일 */}
         <ScrollReveal>
-          <div className="max-w-4xl mx-auto w-full px-6 pt-24 pb-12">
-            <div className="grid grid-cols-3 divide-x divide-neutral-200 dark:divide-neutral-800">
+          <div className="max-w-5xl mx-auto w-full px-6 pt-24 pb-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { num: "94%",  label: "위험 감지 정확도" },
-                { num: "3분",  label: "하루 평균 체크인 시간" },
-                { num: "실시간", label: "멘토 알림 속도" },
+                { num: "94%",   label: "위험 감지 정확도",      accent: "#FFA500", sub: "검증된 AI 예측 모델" },
+                { num: "3분",   label: "하루 평균 체크인 시간",  accent: "#6ec985", sub: "부담 없는 일일 루틴" },
+                { num: "실시간", label: "멘토 알림 속도",        accent: "#5eb8e5", sub: "골든타임 내 개입 가능" },
               ].map((s, i) => (
-                <div key={i} className="text-center px-6 py-4">
-                  <div className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white">{s.num}</div>
-                  <div className="text-sm text-neutral-500 mt-1">{s.label}</div>
+                <div
+                  key={i}
+                  className="relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.04] px-8 py-8"
+                >
+                  {/* 좌측 액센트 바 */}
+                  <div
+                    className="absolute left-0 top-0 h-full w-1 rounded-l-2xl"
+                    style={{ background: s.accent }}
+                  />
+                  <div
+                    className="text-4xl md:text-5xl font-bold tracking-tight"
+                    style={{ color: s.accent }}
+                  >
+                    {s.num}
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-white/90">{s.label}</div>
+                  <div className="mt-1 text-xs text-white/40">{s.sub}</div>
                 </div>
               ))}
             </div>
           </div>
         </ScrollReveal>
 
-        {/* CTA */}
-        <div className="flex-1 flex items-center justify-center px-6 py-20">
+        {/* CTA — 중앙 글로우 카드 */}
+        <div className="flex-1 flex items-center justify-center px-6 py-24">
           <ScrollReveal delay={100}>
-            <div className="max-w-2xl mx-auto text-center space-y-6">
-              <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white">
-                지금 바로 시작하세요
+            <div className="relative max-w-2xl mx-auto text-center">
+              {/* 배경 글로우 */}
+              <div className="pointer-events-none absolute inset-0 -z-10 mx-auto h-full w-3/4 rounded-full bg-[#FFA500]/10 blur-3xl" />
+
+              <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-[#FFA500] mb-6">
+                지금 시작하세요
+              </span>
+              <h2
+                id="cta-heading"
+                className="text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight text-balance"
+              >
+                학생의 신호를<br />먼저 읽는 AI
               </h2>
-              <p className="text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                AI가 학생의 신호를 먼저 읽고,<br />
-                여러분이 먼저 행동할 수 있도록 돕습니다.
+              <p className="mt-5 text-[15px] text-white/50 leading-relaxed">
+                중도탈락의 징후는 데이터 안에 있습니다.<br />
+                AI가 먼저 발견하고, 여러분이 먼저 행동합니다.
               </p>
-              <div className="flex flex-wrap gap-4 justify-center">
+              <div className="mt-8 flex flex-wrap gap-3 justify-center">
                 <Link href="/login">
                   <Button
                     size="lg"
-                    className="px-10 bg-[#FFA500] text-white hover:bg-[#e69400] border-0"
+                    className="px-10 bg-[#FFA500] text-white hover:bg-[#e69400] border-0 shadow-[0_0_24px_rgba(255,165,0,0.35)] hover:shadow-[0_0_32px_rgba(255,165,0,0.5)] transition-shadow"
                   >
-                    시작하기
+                    무료로 시작하기
                   </Button>
                 </Link>
                 <Link href="/ai-test">
-                  <Button size="lg" variant="outline" className="px-8">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="px-8 border-white/20 text-white/80 hover:bg-white/[0.06] hover:text-white hover:border-white/40"
+                  >
                     AI 테스트 해보기
                   </Button>
                 </Link>
@@ -301,13 +329,13 @@ export default function LandingPage() {
         </div>
 
         {/* Footer */}
-        <footer className="shrink-0 py-8 border-t border-neutral-200 dark:border-neutral-800 px-6">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-neutral-400">
-            <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="로고" className="h-6 w-auto object-contain" />
-              <span className="font-semibold text-neutral-700 dark:text-neutral-300">중탈 멈춰 !</span>
+        <footer className="shrink-0 py-8 border-t border-white/[0.07] px-6">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <img src="/logo.png" alt="로고" className="h-6 w-auto object-contain opacity-90" />
+              <span className="font-semibold text-white/80 text-sm">중탈 멈춰 !</span>
             </div>
-            <p>AI 기반 학생 위험 관리 시스템</p>
+            <p className="text-xs text-white/30">AI 기반 학생 위험 관리 시스템</p>
           </div>
         </footer>
       </section>

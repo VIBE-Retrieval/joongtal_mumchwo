@@ -77,113 +77,200 @@ function TrendIcon({ trend }: { trend: 'up' | 'down' | 'stable' }) {
   return <Minus className="w-4 h-4 text-muted-foreground" />
 }
 
+const TREND_COLORS = {
+  achievement:  '#D97757', // 오렌지 — 브랜드 메인
+  adaptability: '#5AAEE0', // 블루 — 명확한 대비
+  relationship: '#6DC98A', // 그린 — 세 번째 확실한 구분
+} as const
+
 function TrendChart({ data }: { data: SurveyRecord[] }) {
   const recent7 = data.slice(0, 7).reverse()
   const xDenom = Math.max(1, recent7.length - 1)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
-  const getY = (value: number) => {
-    // Scale 1-5 to 10-90 (inverted for SVG)
-    return 90 - ((value - 1) / 4) * 80
+  // Y축: 실제 데이터 범위 기반, 패딩 축소 → 변화가 확실히 보이게
+  const allVals = recent7.flatMap(d => [d.achievement, d.adaptability, d.relationship])
+  const dataMin = Math.min(...allVals)
+  const dataMax = Math.max(...allVals)
+  // 범위가 너무 좁으면(0.5 미만) 최소 1.0 보장 → 그래프가 절대 눕지 않도록
+  const spread = Math.max(1.0, dataMax - dataMin)
+  const pad = spread * 0.18
+  const yMin = Math.max(1, dataMin - pad)
+  const yMax = Math.min(5, dataMax + pad)
+
+  // SVG 상하 여백을 6~94로 넉넉히 써서 수직 해상도 극대화
+  const getY = (value: number) => 94 - ((value - yMin) / (yMax - yMin)) * 88
+
+  // 큐빅 베지어 스무딩
+  const createSmoothPath = (key: keyof typeof TREND_COLORS) => {
+    if (recent7.length < 2) return `M 0 ${getY(recent7[0][key])}`
+    const pts = recent7.map((d, i) => ({ x: (i / xDenom) * 100, y: getY(d[key]) }))
+    let d = `M ${pts[0].x} ${pts[0].y}`
+    for (let i = 1; i < pts.length; i++) {
+      const t = 0.38
+      const cpx1 = pts[i - 1].x + (pts[i].x - pts[i - 1].x) * t
+      const cpy1 = pts[i - 1].y
+      const cpx2 = pts[i].x - (pts[i].x - pts[i - 1].x) * t
+      const cpy2 = pts[i].y
+      d += ` C ${cpx1} ${cpy1} ${cpx2} ${cpy2} ${pts[i].x} ${pts[i].y}`
+    }
+    return d
   }
 
-  const createPath = (key: keyof Omit<SurveyRecord, "date">) => {
-    return recent7.map((d, i) => {
-      const x = (i / xDenom) * 100
-      const y = getY(d[key])
-      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
-    }).join(' ')
-  }
+  const keys = ['achievement', 'adaptability', 'relationship'] as const
 
   return (
-    <div className="space-y-4">
-      <div className="h-40 w-full relative">
-        <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
-          {/* Grid lines */}
-          {[1, 2, 3, 4, 5].map(v => (
-            <line 
-              key={v} 
-              x1="0" 
-              y1={getY(v)} 
-              x2="100" 
-              y2={getY(v)} 
-              stroke="currentColor" 
-              strokeOpacity="0.08" 
-              strokeWidth="0.5" 
+    <div className="space-y-3">
+      {/* SVG 그래프 */}
+      <div className="h-64 w-full relative">
+        <svg
+          viewBox="0 0 100 100"
+          className="w-full h-full overflow-visible"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            {/* 포인트 glow 필터 */}
+            <filter id="tc-glow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="1.8" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="tc-glow-hover" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            {/* 반짝임 애니메이션 */}
+            <style>{`
+              @keyframes tc-sparkle {
+                0%,100%{ opacity:1; }
+                50%{ opacity:0.55; }
+              }
+              .tc-dot-0{ animation: tc-sparkle 2.4s ease-in-out infinite; }
+              .tc-dot-1{ animation: tc-sparkle 2.4s ease-in-out infinite 0.5s; }
+              .tc-dot-2{ animation: tc-sparkle 2.4s ease-in-out infinite 1.0s; }
+            `}</style>
+          </defs>
+
+          {/* 그리드 — 점선 (상/중/하 3줄) */}
+          {[yMax, (yMin + yMax) / 2, yMin].map((v, i) => (
+            <line key={i}
+              x1="0" y1={getY(v)} x2="100" y2={getY(v)}
+              stroke="currentColor" strokeOpacity="0.08"
+              strokeWidth="0.35" strokeDasharray="2.5 2"
             />
           ))}
-          
-          {/* Achievement line */}
-          <path
-            d={createPath('achievement')}
-            fill="none"
-            stroke="var(--chart-1)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          
-          {/* Adaptability line */}
-          <path
-            d={createPath('adaptability')}
-            fill="none"
-            stroke="var(--chart-2)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          
-          {/* Relationship line */}
-          <path
-            d={createPath('relationship')}
-            fill="none"
-            stroke="var(--chart-3)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          
-          {/* Data points */}
+
+          {/* hover 수직선 */}
+          {hoveredIdx !== null && (
+            <line
+              x1={(hoveredIdx / xDenom) * 100} y1="8"
+              x2={(hoveredIdx / xDenom) * 100} y2="92"
+              stroke="#D97757" strokeOpacity="0.25"
+              strokeWidth="0.5" strokeDasharray="2 1.5"
+            />
+          )}
+
+          {/* 라인 */}
+          {keys.map((key, ki) => (
+            <path key={key}
+              d={createSmoothPath(key)}
+              fill="none"
+              stroke={TREND_COLORS[key]}
+              strokeWidth={hoveredIdx !== null ? '1.6' : '1.9'}
+              strokeLinecap="round" strokeLinejoin="round"
+              opacity={0.92}
+            />
+          ))}
+
+          {/* 데이터 포인트 */}
           {recent7.map((d, i) => {
             const x = (i / xDenom) * 100
+            const isHov = hoveredIdx === i
             return (
               <g key={i}>
-                <circle cx={x} cy={getY(d.achievement)} r="2.5" fill="var(--chart-1)" />
-                <circle cx={x} cy={getY(d.adaptability)} r="2.5" fill="var(--chart-2)" />
-                <circle cx={x} cy={getY(d.relationship)} r="2.5" fill="var(--chart-3)" />
+                {keys.map((key, ki) => {
+                  const cy = getY(d[key])
+                  const col = TREND_COLORS[key]
+                  return (
+                    <g key={key}>
+                      {/* 외곽 halo */}
+                      <circle cx={x} cy={cy} r={isHov ? 5 : 3.8}
+                        fill={col} opacity={isHov ? 0.22 : 0.13}
+                      />
+                      {/* 핵심 dot — 반짝임 */}
+                      <circle cx={x} cy={cy} r={isHov ? 2.8 : 2.0}
+                        fill={col}
+                        filter={isHov ? 'url(#tc-glow-hover)' : 'url(#tc-glow)'}
+                        className={`tc-dot-${ki}`}
+                      />
+                    </g>
+                  )
+                })}
+                {/* hover 히트영역 */}
+                <rect
+                  x={x - 6} y="5" width="12" height="90"
+                  fill="transparent"
+                  onMouseEnter={() => setHoveredIdx(i)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  style={{ cursor: 'crosshair' }}
+                />
               </g>
             )
           })}
         </svg>
-        
-        {/* Y-axis labels */}
-        <div className="absolute left-0 inset-y-0 flex flex-col justify-between text-[10px] text-muted-foreground -ml-6 py-2">
-          <span>5</span>
-          <span>3</span>
-          <span>1</span>
+
+        {/* Y축 레이블 */}
+        <div className="absolute left-0 inset-y-0 flex flex-col justify-between text-[9px] text-muted-foreground -ml-5 py-2 pointer-events-none">
+          <span>{yMax.toFixed(1)}</span>
+          <span>{((yMin + yMax) / 2).toFixed(1)}</span>
+          <span>{yMin.toFixed(1)}</span>
         </div>
+
+        {/* hover 툴팁 */}
+        {hoveredIdx !== null && (() => {
+          const d = recent7[hoveredIdx]
+          const x = (hoveredIdx / xDenom) * 100
+          const isRight = hoveredIdx >= recent7.length * 0.7
+          return (
+            <div
+              className="pointer-events-none absolute z-20 top-1 rounded-lg border border-border/60 bg-background/95 px-2.5 py-2 text-xs shadow-lg backdrop-blur-sm"
+              style={{ left: isRight ? 'auto' : `calc(${x}% + 8px)`, right: isRight ? `calc(${100 - x}% + 8px)` : 'auto' }}
+            >
+              <div className="font-semibold text-foreground mb-1.5">{formatDate(d.date)}</div>
+              <div className="space-y-1">
+                {keys.map(key => (
+                  <div key={key} className="flex items-center gap-1.5">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: TREND_COLORS[key] }} />
+                    <span className="text-muted-foreground">
+                      {key === 'achievement' ? '성취도' : key === 'adaptability' ? '적응도' : '인간관계'}
+                    </span>
+                    <span className="ml-auto font-medium tabular-nums" style={{ color: TREND_COLORS[key] }}>
+                      {d[key]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
       </div>
-      
-      {/* X-axis labels */}
-      <div className="flex justify-between text-xs text-muted-foreground pl-1">
+
+      {/* X축 레이블 */}
+      <div className="flex justify-between text-[10px] text-muted-foreground">
         {recent7.map((d, i) => (
           <span key={i}>{formatDate(d.date)}</span>
         ))}
       </div>
-      
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-6 text-xs">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 rounded-full bg-[var(--chart-1)]" />
-          <span className="text-muted-foreground">성취도</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 rounded-full bg-[var(--chart-2)]" />
-          <span className="text-muted-foreground">적응도</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 rounded-full bg-[var(--chart-3)]" />
-          <span className="text-muted-foreground">인간관계</span>
-        </div>
+
+      {/* 범례 */}
+      <div className="flex items-center justify-center gap-5 text-xs">
+        {keys.map(key => (
+          <div key={key} className="flex items-center gap-1.5">
+            <div className="w-4 h-[2px] rounded-full" style={{ background: TREND_COLORS[key] }} />
+            <span className="text-muted-foreground">
+              {key === 'achievement' ? '성취도' : key === 'adaptability' ? '적응도' : '인간관계'}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -728,7 +815,7 @@ export function StudentMode() {
       </Card>
 
       {/* Trend Visualization */}
-      <Card className="border border-border/60">
+      <Card className="border border-[#D97757]/25 shadow-sm shadow-[#D97757]/8">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-foreground">최근 7일 추이</CardTitle>
           <CardDescription className="text-xs">지난 일주일간의 변화 그래프</CardDescription>
