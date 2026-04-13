@@ -325,7 +325,12 @@ export default function MentorDashboard() {
     newRiskCount,
     careNeededStudents,
     completeCare,
+    refetchStudents,
   } = useStudents()
+
+  useEffect(() => {
+    refetchStudents()
+  }, [refetchStudents])
 
   useEffect(() => {
     const storedUser = localStorage.getItem("auth-user")

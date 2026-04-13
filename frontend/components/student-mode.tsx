@@ -433,7 +433,7 @@ export function StudentMode() {
                     <div className="flex items-start gap-2">
                       <Heart className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-xs font-medium text-foreground mb-1">멘토 케어 메시지</p>
+                        <p className="text-xs font-medium text-foreground mb-1">AI 케어 메시지</p>
                         <p className="text-xs text-muted-foreground">{careMessage}</p>
                       </div>
                     </div>

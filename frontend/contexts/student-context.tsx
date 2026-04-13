@@ -129,6 +129,7 @@ interface StudentContextType {
     feedback?: { isFalseAlarm: boolean; recoveryDays: number | null }
   ) => void
   getStudentById: (studentId: string) => Student | undefined
+  refetchStudents: () => void
 }
 
 const StudentContext = createContext<StudentContextType | null>(null)
@@ -136,7 +137,7 @@ const StudentContext = createContext<StudentContextType | null>(null)
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<Student[]>([])
 
-  useEffect(() => {
+  const refetchStudents = useCallback(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/mentor/students/risks`)
       .then(res => res.json())
       .then(json => {
@@ -146,6 +147,10 @@ export function StudentProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    refetchStudents()
+  }, [refetchStudents])
 
   const careNeededStudents = useMemo(() => 
     students.filter(s => s.isCareNeeded), 
@@ -240,7 +245,8 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     addStudent,
     removeStudent,
     completeCare,
-    getStudentById
+    getStudentById,
+    refetchStudents,
   }
 
   return (
