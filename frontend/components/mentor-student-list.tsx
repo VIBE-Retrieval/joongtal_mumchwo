@@ -100,8 +100,8 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
   const riskStyle = riskColors[student.riskLevel]
   const RiskIcon = riskStyle.icon
   const changeDirection = student.recentChange > 0 ? "+" : ""
-  const TrendIcon = student.recentChange > 5 ? TrendingUp : student.recentChange < -5 ? TrendingDown : Minus
-  const changeColor = student.recentChange > 5 ? "text-risk-high" : student.recentChange < -5 ? "text-risk-low" : "text-muted-foreground"
+  const TrendIcon = student.recentChange > 0 ? TrendingUp : student.recentChange < 0 ? TrendingDown : Minus
+  const changeColor = student.recentChange > 0 ? "text-risk-high" : student.recentChange < 0 ? "text-risk-low" : "text-muted-foreground"
 
   const interventionIcons: Record<string, typeof MessageCircle> = {
     message: MessageCircle,
@@ -276,12 +276,14 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
               <div className="bg-muted/30 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm font-medium">
-                    {student.trend.length > 0 ? `${student.trend.length}일 참여도 추이` : "참여도 추이"}
+                    {student.trend.length > 0 ? `${student.trend.length}일 위험도 추이` : "위험도 추이"}
                   </span>
-                  <div className={cn("flex items-center gap-1 text-sm font-medium", changeColor)}>
-                    <TrendIcon className="w-4 h-4" />
-                    <span>{changeDirection}{student.recentChange.toFixed(1)}%</span>
-                  </div>
+                  {student.trend.length >= 2 && (
+                    <div className={cn("flex items-center gap-1 text-sm font-medium", changeColor)}>
+                      <TrendIcon className="w-4 h-4" />
+                      <span>{changeDirection}{Math.abs(student.recentChange).toFixed(1)}%p</span>
+                    </div>
+                  )}
                 </div>
                 <TrendChart data={student.trend} riskLevel={student.riskLevel} />
                 <div className="flex justify-between text-xs text-muted-foreground mt-2">

@@ -96,7 +96,11 @@ function mapToStudent(item: {
     major: undefined,
     riskLevel,
     riskScore,
-    recentChange: 0,
+    recentChange: (() => {
+      const h = item.risk_history
+      if (!h || h.length < 2) return 0
+      return parseFloat(((h[h.length - 1] - h[h.length - 2]) * 100).toFixed(1))
+    })(),
     trend: item.risk_history?.length ? item.risk_history : [riskScore],
     aiSummary: item.llm_summary?.trim() || item.recommended_action || "",
     mentorNotes: "",
