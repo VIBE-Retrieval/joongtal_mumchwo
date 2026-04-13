@@ -21,7 +21,9 @@
       "Bash(curl -s -X OPTIONS http://localhost:8000/auth/login -H \"Origin: http://localhost:3000\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: Content-Type\" -D -)",
       "Bash(pip freeze:*)",
       "Bash(pip3 freeze:*)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(pip install:*)",
+      "Bash(pandoc \"C:\\\\Users\\\\hubo0\\\\Downloads\\\\바이브 코딩 문서 정리  \\(1\\).docx\" -o output.md)"
     ]
   }
 }

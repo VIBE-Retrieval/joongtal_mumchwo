@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 
@@ -29,7 +29,7 @@ def _parse_mentor_id(action_reason: str) -> str | None:
     if not m:
         return None
     value = m.group(1).strip()
-    if value in {"", "알 수 없음", "?????놁쓬", "None", "null"}:
+    if value in {"", "값없음", "미지정", "None", "null"}:
         return None
     return value
 
@@ -41,11 +41,12 @@ def get_messages(session: Session, student_id: str) -> dict:
             {
                 "message_id": str(row.intervention_id),
                 "student_id": row.student_id,
-                "message": row.llm_summary,
+                "message": row.student_insight or row.llm_summary,
                 "mentor_id": _parse_mentor_id(row.action_reason),
-                "mentor_name": "멘토",
+                "mentor_name": "멘토" if _parse_mentor_id(row.action_reason) else "AI",
                 "sent_at": row.created_at.isoformat(),
             }
             for row in rows
         ]
     }
+
