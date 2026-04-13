@@ -7,7 +7,7 @@ const features = [
   {
     icon: "📊",
     title: "AI 기반 위험 분석",
-    description: "머신러닝을 활용한 정교한 학생 이탈 예측 시스템"
+    description: "머신러닝을 활용한 정교한 학생 중탈 예측 시스템"
   },
   {
     icon: "🔔",
@@ -60,7 +60,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <span className="text-lg">🎯</span>
             </div>
-            <span className="landing-brand-title text-lg">학생 인사이트</span>
+            <span className="landing-brand-title text-lg">중탈 멈춰 !</span>
           </div>
           <Link href="/login">
             <Button>로그인</Button>
@@ -70,25 +70,40 @@ export default function LandingPage() {
 
       {/* Hero — 첫 화면: 헤더 제외 나머지 뷰포트만 사용 (아래 섹션 노출 방지) */}
       <section
-        className="min-h-[calc(100dvh-4rem)] flex flex-col justify-center px-6 py-10 md:py-12 box-border"
+        className="relative min-h-[calc(100dvh-4rem)] flex items-center overflow-hidden box-border"
         aria-label="소개"
       >
-        <div className="max-w-4xl mx-auto w-full text-center space-y-6">
-          <h1 className="text-4xl md:text-5xl text-foreground leading-tight text-balance">
-            놓치기 전에, 먼저 발견하세요
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
-            학생의 중탈 신호를 AI로 예측하고, 적시에 개입합니다
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center pt-4">
-            <Link href="/login">
-              <Button size="lg" className="px-8">
-                시작하기
+        {/* Background GIF */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnUxZnNmbGhjOHZvZDQ1ZDhtZDJ0OXpzbTFoYnMyaThyM2k3bTc4aiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/stkTZ52YoroVhKZc1l/giphy.gif"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover"
+          />
+          {/* Dark overlay for readability */}
+          <div className="absolute inset-0 bg-background/70" />
+        </div>
+
+        {/* Content — left aligned */}
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-10 md:py-12">
+          <div className="max-w-xl space-y-6">
+            <h1 className="text-4xl md:text-5xl text-foreground leading-tight text-balance">
+              놓치기 전에, 먼저 발견하세요
+            </h1>
+            <p className="text-lg text-muted-foreground leading-relaxed text-pretty">
+              학생의 중탈 신호를 AI로 예측하고, 적시에 개입합니다
+            </p>
+            <div className="flex flex-wrap gap-4 pt-4">
+              <Link href="/login">
+                <Button size="lg" className="px-8">
+                  시작하기
+                </Button>
+              </Link>
+              <Button size="lg" variant="outline" className="px-8" asChild>
+                <a href="#features">더 알아보기</a>
               </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="px-8" asChild>
-              <a href="#features">더 알아보기</a>
-            </Button>
+            </div>
           </div>
         </div>
       </section>

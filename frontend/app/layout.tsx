@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: '학생 인사이트 - AI 위험 관리',
+  title: '중탈 멈춰 !',
   description: '중도 탈락 예측 및 멘토 개입을 위한 AI 기반 학생 위험 관리 시스템',
   generator: 'v0.app',
   icons: {
