@@ -27,7 +27,7 @@ const roleConfig: Record<UserRole, { icon: React.ReactNode; label: string; descr
 }
 
 const roleDefaults: Record<UserRole, { email: string; birthDate: string }> = {
-  student:     { email: "wob0217@gmail.com", birthDate: "19980217" },
+  student:     { email: "minjun.kim@demo.com", birthDate: "19980315" },
   interviewer: { email: "interviewer@test.com", birthDate: "19900615" },
   mentor:      { email: "mentor@test.com", birthDate: "19850320" },
 }

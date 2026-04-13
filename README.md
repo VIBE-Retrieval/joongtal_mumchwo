@@ -247,6 +247,46 @@ ANTHROPIC_API_KEY=your_api_key_here
 
 ---
 
+## 데모 데이터
+
+`DB/seeds/demo_seed.sql`을 적용하면 5명의 학생 데이터(14일치)가 들어갑니다.
+
+| 이름 | 이메일 | 생년월일 | 면접 위험도 |
+|---|---|---|---|
+| 김민준 | minjun.kim@demo.com | 1998-03-15 | LOW (0.18) |
+| 이서연 | seoyeon.lee@demo.com | 2001-08-22 | HIGH (0.76) |
+| 박도현 | dohyun.park@demo.com | 1999-05-07 | MEDIUM (0.42) |
+| 최유진 | yujin.choi@demo.com | 2000-02-14 | LOW (0.06) |
+| 정우성 | woosung.jung@demo.com | 1997-11-29 | MEDIUM (0.39) |
+
+### 학생별 시나리오
+
+**김민준 — 위기 후 회복**
+- D1~D6: 안정 상태(LOW). Agent NONE.
+- D7~D10: 점수 연속 하락. Agent가 `ENCOURAGE_MESSAGE` 발송.
+- D11: HIGH 2일 연속 → Agent가 `ALERT_MENTOR` 실행. 멘토 직접 개입.
+- D12~D14: 점수 회복, LOW 복귀. 멘토 피드백 "recovered" 기록 → Agent가 ALERT_MENTOR 효과 학습.
+
+**이서연 — 고위험 지속 (EMERGENCY 대기 중)**
+- D1~D4: 빠른 하락. Agent `ENCOURAGE_MESSAGE` 발송 → 효과 없음.
+- D5~D7: HIGH 3일 연속 → `ALERT_MENTOR`. 멘토 확인했으나 개선 없음.
+- D8~D10: `REQUEST_MEETING` 면담 요청. 면담 진행했으나 위험도 유지.
+- D11~D14: 위험도 0.91 도달 → `EMERGENCY` PENDING 상태. 멘토 즉시 개입 필요.
+
+**박도현 — 오탐(false alarm) 케이스**
+- D1~D5: 소폭 하락. Agent `ENCOURAGE_MESSAGE` 발송.
+- D6~D14: 자연 회복. 멘토가 "false_alarm" 피드백 입력 → Agent가 이 패턴을 과잉 경보로 학습.
+
+**최유진 — 전 기간 안정**
+- D1~D14: 4~5점 유지. Agent 계속 NONE. 별도 개입 없음.
+
+**정우성 — 복합 위험 진행 (REQUEST_MEETING 대기 중)**
+- D1~D5: 성취도·인간관계 동반 하락. `ENCOURAGE_MESSAGE` 발송.
+- D6~D8: HIGH 3일 연속 → `ALERT_MENTOR`. 멘토 확인.
+- D9~D14: HIGH 5일 연속 → `REQUEST_MEETING` PENDING 상태. 면담 대기 중.
+
+---
+
 ## 설계 원칙
 
 - **ML은 숫자만 계산한다** — 해석은 LLM, 결정은 Agent가 담당
