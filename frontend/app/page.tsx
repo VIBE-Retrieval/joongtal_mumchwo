@@ -1,31 +1,16 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { LandingHeader } from "@/components/landing-header"
 import { ScrollReveal } from "@/components/scroll-reveal"
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header — fixed, overlays hero video */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white/15 backdrop-blur-md border-b border-white/10 dark:bg-black/20 dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <img
-              src="/logo.png"
-              alt="중탈 멈춰 로고"
-              className="h-8 w-auto object-contain"
-            />
-            <span className="font-semibold text-base tracking-tight text-white drop-shadow">중탈 멈춰 !</span>
-          </div>
-          <Link href="/login">
-            <Button className="bg-white/20 text-white border border-white/40 hover:bg-white/30 backdrop-blur-sm">
-              로그인
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <LandingHeader />
 
       {/* Hero — 전체 뷰포트 (헤더가 overlay되므로 100dvh) */}
       <section
+        id="landing-hero"
         className="relative min-h-screen flex items-center overflow-hidden box-border"
         aria-label="소개"
       >
