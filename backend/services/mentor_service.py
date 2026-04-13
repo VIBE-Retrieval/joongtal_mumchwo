@@ -41,6 +41,7 @@ def list_student_risks(session: Session) -> dict:
                 "email": row["email"],
                 "course_name": row["course_name"],
                 "education_level": row.get("education_level") or "기타",
+                "created_at": row.get("created_at", ""),
                 "risk_score": risk_score,
                 "risk_level": risk_level,
                 "risk_trend": risk_trend,

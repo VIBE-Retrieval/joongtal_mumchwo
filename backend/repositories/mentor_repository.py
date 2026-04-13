@@ -123,6 +123,7 @@ def get_all_students_with_risk(session: Session) -> list[dict]:
                 "email": s.email,
                 "course_name": s.course_name,
                 "education_level": s.education_level,
+                "created_at": s.created_at.date().isoformat() if s.created_at is not None else "",
                 "process_risk_score": pr.risk_score if pr is not None else None,
                 "process_risk_level": pr.risk_level if pr is not None else None,
                 "process_risk_trend": pr.risk_trend if pr is not None else None,

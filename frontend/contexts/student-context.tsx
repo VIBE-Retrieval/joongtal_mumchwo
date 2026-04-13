@@ -64,6 +64,7 @@ function mapToStudent(item: {
   student_id: string
   student_name: string
   birth_date: string
+  created_at?: string
   phone: string | null
   email: string
   course_name: string | null
@@ -79,7 +80,12 @@ function mapToStudent(item: {
   return {
     id: item.student_id,
     name: item.student_name,
-    birthDate: item.birth_date ?? "",
+    birthDate: (() => {
+      const v = item.birth_date ?? ""
+      return v.length === 8 && /^\d{8}$/.test(v)
+        ? `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}`
+        : v
+    })(),
     phone: item.phone ?? "",
     email: item.email ?? "",
     courseName: item.course_name ?? "",
@@ -94,7 +100,7 @@ function mapToStudent(item: {
     aiSummary: item.recommended_action,
     mentorNotes: "",
     interventions: [],
-    enrollmentDate: "",
+    enrollmentDate: item.created_at ?? "",
     attendance: 0,
     assignmentsCompleted: 0,
     totalAssignments: 0,

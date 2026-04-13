@@ -207,7 +207,7 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
       riskLevel,
       riskScore,
       recentChange: 0,
-      trend: Array.from({ length: 14 }, () => Math.floor(Math.random() * 20) + 40),
+      trend: [],
       aiSummary: "신규 입과 학생입니다. 면접 평가 결과에 따른 초기 위험도가 설정되었습니다. 첫 2주간 적응 기간에 대한 모니터링을 권장합니다.",
       mentorNotes: `면접 합격 후 입과. 초기 평가: 성취도 ${sourceEvaluation.achievement.rating}/5, 적응력 ${sourceEvaluation.adaptability.rating}/5, 인간관계 ${sourceEvaluation.relationship.rating}/5`,
       interventions: [{

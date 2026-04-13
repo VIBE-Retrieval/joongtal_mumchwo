@@ -16,6 +16,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 
 function TrendChart({ data, riskLevel }: { data: number[]; riskLevel: RiskLevel }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-24 w-full flex items-center justify-center">
+        <span className="text-xs text-muted-foreground">설문 데이터 없음</span>
+      </div>
+    )
+  }
+
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
