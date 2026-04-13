@@ -75,6 +75,8 @@ function mapToStudent(item: {
   llm_summary?: string
   risk_history?: number[]
   education_level?: string | null
+  care_needed?: boolean
+  new_risk_today?: boolean
 }): Student {
   const riskLevel = mapRiskLevel(item.risk_level)
   const riskScore = Math.round(item.risk_score * 100)
@@ -110,8 +112,8 @@ function mapToStudent(item: {
     assignmentsCompleted: 0,
     totalAssignments: 0,
     lastContact: "",
-    isCareNeeded: riskLevel === "high" || riskLevel === "medium",
-    isNewRiskToday: item.risk_level === "HIGH" && item.risk_trend === "UP",
+    isCareNeeded: item.care_needed ?? (riskLevel === "high" || riskLevel === "medium"),
+    isNewRiskToday: item.new_risk_today ?? (item.risk_level === "HIGH" && item.risk_trend === "UP"),
   }
 }
 

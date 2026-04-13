@@ -32,6 +32,12 @@ def list_student_risks(session: Session) -> dict:
             risk_level = "LOW"
             risk_trend = "STABLE"
 
+        inv_status = inv.status if inv is not None else None
+        inv_action = inv.action_type if inv is not None else "NONE"
+        is_pending = inv_status == "PENDING"
+        care_needed = inv_action == "ENCOURAGE_MESSAGE" and is_pending
+        new_risk_today = inv_action == "EMERGENCY" and is_pending
+
         items.append(
             {
                 "student_id": sid,
@@ -48,6 +54,8 @@ def list_student_risks(session: Session) -> dict:
                 "recommended_action": recommended,
                 "risk_history": row.get("risk_history", []),
                 "llm_summary": row.get("llm_summary", ""),
+                "care_needed": care_needed,
+                "new_risk_today": new_risk_today,
             }
         )
 

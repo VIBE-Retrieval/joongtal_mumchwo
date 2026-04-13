@@ -23,7 +23,9 @@
       "Bash(pip3 freeze:*)",
       "mcp__Claude_Preview__preview_start",
       "Bash(pip install:*)",
-      "Bash(pandoc \"C:\\\\Users\\\\hubo0\\\\Downloads\\\\바이브 코딩 문서 정리  \\(1\\).docx\" -o output.md)"
+      "Bash(pandoc \"C:\\\\Users\\\\hubo0\\\\Downloads\\\\바이브 코딩 문서 정리  \\(1\\).docx\" -o output.md)",
+      "Bash(pandoc \"C:\\\\Users\\\\hubo0\\\\Downloads\\\\③ 2026 KIT 바이브코딩 공모전_팀명\\(개인은 이름\\)_AI리포트.docx\" -o report_out.md)",
+      "Bash(curl -s http://localhost:8000/mentor/students/risks)"
     ]
   }
 }
