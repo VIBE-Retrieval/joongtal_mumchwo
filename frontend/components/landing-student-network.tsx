@@ -20,11 +20,11 @@ const BG = "#0e0d12"
 const BG_FOG = 0x0e0d12
 
 const CLUSTER_PALETTE = [
-  { name: "군집 A", color: "#e8927a" },
-  { name: "군집 B", color: "#6ec985" },
-  { name: "군집 C", color: "#b091e8" },
-  { name: "군집 D", color: "#f0c14d" },
-  { name: "군집 E", color: "#5eb8e5" },
+  { name: "중탈 위험",  color: "#e8927a", desc: "즉각적 개입 권고" },
+  { name: "합격",      color: "#6ec985", desc: "안정적 학습 진행 중" },
+  { name: "보류",      color: "#b091e8", desc: "추가 검토 대기 중" },
+  { name: "불합격",    color: "#f0c14d", desc: "재심의 필요" },
+  { name: "안정 관찰", color: "#5eb8e5", desc: "경과 모니터링 중" },
 ] as const
 
 function randn(): number {
@@ -44,11 +44,17 @@ function generateEmbeddingCloud(): EmbeddingPoint[] {
     sz: number
     clusterKey: number
   }[] = [
-    { center: [-3.5, -1.05, 0.45], count: 36, sx: 0.42, sy: 0.36, sz: 0.31, clusterKey: 0 },
-    { center: [2.95, -1.35, -0.55], count: 22, sx: 0.28, sy: 0.32, sz: 0.26, clusterKey: 1 },
-    { center: [0.15, 2.55, 0.95], count: 14, sx: 0.18, sy: 0.2, sz: 0.17, clusterKey: 2 },
-    { center: [-1.25, 1.35, -1.85], count: 40, sx: 0.38, sy: 0.34, sz: 0.4, clusterKey: 3 },
-    { center: [3.2, 1.45, 1.35], count: 28, sx: 0.33, sy: 0.3, sz: 0.35, clusterKey: 4 },
+    // 클러스터당 인원 대폭 증가 — 실제 학생 수 규모 반영
+    { center: [-3.5, -1.05, 0.45],  count: 110, sx: 0.58, sy: 0.52, sz: 0.46, clusterKey: 0 }, // 중탈 위험
+    { center: [2.95, -1.35, -0.55], count:  82, sx: 0.50, sy: 0.54, sz: 0.44, clusterKey: 1 }, // 합격
+    { center: [0.15,  2.55,  0.95], count:  55, sx: 0.36, sy: 0.40, sz: 0.34, clusterKey: 2 }, // 보류
+    { center: [-1.25, 1.35, -1.85], count: 130, sx: 0.55, sy: 0.50, sz: 0.58, clusterKey: 3 }, // 불합격
+    { center: [3.2,   1.45,  1.35], count:  95, sx: 0.52, sy: 0.48, sz: 0.54, clusterKey: 4 }, // 안정 관찰
+    // 위성 소클러스터 — 실제 데이터에서 자주 나타나는 경계 케이스들
+    { center: [-2.8,  0.8,  -1.2],  count:  38, sx: 0.28, sy: 0.26, sz: 0.30, clusterKey: 0 }, // 중탈 위험 위성
+    { center: [1.8,   2.2,   0.6],  count:  28, sx: 0.22, sy: 0.24, sz: 0.20, clusterKey: 1 }, // 합격 위성
+    { center: [-0.4, -2.2,   1.0],  count:  32, sx: 0.24, sy: 0.22, sz: 0.26, clusterKey: 3 }, // 불합격 위성
+    { center: [4.5,   0.2,  -0.8],  count:  22, sx: 0.20, sy: 0.22, sz: 0.18, clusterKey: 4 }, // 안정 관찰 위성
   ]
 
   const points: EmbeddingPoint[] = []
@@ -58,12 +64,13 @@ function generateEmbeddingCloud(): EmbeddingPoint[] {
     const { center, count, sx, sy, sz, clusterKey } = spec
     const meta = CLUSTER_PALETTE[clusterKey % CLUSTER_PALETTE.length]
     for (let i = 0; i < count; i++) {
-      const jitter = (Math.random() - 0.5) * 0.06
+      const jitter = (Math.random() - 0.5) * 0.04
       const x = center[0] + randn() * sx + jitter
       const y = center[1] + randn() * sy + jitter
       const z = center[2] + randn() * sz + jitter
-      // 노드 크기 증가
-      const scale = 0.048 + Math.random() * 0.028 + (clusterKey === 2 ? 0.01 : 0)
+      // 노드가 많아지므로 크기 약간 축소, 중요 클러스터는 조금 더 크게
+      const base = clusterKey === 0 ? 0.038 : clusterKey === 3 ? 0.036 : 0.032
+      const scale = base + Math.random() * 0.018
       points.push({
         id: `S-${globalIdx + 1}`,
         position: [x, y, z],
@@ -82,6 +89,8 @@ function generateEmbeddingCloud(): EmbeddingPoint[] {
 type TooltipState = {
   id: string
   clusterName: string
+  color: string
+  desc: string
   left: number
   top: number
 } | null
@@ -97,7 +106,7 @@ function EmbeddingFog() {
   return null
 }
 
-/** 노드 간 연결선 — 가까운 노드끼리만, 얇고 반투명 */
+/** 노드 간 연결선 — Baltimore 스타일 dense web */
 function ConnectionLines({
   points,
   hoveredIndex,
@@ -112,8 +121,9 @@ function ConnectionLines({
   }, [hoveredIndex])
 
   const { geometry, material } = useMemo(() => {
-    const MAX_DIST = 2.4
-    const MAX_PER_NODE = 4
+    // 거리 임계값 크게 높여 클러스터 간 연결도 생성 → dense web
+    const MAX_DIST = 4.2
+    const MAX_PER_NODE = 12
     const cnt = new Array(points.length).fill(0)
 
     const allPairs: { i: number; j: number; dist: number }[] = []
@@ -139,22 +149,35 @@ function ConnectionLines({
       }
     }
 
+    // 거리에 따라 opacity를 달리하는 vertex color 활용
     const positions = new Float32Array(pairs.length * 6)
+    const colors = new Float32Array(pairs.length * 6) // rgb per vertex
     for (let k = 0; k < pairs.length; k++) {
       const [i, j] = pairs[k]
       const pi = points[i].position
       const pj = points[j].position
       positions[k * 6 + 0] = pi[0]; positions[k * 6 + 1] = pi[1]; positions[k * 6 + 2] = pi[2]
       positions[k * 6 + 3] = pj[0]; positions[k * 6 + 4] = pj[1]; positions[k * 6 + 5] = pj[2]
+
+      // 짧은 선일수록 밝게 (가까운 연결 = 강한 관계)
+      const dx = pi[0] - pj[0], dy = pi[1] - pj[1], dz = pi[2] - pj[2]
+      const d = Math.sqrt(dx * dx + dy * dy + dz * dz)
+      const bright = Math.max(0.18, 0.55 - d * 0.09) // 0.18 ~ 0.55
+      // 노드 색 혼합 (시작점 색, 끝점 색)
+      const ci = new THREE.Color(points[i].color)
+      const cj = new THREE.Color(points[j].color)
+      colors[k * 6 + 0] = ci.r * bright; colors[k * 6 + 1] = ci.g * bright; colors[k * 6 + 2] = ci.b * bright
+      colors[k * 6 + 3] = cj.r * bright; colors[k * 6 + 4] = cj.g * bright; colors[k * 6 + 5] = cj.b * bright
     }
 
     const geo = new THREE.BufferGeometry()
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3))
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3))
 
     const mat = new THREE.LineBasicMaterial({
-      color: "#7a88c8",
+      vertexColors: true,
       transparent: true,
-      opacity: 0.1,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     })
@@ -167,10 +190,10 @@ function ConnectionLines({
     const t = state.clock.elapsedTime
     const mat = linesRef.current.material as THREE.LineBasicMaterial
     const isHovered = hoveredRef.current !== null
-    // hover 시 선 강조, 평소엔 부드러운 pulse
+    // vertex color 기반이라 opacity는 전체 밝기 조절용
     mat.opacity = isHovered
-      ? 0.22 + 0.06 * Math.sin(t * 2.0)
-      : 0.07 + 0.04 * Math.sin(t * 0.42)
+      ? 0.75 + 0.1 * Math.sin(t * 2.0)
+      : 0.52 + 0.08 * Math.sin(t * 0.38)
   })
 
   return (
@@ -344,7 +367,8 @@ function EmbeddingScene({
   const handleEnter = useCallback(
     (p: EmbeddingPoint, _i: number, cx: number, cy: number) => {
       const { left, top } = toLocal(cx, cy)
-      setTooltip({ id: p.id, clusterName: p.clusterName, left, top })
+      const meta = CLUSTER_PALETTE[p.clusterIndex % CLUSTER_PALETTE.length]
+      setTooltip({ id: p.id, clusterName: p.clusterName, color: p.color, desc: meta.desc, left, top })
     },
     [setTooltip, toLocal]
   )
@@ -457,11 +481,25 @@ export default function LandingStudentNetwork() {
 
       {tooltip && (
         <div
-          className="pointer-events-none absolute z-10 max-w-[168px] rounded-md border border-white/[0.18] bg-[#1a1816]/95 px-2.5 py-2 text-left text-[11px] text-neutral-100 shadow-lg backdrop-blur-sm"
+          className="pointer-events-none absolute z-10 w-[188px] rounded-lg border border-white/[0.14] bg-[#18171c]/96 px-3 py-2.5 text-left shadow-xl backdrop-blur-sm"
           style={{ left: twPad.left, top: twPad.top }}
         >
-          <div className="text-[10px] uppercase tracking-wider text-primary/90">{tooltip.clusterName}</div>
-          <div className="mt-1 font-medium text-white">학생 {tooltip.id}</div>
+          {/* 상태 레이블 + 색상 인디케이터 */}
+          <div className="flex items-center gap-1.5">
+            <span
+              className="inline-block h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: tooltip.color, boxShadow: `0 0 5px ${tooltip.color}` }}
+            />
+            <span className="text-[12px] font-semibold text-white">{tooltip.clusterName}</span>
+          </div>
+          {/* 설명 */}
+          <div className="mt-0.5 pl-3.5 text-[10px] leading-snug text-neutral-400">{tooltip.desc}</div>
+          {/* 구분선 */}
+          <div className="my-1.5 border-t border-white/[0.08]" />
+          {/* 학생 ID */}
+          <div className="text-[10px] text-neutral-500">
+            학생 <span className="font-medium text-neutral-300">{tooltip.id}</span>
+          </div>
         </div>
       )}
 

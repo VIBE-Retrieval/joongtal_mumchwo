@@ -54,7 +54,7 @@ export default function LandingPage() {
       {/* ── Section 2: Features ──────────────────────────────── */}
       <section
         id="features"
-        className="min-h-screen flex items-center bg-neutral-950 px-6 py-20"
+        className="min-h-screen flex items-center bg-[#1e1e2e] px-6 py-20"
         aria-labelledby="features-heading"
       >
         <div className="max-w-6xl mx-auto w-full grid lg:grid-cols-2 gap-16 items-center">
@@ -113,10 +113,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── Section 3: 유사도 네트워크 맵 ────────────────────── */}
-      {/* 어두운 배경 — 캔버스와 자연스럽게 어우러지도록 */}
+      {/* 밝은 배경 — 다크 카드가 강조 요소로 돋보이도록 */}
       <section
         id="similarity-map"
-        className="min-h-screen flex items-center bg-[#0b0b0f] px-6 py-20"
+        className="min-h-screen flex items-center bg-[#F7F3EF] px-6 py-20"
         aria-labelledby="similarity-heading"
       >
         <div className="max-w-6xl mx-auto w-full">
@@ -128,11 +128,11 @@ export default function LandingPage() {
                 </p>
                 <h2
                   id="similarity-heading"
-                  className="text-3xl font-semibold leading-[1.2] tracking-tight text-white text-balance md:text-4xl"
+                  className="text-3xl font-semibold leading-[1.2] tracking-tight text-neutral-900 text-balance md:text-4xl"
                 >
                   학생의 변화는, 구조로 보입니다
                 </h2>
-                <p className="whitespace-pre-line text-[15px] leading-relaxed text-neutral-400 md:text-base">
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-neutral-600 md:text-base">
                   {`설문, 학습 데이터, 최근 변화 추이를 기반으로
 유사한 상태의 학생들을 공간상에 배치해
 위험군의 패턴을 직관적으로 파악합니다.`}
@@ -141,7 +141,7 @@ export default function LandingPage() {
                   {["유사도 기반 분류", "군집 시각화", "위험 패턴 탐지"].map((kw) => (
                     <li
                       key={kw}
-                      className="rounded-full border border-neutral-700/80 bg-neutral-800/40 px-3 py-1 text-xs text-neutral-300"
+                      className="rounded-full border border-neutral-300 bg-white/70 px-3 py-1 text-xs text-neutral-600"
                     >
                       {kw}
                     </li>
@@ -150,6 +150,7 @@ export default function LandingPage() {
               </div>
             </ScrollReveal>
             <ScrollReveal direction="right" delay={90}>
+              {/* 캔버스 자체가 어두운 배경 — 밝은 페이지 위 다크 카드 효과 */}
               <LandingStudentNetworkLazy />
             </ScrollReveal>
           </div>
@@ -248,7 +249,7 @@ export default function LandingPage() {
 
       {/* ── Section 5: Stats + CTA + Footer ─────────────────── */}
       <section
-        className="flex flex-col bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800"
+        className="flex flex-col bg-[#F2EDE6] border-t border-[#E0D8CF]"
         aria-labelledby="cta-heading"
       >
         {/* Stats */}
@@ -284,7 +285,7 @@ export default function LandingPage() {
                 <Link href="/login">
                   <Button
                     size="lg"
-                    className="px-10 bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+                    className="px-10 bg-[#FFA500] text-white hover:bg-[#e69400] border-0"
                   >
                     시작하기
                   </Button>
