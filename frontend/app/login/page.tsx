@@ -106,7 +106,7 @@ function LoginPageInner() {
           </div>
         </div>
 
-        <p className="relative z-10 text-white/30 text-xs">© 2025 학생 인사이트</p>
+        <p className="relative z-10 text-white/30 text-xs">© 2026 중탈 멈춰 !</p>
       </div>
 
       {/* ─── Right: Form Area ─── */}
