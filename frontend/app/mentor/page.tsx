@@ -100,7 +100,6 @@ function NotificationBell() {
 
   const handleOpen = () => {
     setIsOpen(!isOpen)
-    if (!isOpen) markAllAsRead()
   }
 
   const formatTime = (date: Date) => {

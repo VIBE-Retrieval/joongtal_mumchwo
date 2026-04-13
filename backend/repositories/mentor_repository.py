@@ -175,3 +175,20 @@ def get_student_names_by_ids(session: Session, student_ids: list[str]) -> dict[s
     )
     rows = session.execute(stmt).all()
     return {row.student_id: row.name for row in rows}
+
+
+def mark_alert_as_read(session: Session, intervention_id: int) -> bool:
+    row = session.get(InterventionHistory, intervention_id)
+    if row is None:
+        return False
+    row.status = "COMPLETED"
+    session.commit()
+    return True
+
+
+def mark_all_alerts_as_read(session: Session) -> int:
+    rows = get_pending_non_none_alerts(session)
+    for row in rows:
+        row.status = "COMPLETED"
+    session.commit()
+    return len(rows)

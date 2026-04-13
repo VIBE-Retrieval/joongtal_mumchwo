@@ -42,13 +42,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         if (json.code === 200 && Array.isArray(json.data?.alerts)) {
           const mapped: Notification[] = json.data.alerts.map(
             (a: {
+              intervention_id: number
               student_id: string
               student_name: string
               action_type: string
               llm_summary: string
               date: string
-            }, idx: number) => ({
-              id: `alert-${idx}-${a.student_id}`,
+            }) => ({
+              id: String(a.intervention_id),
               studentId: a.student_id,
               studentName: a.student_name,
               message: `[${a.student_name}] ${a.llm_summary}`,
@@ -72,10 +73,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications(prev => prev.map(n => 
       n.id === id ? { ...n, isRead: true } : n
     ))
+    const base = process.env.NEXT_PUBLIC_API_URL
+    if (!base) return
+    fetch(`${base}/mentor/alerts/${id}/read`, { method: "PATCH" }).catch(() => {})
   }, [])
 
   const markAllAsRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+    const base = process.env.NEXT_PUBLIC_API_URL
+    if (!base) return
+    fetch(`${base}/mentor/alerts/read-all`, { method: "POST" }).catch(() => {})
   }, [])
 
   const dismissBanner = useCallback(() => {
