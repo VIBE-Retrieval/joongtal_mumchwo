@@ -231,7 +231,7 @@ export default function LandingPage() {
 위험군의 패턴을 직관적으로 파악합니다.`}
                   </p>
                   <ul className="flex flex-wrap gap-2 pt-1">
-                    {["유사도 매핑", "위험 신호", "변화 추이", "설문·학습 통합"].map((kw) => (
+                    {["유사도 기반 분류", "군집 시각화", "위험 패턴 탐지"].map((kw) => (
                       <li
                         key={kw}
                         className="rounded-full border border-neutral-200/90 bg-white/60 px-3 py-1 text-xs text-[#2d2d2d]/80 dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-300"
