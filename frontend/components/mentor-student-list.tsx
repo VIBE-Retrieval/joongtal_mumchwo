@@ -273,6 +273,12 @@ function StudentRecord({
                 </div>
               </div>
 
+            </div>
+
+            {/* Right Column - AI Summary */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">멘토 기록</h3>
+
               <div className="bg-muted/30 rounded-xl p-4">
                 <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -281,51 +287,6 @@ function StudentRecord({
                 <p className="text-sm text-foreground leading-relaxed">
                   {student.aiSummary}
                 </p>
-              </div>
-            </div>
-
-            {/* Right Column - Notes & History */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">멘토 기록</h3>
-              
-              <div className="bg-muted/30 rounded-xl p-4">
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3">멘토 메모</h4>
-                <p className="text-sm text-foreground leading-relaxed">
-                  {student.mentorNotes}
-                </p>
-              </div>
-
-              <div className="bg-muted/30 rounded-xl p-4">
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3">상담 이력</h4>
-                <div className="space-y-3 max-h-40 overflow-y-auto">
-                  {student.interventions.map((intervention, idx) => {
-                    const Icon = interventionIcons[intervention.type] || FileText
-                    const isCareComplete = intervention.type === "care-complete"
-                    return (
-                      <div key={idx} className={cn(
-                        "flex items-start gap-3 text-sm",
-                        isCareComplete && "bg-risk-low/10 -mx-2 px-2 py-2 rounded-lg"
-                      )}>
-                        <div className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
-                          isCareComplete ? "bg-risk-low/20" : "bg-muted"
-                        )}>
-                          <Icon className={cn(
-                            "w-4 h-4",
-                            isCareComplete ? "text-risk-low" : "text-muted-foreground"
-                          )} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={cn(
-                            "font-medium",
-                            isCareComplete ? "text-risk-low" : "text-foreground"
-                          )}>{intervention.summary}</p>
-                          <p className="text-xs text-muted-foreground">{intervention.date}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
               </div>
             </div>
           </div>
