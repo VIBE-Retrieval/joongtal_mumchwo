@@ -23,7 +23,7 @@ app = FastAPI(title="joongtal mumchwo API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://54.116.129.63:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
