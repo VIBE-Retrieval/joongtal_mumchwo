@@ -135,7 +135,7 @@ function NotificationBell() {
         <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">알림</h3>
-            {notifications.length > 0 && (
+            {unreadCount > 0 && (
               <button onClick={markAllAsRead} className="text-xs text-primary hover:underline">
                 모두 읽음
               </button>
@@ -143,9 +143,9 @@ function NotificationBell() {
           </div>
 
           <div className="max-h-80 overflow-y-auto">
-            {notifications.length > 0 ? (
+            {unreadCount > 0 ? (
               <div className="divide-y divide-border">
-                {notifications.map(notification => (
+                {notifications.filter(n => !n.isRead).map(notification => (
                   <div
                     key={notification.id}
                     className={cn(

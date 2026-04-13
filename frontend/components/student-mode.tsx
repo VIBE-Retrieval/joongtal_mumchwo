@@ -213,6 +213,8 @@ export function StudentMode() {
   const [studentId, setStudentId] = useState("")
   const [careMessage, setCareMessage] = useState<string | null>(null)
   const [careMessageRead, setCareMessageRead] = useState(false)
+  const [aiInsight, setAiInsight] = useState<string | null>(null)
+  const [isInsightLoading, setIsInsightLoading] = useState(true)
 
   useEffect(() => {
     const storedUser = localStorage.getItem("auth-user")
@@ -263,14 +265,31 @@ export function StudentMode() {
       .catch(() => {})
       .finally(() => {
         setIsLoading(false)
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${sid}/care-message`)
-          .then(res => res.json())
-          .then(json => {
-            if (json.code === 200 && json.data?.has_message === true) {
-              setCareMessage(json.data.message)
+        Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${sid}/care-message`)
+            .then(res => res.json())
+            .catch(() => null),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${sid}/ai-insight`)
+            .then(res => res.json())
+            .catch(() => null),
+        ])
+          .then(([careJson, insightJson]) => {
+            if (careJson?.code === 200 && careJson.data?.has_message === true && careJson.data?.message) {
+              setCareMessage(careJson.data.message)
+            } else {
+              setCareMessage(null)
+            }
+
+            const insight = insightJson?.code === 200 ? insightJson.data?.insight : ""
+            if (typeof insight === "string" && insight.trim()) {
+              setAiInsight(insight)
+            } else {
+              setAiInsight(null)
             }
           })
-          .catch(() => {})
+          .finally(() => {
+            setIsInsightLoading(false)
+          })
       })
   }, [])
   
@@ -338,7 +357,7 @@ export function StudentMode() {
   
   const displayedHistory = showAllHistory ? surveyHistory : surveyHistory.slice(0, 5)
 
-  // Generate insight based on trends
+  // Fallback-only local insight (used when API message is absent)
   const getInsight = () => {
     if (adaptabilityTrend === 'down') {
       return "최근 적응도가 감소하고 있습니다. 어려운 점이 있다면 멘토에게 상담을 요청해 보세요."
@@ -354,6 +373,7 @@ export function StudentMode() {
     }
     return "꾸준히 기록하고 있어요. 자기 이해의 첫걸음입니다."
   }
+  const displayedInsight = aiInsight ?? getInsight()
 
   return (
     <div className="max-w-3xl mx-auto space-y-5 px-6 py-8">
@@ -792,7 +812,7 @@ export function StudentMode() {
             <div className="space-y-1 pt-0.5">
               <p className="text-xs font-semibold text-primary uppercase tracking-wide">AI 인사이트</p>
               <p className="text-sm leading-relaxed text-foreground/80">
-                {getInsight()}
+                {isInsightLoading ? "분석 중..." : displayedInsight}
               </p>
             </div>
           </div>

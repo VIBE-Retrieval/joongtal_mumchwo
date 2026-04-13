@@ -123,3 +123,9 @@ def get_progress(student_id: str, db: Session = Depends(get_db)):
 def get_care_message(student_id: str, db: Session = Depends(get_db)):
     data = student_service.get_care_message(db, student_id)
     return _ok(data)
+
+
+@router.get("/{student_id}/ai-insight")
+def get_ai_insight(student_id: str, db: Session = Depends(get_db)):
+    data = student_service.get_ai_insight(db, student_id)
+    return _ok(data)
