@@ -35,8 +35,12 @@ def list_student_risks(session: Session) -> dict:
         inv_status = inv.status if inv is not None else None
         inv_action = inv.action_type if inv is not None else "NONE"
         is_pending = inv_status == "PENDING"
-        care_needed = inv_action == "ENCOURAGE_MESSAGE" and is_pending
-        new_risk_today = inv_action == "EMERGENCY" and is_pending
+        care_needed = is_pending and inv_action not in ("NONE", "")
+        new_risk_today = is_pending and inv_action in (
+            "EMERGENCY",
+            "ALERT_MENTOR",
+            "REQUEST_MEETING",
+        )
 
         items.append(
             {
