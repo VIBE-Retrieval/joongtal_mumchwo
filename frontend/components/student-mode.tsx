@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
@@ -294,8 +294,8 @@ export function StudentMode() {
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [surveyHistory, setSurveyHistory] = useState<SurveyRecord[]>([])
   const [todaySurveyCompleted, setTodaySurveyCompleted] = useState(false)
-  const [emotionState, setEmotionState] = useState("보통")
-  const [emotionLabel, setEmotionLabel] = useState("😐")
+  const [emotionState, setEmotionState] = useState("蹂댄넻")
+  const [emotionLabel, setEmotionLabel] = useState("?삉")
   const [isLoading, setIsLoading] = useState(true)
   const [studentId, setStudentId] = useState("")
   const [careMessage, setCareMessage] = useState<string | null>(null)
@@ -427,7 +427,7 @@ export function StudentMode() {
   
   const currentMeeting = currentMeetingId ? allMeetings.find(m => m.id === currentMeetingId) : null
   const isEmergencyMeeting = (meeting: { mentorName: string; purpose: string }) =>
-    meeting.mentorName === "AI 긴급 요청" || meeting.purpose.startsWith("[긴급]")
+    meeting.mentorName === "AI 湲닿툒 ?붿껌" || meeting.purpose.startsWith("[湲닿툒]")
   
   const handleOpenNotifications = () => {
     setNotificationOpen(true)
@@ -472,18 +472,18 @@ export function StudentMode() {
   // Fallback-only local insight (used when API message is absent)
   const getInsight = () => {
     if (adaptabilityTrend === 'down') {
-      return "최근 적응도가 감소하고 있습니다. 어려운 점이 있다면 멘토에게 상담을 요청해 보세요."
+      return "理쒓렐 ?곸쓳?꾧? 媛먯냼?섍퀬 ?덉뒿?덈떎. ?대젮???먯씠 ?덈떎硫?硫섑넗?먭쾶 ?곷떞???붿껌??蹂댁꽭??"
     }
     if (achievementTrend === 'down') {
-      return "최근 성취도가 낮아지고 있어요. 학습 목표를 다시 점검해 보는 건 어떨까요?"
+      return "理쒓렐 ?깆랬?꾧? ??븘吏怨??덉뼱?? ?숈뒿 紐⑺몴瑜??ㅼ떆 ?먭???蹂대뒗 嫄??대뼥源뚯슂?"
     }
     if (relationshipTrend === 'up') {
-      return "인간관계가 좋아지고 있네요! 좋은 흐름을 유지해 보세요."
+      return "?멸컙愿怨꾧? 醫뗭븘吏怨??덈꽕?? 醫뗭? ?먮쫫???좎???蹂댁꽭??"
     }
     if (achievementTrend === 'up' && adaptabilityTrend === 'up') {
-      return "전반적으로 좋은 상태를 유지하고 있어요. 잘하고 있습니다!"
+      return "?꾨컲?곸쑝濡?醫뗭? ?곹깭瑜??좎??섍퀬 ?덉뼱?? ?섑븯怨??덉뒿?덈떎!"
     }
-    return "꾸준히 기록하고 있어요. 자기 이해의 첫걸음입니다."
+    return "袁몄???湲곕줉?섍퀬 ?덉뼱?? ?먭린 ?댄빐??泥リ구?뚯엯?덈떎."
   }
   const displayedInsight = aiInsight ?? getInsight()
 
@@ -520,7 +520,7 @@ export function StudentMode() {
           </PopoverTrigger>
           <PopoverContent align="end" className="w-80 p-0">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-sm">알림</h3>
+              <h3 className="font-semibold text-sm">?뚮┝</h3>
               {unreadCount > 0 && (
                 <Button 
                   variant="ghost" 
@@ -528,7 +528,7 @@ export function StudentMode() {
                   className="text-xs h-7"
                   onClick={handleMarkAllRead}
                 >
-                  모두 읽음 처리
+                  紐⑤몢 ?쎌쓬 泥섎━
                 </Button>
               )}
             </div>
@@ -552,7 +552,7 @@ export function StudentMode() {
                     <div className="flex items-start gap-2">
                       <Heart className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-xs font-medium text-foreground mb-1">AI 케어 메시지</p>
+                        <p className="text-xs font-medium text-foreground mb-1">AI 耳??硫붿떆吏</p>
                         <p className="text-xs text-muted-foreground">{careMessage}</p>
                       </div>
                     </div>
@@ -575,10 +575,10 @@ export function StudentMode() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">
-                        멘토가 미팅을 요청했습니다
+                        硫섑넗媛 誘명똿???붿껌?덉뒿?덈떎
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        목적: {meeting.purpose}
+                        紐⑹쟻: {meeting.purpose}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {formatMessageTime(meeting.createdAt)}
@@ -602,13 +602,13 @@ export function StudentMode() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">
-                        미팅 일정이 확정되었습니다
+                        誘명똿 ?쇱젙???뺤젙?섏뿀?듬땲??
                       </p>
                       <p className="text-xs text-foreground mt-0.5">
                         {meeting.confirmedSlot?.date} {meeting.confirmedSlot?.time}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        목적: {meeting.purpose}
+                        紐⑹쟻: {meeting.purpose}
                       </p>
                     </div>
                     <div className="w-2 h-2 rounded-full bg-risk-low flex-shrink-0 mt-2" />
@@ -641,7 +641,7 @@ export function StudentMode() {
                         "text-sm",
                         !msg.isRead && "font-medium"
                       )}>
-                        멘토가 격려 메시지를 보냈습니다
+                        {msg.mentorName === "AI" ? "AI가 메시지를 보냈습니다" : `${msg.mentorName}가 메시지를 보냈습니다`}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                         {msg.message}
@@ -659,7 +659,7 @@ export function StudentMode() {
               
               {!careMessage && messages.length === 0 && pendingMeetingRequests.length === 0 && confirmedMeetings.filter(m => !m.studentNotified).length === 0 && (
                 <div className="p-8 text-center text-muted-foreground text-sm">
-                  아직 알림이 없습니다
+                  ?꾩쭅 ?뚮┝???놁뒿?덈떎
                 </div>
               )}
             </div>
@@ -688,7 +688,7 @@ export function StudentMode() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-sm font-semibold text-foreground">멘토의 메시지</span>
+                  <span className="text-sm font-semibold text-foreground">{latestMessage.mentorName === "AI" ? "AI 메시지" : `${latestMessage.mentorName} 메시지`}</span>
                   {!latestMessage.isRead && (
                     <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded-md tracking-wide">NEW</span>
                   )}
@@ -740,7 +740,7 @@ export function StudentMode() {
               <Button asChild size="sm" className="gap-1.5 text-xs h-8">
                 <Link href="/student/survey">
                   <ClipboardList className="w-3.5 h-3.5" />
-                  설문 하러가기
+                  ?ㅻЦ ?섎윭媛湲?
                 </Link>
               </Button>
             )}
@@ -748,13 +748,13 @@ export function StudentMode() {
         </CardContent>
       </Card>
 
-      {/* ─── Summary Section ─── */}
+      {/* ??? Summary Section ??? */}
       <Card className="border border-border/60">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-semibold text-foreground">최근 평균</CardTitle>
-              <CardDescription className="text-xs mt-0.5">최근 7일간의 평균 점수</CardDescription>
+              <CardTitle className="text-sm font-semibold text-foreground">理쒓렐 ?됯퇏</CardTitle>
+              <CardDescription className="text-xs mt-0.5">理쒓렐 7?쇨컙???됯퇏 ?먯닔</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -817,15 +817,15 @@ export function StudentMode() {
       {/* Trend Visualization */}
       <Card className="border border-[#D97757]/25 shadow-sm shadow-[#D97757]/8">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-foreground">최근 7일 추이</CardTitle>
-          <CardDescription className="text-xs">지난 일주일간의 변화 그래프</CardDescription>
+          <CardTitle className="text-sm font-semibold text-foreground">理쒓렐 7??異붿씠</CardTitle>
+          <CardDescription className="text-xs">지난 일주일간 변화 그래프</CardDescription>
         </CardHeader>
         <CardContent className="pl-8 pt-2">
           {isLoading ? (
             <div className="h-40 bg-muted/30 rounded-lg animate-pulse" />
           ) : surveyHistory.length === 0 ? (
             <div className="h-40 flex items-center justify-center">
-              <p className="text-sm text-muted-foreground">아직 설문 데이터가 없습니다</p>
+              <p className="text-sm text-muted-foreground">?꾩쭅 ?ㅻЦ ?곗씠?곌? ?놁뒿?덈떎</p>
             </div>
           ) : (
             <TrendChart data={surveyHistory} />
@@ -836,8 +836,8 @@ export function StudentMode() {
       {/* Survey History Table */}
       <Card className="border border-border/60">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-foreground">설문 기록</CardTitle>
-          <CardDescription className="text-xs">과거 설문 응답 내역</CardDescription>
+          <CardTitle className="text-sm font-semibold text-foreground">?ㅻЦ 湲곕줉</CardTitle>
+          <CardDescription className="text-xs">怨쇨굅 ?ㅻЦ ?묐떟 ?댁뿭</CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
           {isLoading ? (
@@ -846,7 +846,7 @@ export function StudentMode() {
             </div>
           ) : surveyHistory.length === 0 ? (
             <div className="py-10 text-center">
-              <p className="text-sm text-muted-foreground">아직 설문 데이터가 없습니다</p>
+              <p className="text-sm text-muted-foreground">?꾩쭅 ?ㅻЦ ?곗씠?곌? ?놁뒿?덈떎</p>
             </div>
           ) : (
             <>
@@ -854,7 +854,7 @@ export function StudentMode() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border/40 bg-muted/30">
-                      <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">날짜</th>
+                      <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">?좎쭨</th>
                       <th className="text-center py-2.5 px-3 text-xs font-medium text-muted-foreground">성취도</th>
                       <th className="text-center py-2.5 px-3 text-xs font-medium text-muted-foreground">적응도</th>
                       <th className="text-center py-2.5 px-3 text-xs font-medium text-muted-foreground">인간관계</th>
@@ -870,7 +870,7 @@ export function StudentMode() {
                           <div className="flex items-center gap-1.5">
                             <span>{formatFullDate(record.date)}</span>
                             {index === 0 && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary rounded">오늘</span>
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary rounded">?ㅻ뒛</span>
                             )}
                           </div>
                         </td>
@@ -912,7 +912,7 @@ export function StudentMode() {
                     onClick={() => setShowAllHistory(!showAllHistory)}
                     className="text-xs h-7 text-muted-foreground hover:text-foreground"
                   >
-                    {showAllHistory ? "접기" : `더 보기 (${surveyHistory.length - 5}개)`}
+                    {showAllHistory ? "?묎린" : `??蹂닿린 (${surveyHistory.length - 5}媛?`}
                   </Button>
                 </div>
               )}
@@ -926,12 +926,12 @@ export function StudentMode() {
         <CardContent className="py-4 px-5">
           <div className="flex gap-3.5">
             <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/12 flex items-center justify-center">
-              <span className="text-base leading-none">💡</span>
+              <span className="text-base leading-none">?뮕</span>
             </div>
             <div className="space-y-1 pt-0.5">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wide">AI 인사이트</p>
+              <p className="text-xs font-semibold text-primary uppercase tracking-wide">AI ?몄궗?댄듃</p>
               <p className="text-sm leading-relaxed text-foreground/80">
-                {isInsightLoading ? "분석 중..." : displayedInsight}
+                {isInsightLoading ? "遺꾩꽍 以?.." : displayedInsight}
               </p>
             </div>
           </div>
@@ -944,7 +944,7 @@ export function StudentMode() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <Calendar className="w-4 h-4 text-status-stable" />
-              예정된 미팅
+              ?덉젙??誘명똿
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0 space-y-2">
@@ -954,11 +954,11 @@ export function StudentMode() {
                   <p className="text-sm font-medium text-foreground">
                     {meeting.confirmedSlot?.date} {meeting.confirmedSlot?.time}
                   </p>
-                  <p className="text-xs text-muted-foreground">목적: {meeting.purpose}</p>
+                  <p className="text-xs text-muted-foreground">紐⑹쟻: {meeting.purpose}</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Check className="w-3.5 h-3.5 text-status-stable" />
-                  <span className="text-xs text-status-stable font-medium">확정</span>
+                  <span className="text-xs text-status-stable font-medium">?뺤젙</span>
                 </div>
               </div>
             ))}
@@ -972,7 +972,7 @@ export function StudentMode() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <Clock className="w-4 h-4 text-primary" />
-              미팅 요청
+              誘명똿 ?붿껌
               <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded-md">NEW</span>
             </CardTitle>
           </CardHeader>
@@ -991,14 +991,14 @@ export function StudentMode() {
                   {isEmergencyMeeting(meeting) ? (
                     <p className="text-sm font-semibold text-red-700 flex items-center gap-1.5">
                       <AlertTriangle className="w-4 h-4" />
-                      ⚠️ 긴급 미팅 요청
+                      ?좑툘 湲닿툒 誘명똿 ?붿껌
                     </p>
                   ) : (
                     <p className="text-sm font-medium text-foreground">
-                      {meeting.mentorName} 멘토가 미팅을 요청했습니다
+                      {meeting.mentorName} 硫섑넗媛 誘명똿???붿껌?덉뒿?덈떎
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">목적: {meeting.purpose}</p>
+                  <p className="text-xs text-muted-foreground">紐⑹쟻: {meeting.purpose}</p>
                   {meeting.message && (
                     <p className="text-xs text-foreground/80 mt-2 p-2.5 bg-muted/30 rounded-lg border border-border/30">
                       {meeting.message}
@@ -1012,15 +1012,15 @@ export function StudentMode() {
                     onClick={() => handleOpenAvailabilityModal(meeting.id)}
                   >
                     <Calendar className="w-3.5 h-3.5" />
-                    가능한 시간 선택하기
+                    媛?ν븳 ?쒓컙 ?좏깮?섍린
                   </Button>
                 ) : isEmergencyMeeting(meeting) ? (
                   <p className="text-xs text-red-700 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
-                    멘토가 곧 직접 연락드릴 예정입니다.
+                    硫섑넗媛 怨?吏곸젒 ?곕씫?쒕┫ ?덉젙?낅땲??
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    제안된 시간이 없습니다.
+                    ?쒖븞???쒓컙???놁뒿?덈떎.
                   </p>
                 )}
               </div>
@@ -1033,20 +1033,20 @@ export function StudentMode() {
       <Dialog open={availabilityModalOpen} onOpenChange={setAvailabilityModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>미팅 시간 선택</DialogTitle>
+            <DialogTitle>誘명똿 ?쒓컙 ?좏깮</DialogTitle>
             <DialogDescription>
               {currentMeeting && (
                 <>
                   {isEmergencyMeeting(currentMeeting) ? (
-                    <span className="font-medium text-red-700">⚠️ 긴급 미팅 요청</span>
+                    <span className="font-medium text-red-700">?좑툘 湲닿툒 誘명똿 ?붿껌</span>
                   ) : (
                     <span className="font-medium text-foreground">{currentMeeting.mentorName}</span>
                   )}{" "}
                   {isEmergencyMeeting(currentMeeting)
-                    ? "건입니다. 아래 안내를 확인해주세요."
-                    : "멘토가 제안한 시간 중 가능한 시간을 선택해주세요."}
+                    ? "嫄댁엯?덈떎. ?꾨옒 ?덈궡瑜??뺤씤?댁＜?몄슂."
+                    : "硫섑넗媛 ?쒖븞???쒓컙 以?媛?ν븳 ?쒓컙???좏깮?댁＜?몄슂."}
                   <br />
-                  <span className="text-xs">목적: {currentMeeting.purpose}</span>
+                  <span className="text-xs">紐⑹쟻: {currentMeeting.purpose}</span>
                 </>
               )}
             </DialogDescription>
@@ -1054,13 +1054,13 @@ export function StudentMode() {
           <div className="py-4">
             {currentMeeting && currentMeeting.proposedSlots.length > 0 ? (
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground mb-3">여러 개 선택 가능합니다</p>
+                <p className="text-sm text-muted-foreground mb-3">?щ윭 媛??좏깮 媛?ν빀?덈떎</p>
                 {currentMeeting.proposedSlots
                   .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
                   .map((slot, idx) => {
                     const isSelected = selectedSlots.some(s => s.date === slot.date && s.time === slot.time)
                     const slotDate = new Date(slot.date)
-                    const dayNames = ['일', '월', '화', '수', '목', '금', '토']
+                    const dayNames = ["일", "월", "화", "수", "목", "금", "토"]
                     const label = `${slotDate.getMonth() + 1}/${slotDate.getDate()} (${dayNames[slotDate.getDay()]}) ${slot.time}`
                     return (
                       <button
@@ -1090,20 +1090,20 @@ export function StudentMode() {
                   : "text-muted-foreground"
               )}>
                 {currentMeeting && isEmergencyMeeting(currentMeeting)
-                  ? "멘토가 곧 직접 연락드릴 예정입니다."
-                  : "제안된 시간이 없습니다."}
+                  ? "硫섑넗媛 怨?吏곸젒 ?곕씫?쒕┫ ?덉젙?낅땲??"
+                  : "?쒖븞???쒓컙???놁뒿?덈떎."}
               </p>
             )}
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <div className="flex-1 text-sm text-muted-foreground">
-              {selectedSlots.length}개 선택됨
+              {selectedSlots.length}媛??좏깮??
             </div>
             <Button variant="outline" onClick={() => setAvailabilityModalOpen(false)}>
-              취소
+              痍⑥냼
             </Button>
             <Button onClick={handleSubmitAvailability} disabled={selectedSlots.length === 0}>
-              완료
+              ?꾨즺
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1111,3 +1111,4 @@ export function StudentMode() {
     </div>
   )
 }
+
