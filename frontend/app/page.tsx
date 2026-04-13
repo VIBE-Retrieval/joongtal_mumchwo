@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { LandingHeader } from "@/components/landing-header"
+import { LandingStudentNetworkLazy } from "@/components/landing-student-network-lazy"
 import { ScrollReveal } from "@/components/scroll-reveal"
 
 export default function LandingPage() {
@@ -201,11 +202,41 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Section 4: Stats + CTA + Footer ─────────────────── */}
+      {/* ── Section 4: 유사도 맵 + Stats + CTA + Footer ─────── */}
       <section
         className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800"
-        aria-labelledby="cta-heading"
+        aria-labelledby="similarity-heading cta-heading"
       >
+        {/* 유사도 기반 군집 — 3D 네트워크 */}
+        <div
+          id="similarity-map"
+          className="w-full px-6 pt-20 pb-8 md:pt-24 md:pb-12"
+        >
+          <div className="max-w-5xl mx-auto w-full">
+            <ScrollReveal>
+              <div className="text-center space-y-4 mb-10 md:mb-12">
+                <span className="inline-block text-xs font-semibold tracking-widest text-primary uppercase">
+                  학생 유사도 기반 분류
+                </span>
+                <h2
+                  id="similarity-heading"
+                  className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white text-balance"
+                >
+                  비슷한 상태의 학생을 한눈에
+                </h2>
+                <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-pretty max-w-2xl mx-auto text-[15px] md:text-base">
+                  학생의 설문, 학습 데이터, 변화 추이를 기반으로
+                  유사한 상태의 학생들을 군집화하여
+                  위험 패턴을 직관적으로 파악할 수 있습니다.
+                </p>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={80}>
+              <LandingStudentNetworkLazy />
+            </ScrollReveal>
+          </div>
+        </div>
+
         {/* Stats */}
         <ScrollReveal>
           <div className="max-w-4xl mx-auto w-full px-6 pt-24 pb-12">
