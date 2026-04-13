@@ -330,6 +330,7 @@ export function InterviewerMode() {
             ...prev,
             [id]: { score, level },
           }))
+          setVisibleResults(prev => new Set(prev).add(id))
         }
 
         setSaveStatus("saved")
@@ -363,7 +364,9 @@ export function InterviewerMode() {
       if (student) addStudent(student)
     }
 
-    setDecidedIds(prev => new Set(prev).add(id))
+    if (decision !== "HOLD") {
+      setDecidedIds(prev => new Set(prev).add(id))
+    }
     setView("list")
     setSaveStatus("idle")
   }, [selectedCandidate, ctxUpdateEvaluation, updateInterviewResult, handleSave, convertToStudent, addStudent])
@@ -378,9 +381,9 @@ export function InterviewerMode() {
     void handleDecision(decision)
   }, [pendingListDecision, selectedCandidate, handleDecision])
 
-  const completedCount = applicants.filter(
-    a => a.status === "PASSED" || a.status === "FAILED"
-  ).length
+  const completedCount = evaluatedCandidates.length
+  const totalCandidatesCount =
+    pendingCandidates.length + evaluatedCandidates.length + holdCandidates.length
 
   const toggleResultVisible = useCallback((id: string) => {
     setVisibleResults(prev => {
@@ -614,10 +617,12 @@ export function InterviewerMode() {
 
       <div className="flex-shrink-0 border-t border-border/60 bg-card/70 backdrop-blur-sm px-5 py-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-xs text-muted-foreground">
-            평가 완료 <span className="font-semibold text-foreground tabular-nums">{completedCount}</span>
-            <span className="text-muted-foreground/60"> / {applicants.length}명</span>
-          </div>
+          {totalCandidatesCount > 0 && (
+            <div className="text-xs text-muted-foreground">
+              평가 완료 <span className="font-semibold text-foreground tabular-nums">{completedCount}</span>
+              <span className="text-muted-foreground/60"> / {totalCandidatesCount}명</span>
+            </div>
+          )}
           <Button
             variant="secondary"
             size="sm"

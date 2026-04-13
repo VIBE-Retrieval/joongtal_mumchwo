@@ -34,7 +34,9 @@
       "Bash(cmd /c \"netstat -ano | findstr LISTENING | findstr 3000\")",
       "Bash(cmd /c \"netstat -ano\")",
       "Bash(cmd /c \"tasklist | findstr node\")",
-      "Bash(cmd /c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -aon ^| findstr :3000 ^| findstr LISTENING'\\) do taskkill /f /pid %a\")"
+      "Bash(cmd /c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -aon ^| findstr :3000 ^| findstr LISTENING'\\) do taskkill /f /pid %a\")",
+      "Bash(cmd.exe /c \"taskkill /PID 1100 /F\")",
+      "Bash(cmd.exe /c \"netstat -ano | findstr :3000\")"
     ]
   }
 }
