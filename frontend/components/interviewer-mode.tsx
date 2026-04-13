@@ -169,53 +169,57 @@ function EvaluationCard({
   onChange: (field: "answer" | "rating", val: string | number) => void
 }) {
   return (
-    <Card className="border shadow-sm">
+    <Card className="border border-border/60 hover:border-border transition-colors">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <span className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-sm">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2.5">
+          <span className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
             {category.key === "achievement" ? "1" : category.key === "adaptability" ? "2" : "3"}
           </span>
           {category.title}
         </CardTitle>
-        <p className="text-sm text-primary font-medium mt-1">{category.subtitle}</p>
+        <p className="text-xs text-primary/80 font-medium mt-0.5 ml-8">{category.subtitle}</p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="bg-muted/50 rounded-lg p-3 border-l-2 border-primary">
-          <p className="text-sm text-foreground leading-relaxed">
+      <CardContent className="space-y-4 pt-0">
+        {/* Question */}
+        <div className="bg-muted/40 rounded-lg p-3 border-l-2 border-primary/50">
+          <p className="text-xs text-foreground leading-relaxed">
             {category.question}
           </p>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            평가 의견
-          </label>
-          <Textarea
-            value={value.answer}
-            onChange={(e) => onChange("answer", e.target.value)}
-            placeholder="지원자에 대한 평가 의견을 작성하세요..."
-            className="resize-none h-20 text-sm"
-          />
-        </div>
-
-        <div className="bg-muted/30 rounded-lg p-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">면접관 체크 항목</p>
-          <ul className="space-y-1.5">
+        {/* Checklist */}
+        <div className="bg-muted/20 rounded-lg p-3 border border-border/30">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">체크 항목</p>
+          <ul className="space-y-1">
             {category.checklist.map((item, i) => (
-              <li key={i} className="text-sm text-foreground flex items-start gap-2">
-                <span className="text-primary mt-0.5">•</span>
+              <li key={i} className="text-xs text-foreground/80 flex items-start gap-2">
+                <span className="text-primary/60 mt-0.5 text-[10px] font-bold flex-shrink-0">✓</span>
                 {item}
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="space-y-3">
+        {/* Answer textarea */}
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+            평가 의견
+          </label>
+          <Textarea
+            value={value.answer}
+            onChange={(e) => onChange("answer", e.target.value)}
+            placeholder="지원자에 대한 평가 의견을 작성하세요..."
+            className="resize-none h-18 text-xs"
+          />
+        </div>
+
+        {/* Rating */}
+        <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
               평가 점수
             </label>
-            <span className="text-sm font-semibold text-primary">{value.rating} / 5</span>
+            <span className="text-sm font-bold text-primary tabular-nums">{value.rating}<span className="text-xs font-normal text-muted-foreground"> / 5</span></span>
           </div>
           <Slider
             value={[value.rating]}
@@ -225,27 +229,27 @@ function EvaluationCard({
             step={1}
             className="w-full"
           />
-          <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="grid grid-cols-3 gap-1.5 text-[10px]">
             <div className={cn(
-              "text-center p-2 rounded-md transition-all",
-              value.rating === 1 ? "bg-risk-high/15 text-risk-high font-medium" : "text-muted-foreground"
+              "text-center p-2 rounded-lg transition-all border",
+              value.rating === 1 ? "bg-risk-high/10 text-risk-high border-risk-high/20 font-semibold" : "text-muted-foreground border-border/30 bg-muted/20"
             )}>
-              <div className="font-semibold mb-0.5">1점</div>
-              <div>{category.ratingCriteria[1]}</div>
+              <div className="font-bold mb-0.5">1점</div>
+              <div className="leading-tight">{category.ratingCriteria[1]}</div>
             </div>
             <div className={cn(
-              "text-center p-2 rounded-md transition-all",
-              value.rating === 3 ? "bg-risk-medium/15 text-risk-medium font-medium" : "text-muted-foreground"
+              "text-center p-2 rounded-lg transition-all border",
+              value.rating === 3 ? "bg-risk-medium/10 text-risk-medium border-risk-medium/20 font-semibold" : "text-muted-foreground border-border/30 bg-muted/20"
             )}>
-              <div className="font-semibold mb-0.5">3점</div>
-              <div>{category.ratingCriteria[3]}</div>
+              <div className="font-bold mb-0.5">3점</div>
+              <div className="leading-tight">{category.ratingCriteria[3]}</div>
             </div>
             <div className={cn(
-              "text-center p-2 rounded-md transition-all",
-              value.rating === 5 ? "bg-risk-low/15 text-risk-low font-medium" : "text-muted-foreground"
+              "text-center p-2 rounded-lg transition-all border",
+              value.rating === 5 ? "bg-risk-low/10 text-risk-low border-risk-low/20 font-semibold" : "text-muted-foreground border-border/30 bg-muted/20"
             )}>
-              <div className="font-semibold mb-0.5">5점</div>
-              <div>{category.ratingCriteria[5]}</div>
+              <div className="font-bold mb-0.5">5점</div>
+              <div className="leading-tight">{category.ratingCriteria[5]}</div>
             </div>
           </div>
         </div>
@@ -434,13 +438,15 @@ export function InterviewerMode() {
   // Empty state
   if (candidates.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-8 h-8 text-muted-foreground" />
+      <div className="h-full flex items-center justify-center p-8">
+        <div className="text-center space-y-3 max-w-xs">
+          <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-7 h-7 text-muted-foreground/50" />
           </div>
-          <p className="text-lg font-medium text-foreground">대기 중인 지원자가 없습니다</p>
-          <p className="text-sm text-muted-foreground">멘토가 신규 지원자를 등록하면 여기에 표시됩니다.</p>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">대기 중인 지원자가 없습니다</p>
+            <p className="text-xs text-muted-foreground">멘토가 신규 지원자를 등록하면 여기에 표시됩니다.</p>
+          </div>
         </div>
       </div>
     )
@@ -451,90 +457,91 @@ export function InterviewerMode() {
   return (
     <div className="h-full flex flex-col">
       {/* TOP: Candidate Info + Navigation */}
-      <div className="flex-shrink-0 border-b bg-card/50 px-6 py-4">
+      <div className="flex-shrink-0 border-b border-border/60 bg-card/60 backdrop-blur-sm px-6 py-3.5">
         <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-lg font-semibold text-primary">
-                {currentCandidate.name.charAt(0)}
-              </span>
+          <div className="flex items-center justify-between gap-4">
+            {/* Candidate Info */}
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-base font-bold text-primary">
+                  {currentCandidate.name.charAt(0)}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-semibold text-foreground">{currentCandidate.name}</h2>
+                  {currentCandidate.status === "HOLD" && (
+                    <span className="text-[11px] bg-risk-medium/12 text-risk-medium border border-risk-medium/20 px-2 py-0.5 rounded-full font-medium">
+                      보류
+                    </span>
+                  )}
+                  {currentCandidate.isSaved && (
+                    <span className="text-[11px] text-status-stable flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3" />
+                      저장됨
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                  <span>생년월일: {currentCandidate.birthDate}</span>
+                  <span className="text-border">·</span>
+                  <span>과정: {currentCandidate.appliedCourse}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-foreground">{currentCandidate.name}</h2>
-                {currentCandidate.status === "HOLD" && (
-                  <span className="text-xs bg-risk-medium/15 text-risk-medium px-2 py-0.5 rounded-full font-medium">
-                    보류
-                  </span>
-                )}
-                {currentCandidate.isSaved && (
-                  <span className="text-xs text-risk-low flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    저장됨
-                  </span>
-                )}
+
+            {/* Navigation Controls */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPrevious}
+                disabled={safeIndex === 0}
+                className="h-8 gap-1 text-xs"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                이전
+              </Button>
+
+              <div className="px-2.5 py-1 rounded-lg bg-muted/60 text-xs font-medium text-muted-foreground tabular-nums">
+                {safeIndex + 1} / {candidates.length}
               </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                <span>생년월일: {currentCandidate.birthDate}</span>
-                <span>•</span>
-                <span>지원 과정: {currentCandidate.appliedCourse}</span>
-              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNext}
+                disabled={safeIndex === candidates.length - 1}
+                className="h-8 gap-1 text-xs"
+              >
+                다음
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+
+              <div className="w-px h-5 bg-border mx-1" />
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSave}
+                disabled={saveStatus === "saving" || isSaving}
+                className="h-8 gap-1.5 text-xs"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saveStatus === "saving" ? "저장 중..." : saveStatus === "saved" ? "저장됨 ✓" : "임시 저장"}
+              </Button>
             </div>
           </div>
-
-          {/* Navigation */}
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPrevious}
-              disabled={safeIndex === 0}
-              className="gap-1"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              이전 지원자
-            </Button>
-
-            <div className="px-3 py-1 rounded-md bg-muted text-sm font-medium">
-              {safeIndex + 1} / {candidates.length}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNext}
-              disabled={safeIndex === candidates.length - 1}
-              className="gap-1"
-            >
-              다음 지원자
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-
-            <div className="w-px h-8 bg-border mx-2" />
-
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleSave}
-              disabled={saveStatus === "saving" || isSaving}
-              className="gap-1.5"
-            >
-              <Save className="w-4 h-4" />
-              {saveStatus === "saving" ? "저장 중..." : saveStatus === "saved" ? "저장됨" : "임시 저장"}
-            </Button>
-          </div>
-        </div>
-        {saveError && (
-          <p className="text-sm text-destructive text-center">{saveError}</p>
-        )}
+          {saveError && (
+            <p className="text-xs text-destructive bg-destructive/8 border border-destructive/20 rounded-lg px-3 py-1.5">{saveError}</p>
+          )}
         </div>
       </div>
 
       {/* MIDDLE: Left (Evaluation) + Right (Analysis) */}
-      <div className="flex-1 grid grid-cols-[1fr_380px] min-h-0 overflow-hidden">
+      <div className="flex-1 grid grid-cols-[1fr_360px] min-h-0 overflow-hidden">
         {/* LEFT: Evaluation Cards */}
-        <div className="overflow-y-auto p-6 space-y-4">
+        <div className="overflow-y-auto p-5 space-y-4">
           {evaluationCategories.map((category) => (
             <EvaluationCard
               key={category.key}
@@ -546,80 +553,63 @@ export function InterviewerMode() {
         </div>
 
         {/* RIGHT: Real-Time Analysis */}
-        <div className="border-l bg-muted/30 p-6 overflow-y-auto">
-          <div className="space-y-6">
-            {/* Risk Score */}
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  위험 점수
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RiskGauge score={analysis.riskScore} level={analysis.riskLevel} />
-              </CardContent>
-            </Card>
+        <div className="border-l border-border/60 bg-muted/20 p-5 overflow-y-auto">
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="pb-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">실시간 분석</p>
+            </div>
 
-            {/* Risk Level */}
-            <Card className="border-0 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">위험 수준</p>
-                  <span
-                    className={cn(
-                      "inline-block px-4 py-2 rounded-full text-sm font-semibold",
-                      analysis.riskLevel === "LOW" && "bg-risk-low/20 text-risk-low",
-                      analysis.riskLevel === "MEDIUM" && "bg-risk-medium/20 text-risk-medium",
-                      analysis.riskLevel === "HIGH" && "bg-risk-high/20 text-risk-high"
-                    )}
-                  >
+            {/* Risk Score + Level combined */}
+            <Card className="border border-border/60">
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-3">위험 점수</p>
+                <RiskGauge score={analysis.riskScore} level={analysis.riskLevel} />
+                <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">위험 수준</span>
+                  <span className={cn(
+                    "px-2.5 py-1 rounded-lg text-xs font-semibold",
+                    analysis.riskLevel === "LOW" && "bg-risk-low/15 text-risk-low",
+                    analysis.riskLevel === "MEDIUM" && "bg-risk-medium/15 text-risk-medium",
+                    analysis.riskLevel === "HIGH" && "bg-risk-high/15 text-risk-high"
+                  )}>
                     {riskLevelLabels[analysis.riskLevel]}
                   </span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Similar Candidate Type */}
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  유사 지원자 유형
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
+            {/* Cluster */}
+            <Card className="border border-border/60">
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-3">유사 지원자 유형</p>
+                <div className="space-y-1.5">
                   {clusters.map((c) => (
                     <div
                       key={c.id}
                       className={cn(
-                        "flex items-center gap-3 p-2.5 rounded-lg transition-all",
+                        "flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150",
                         c.id === analysis.cluster
-                          ? "bg-primary/10 border border-primary/30"
-                          : "bg-muted/50"
+                          ? "bg-primary/8 border border-primary/25"
+                          : "bg-muted/40"
                       )}
                     >
-                      <div
-                        className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium",
-                          c.id === analysis.cluster
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        )}
-                      >
+                      <div className={cn(
+                        "w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0",
+                        c.id === analysis.cluster
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}>
                         {c.id}
                       </div>
-                      <span
-                        className={cn(
-                          "text-sm",
-                          c.id === analysis.cluster
-                            ? "text-foreground font-medium"
-                            : "text-muted-foreground"
-                        )}
-                      >
+                      <span className={cn(
+                        "text-xs flex-1",
+                        c.id === analysis.cluster ? "text-foreground font-medium" : "text-muted-foreground"
+                      )}>
                         {c.label}
                       </span>
                       {c.id === analysis.cluster && (
-                        <span className="ml-auto text-xs font-medium text-primary">일치</span>
+                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">일치</span>
                       )}
                     </div>
                   ))}
@@ -628,14 +618,10 @@ export function InterviewerMode() {
             </Card>
 
             {/* AI Explanation */}
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  AI 분석 설명
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground leading-relaxed">
+            <Card className="border border-border/60">
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">AI 분석 설명</p>
+                <p className="text-xs text-foreground/80 leading-relaxed">
                   {analysis.explanation}
                 </p>
               </CardContent>
@@ -645,63 +631,62 @@ export function InterviewerMode() {
       </div>
 
       {/* BOTTOM: Actions */}
-      <div className="flex-shrink-0 border-t bg-card/50 px-6 py-4">
+      <div className="flex-shrink-0 border-t border-border/60 bg-card/60 backdrop-blur-sm px-6 py-3">
         <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            평가 완료:{" "}
-            <span className="font-medium text-foreground">{completedCount}</span>{" "}
-            / {applicants.length} 명
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-xs text-muted-foreground">
+              평가 완료{" "}
+              <span className="font-semibold text-foreground tabular-nums">{completedCount}</span>
+              <span className="text-muted-foreground/60"> / {applicants.length}명</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSave}
+                disabled={saveStatus === "saving" || isSaving}
+                className="h-8 gap-1.5 text-xs"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saveStatus === "saving" ? "저장 중..." : "임시 저장"}
+              </Button>
+
+              <div className="w-px h-5 bg-border" />
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDecision("HOLD")}
+                className="h-8 gap-1.5 text-xs border-risk-medium/40 text-risk-medium hover:bg-risk-medium/8 hover:border-risk-medium/60"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                보류
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDecision("FAILED")}
+                className="h-8 gap-1.5 text-xs border-risk-high/40 text-risk-high hover:bg-risk-high/8 hover:border-risk-high/60"
+              >
+                <ThumbsDown className="w-3.5 h-3.5" />
+                불합격
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={() => handleDecision("PASSED")}
+                className="h-8 gap-1.5 text-xs bg-risk-low text-white hover:bg-risk-low/90"
+              >
+                <ThumbsUp className="w-3.5 h-3.5" />
+                합격
+              </Button>
+            </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleSave}
-              disabled={saveStatus === "saving" || isSaving}
-              className="gap-1.5"
-            >
-              <Save className="w-4 h-4" />
-              {saveStatus === "saving" ? "저장 중..." : "임시 저장"}
-            </Button>
-
-            <div className="w-px h-8 bg-border" />
-
-            {/* Decision buttons */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDecision("HOLD")}
-              className="gap-1.5 border-risk-medium/50 text-risk-medium hover:bg-risk-medium/10"
-            >
-              <Clock className="w-4 h-4" />
-              보류
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDecision("FAILED")}
-              className="gap-1.5 border-risk-high/50 text-risk-high hover:bg-risk-high/10"
-            >
-              <ThumbsDown className="w-4 h-4" />
-              불합격
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={() => handleDecision("PASSED")}
-              className="gap-1.5 bg-risk-low text-white hover:bg-risk-low/90"
-            >
-              <ThumbsUp className="w-4 h-4" />
-              합격
-            </Button>
-          </div>
-        </div>
-        {saveError && (
-          <p className="text-sm text-destructive text-center">{saveError}</p>
-        )}
+          {saveError && (
+            <p className="text-xs text-destructive bg-destructive/8 border border-destructive/20 rounded-lg px-3 py-1.5">{saveError}</p>
+          )}
         </div>
       </div>
     </div>

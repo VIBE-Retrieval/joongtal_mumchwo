@@ -57,13 +57,13 @@ function calculateTrend(data: SurveyRecord[], key: keyof Omit<SurveyRecord, "dat
 
 function MetricDots({ value, max = 5 }: { value: number; max?: number }) {
   return (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1">
       {Array.from({ length: max }, (_, i) => (
         <div
           key={i}
           className={cn(
-            "w-3 h-3 rounded-full transition-colors",
-            i < Math.round(value) ? "bg-primary" : "bg-muted"
+            "w-2.5 h-2.5 rounded-full transition-all duration-150",
+            i < Math.round(value) ? "bg-primary scale-100" : "bg-muted/70 scale-90"
           )}
         />
       ))}
@@ -356,14 +356,14 @@ export function StudentMode() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 p-6">
+    <div className="max-w-3xl mx-auto space-y-5 px-6 py-8">
       {/* Header with Notification Bell */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground">나의 대시보드</h1>
+        <div className="space-y-0.5">
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">나의 대시보드</h1>
           {!isLoading && (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <span className="text-lg leading-none" aria-hidden>{emotionLabel}</span>
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <span className="text-base leading-none" aria-hidden>{emotionLabel}</span>
               <span>{emotionState}</span>
             </p>
           )}
@@ -531,33 +531,33 @@ export function StudentMode() {
       {/* Recent Mentor Message Card */}
       {latestMessage && (
         <Card className={cn(
-          "border-0 shadow-md overflow-hidden",
-          !latestMessage.isRead 
-            ? "bg-gradient-to-r from-primary/10 to-primary/5 border-l-4 border-l-primary"
-            : "bg-card/80"
+          "border overflow-hidden transition-all",
+          !latestMessage.isRead
+            ? "border-primary/30 bg-primary/[0.03]"
+            : "border-border/60 bg-card"
         )}>
-          <CardContent className="py-4">
-            <div className="flex items-start gap-4">
+          <CardContent className="py-4 px-5">
+            <div className="flex items-start gap-3.5">
               <div className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                !latestMessage.isRead ? "bg-primary/20" : "bg-muted"
+                "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0",
+                !latestMessage.isRead ? "bg-primary/15" : "bg-muted"
               )}>
                 <Heart className={cn(
-                  "w-5 h-5",
+                  "w-4 h-4",
                   !latestMessage.isRead ? "text-primary" : "text-muted-foreground"
                 )} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-sm font-semibold text-foreground">멘토의 메시지</span>
                   {!latestMessage.isRead && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded">NEW</span>
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded-md tracking-wide">NEW</span>
                   )}
                   <span className="text-xs text-muted-foreground ml-auto">
                     {formatMessageTime(latestMessage.timestamp)}
                   </span>
                 </div>
-                <p className="text-sm text-foreground leading-relaxed">
+                <p className="text-sm text-foreground/90 leading-relaxed">
                   {latestMessage.message}
                 </p>
               </div>
@@ -567,27 +567,40 @@ export function StudentMode() {
       )}
 
       {/* Quick Access - Survey Button */}
-      <Card className="border-0 shadow-md bg-gradient-to-r from-primary/5 to-primary/10">
-        <CardContent className="py-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-foreground">오늘의 설문</h2>
-              <p className="text-sm text-muted-foreground">
-                {todaySurveyCompleted 
-                  ? "완료" 
-                  : "미완료"
-                }
-              </p>
+      <Card className={cn(
+        "border transition-all",
+        todaySurveyCompleted
+          ? "border-status-stable/30 bg-status-stable/[0.03]"
+          : "border-primary/30 bg-primary/[0.03]"
+      )}>
+        <CardContent className="py-5 px-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-10 h-10 rounded-xl flex items-center justify-center",
+                todaySurveyCompleted ? "bg-status-stable/15" : "bg-primary/12"
+              )}>
+                <ClipboardList className={cn(
+                  "w-5 h-5",
+                  todaySurveyCompleted ? "text-status-stable" : "text-primary"
+                )} />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">오늘의 설문</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {todaySurveyCompleted ? "오늘 설문을 완료했습니다" : "아직 오늘 설문을 작성하지 않았습니다"}
+                </p>
+              </div>
             </div>
             {todaySurveyCompleted ? (
-              <Button size="lg" disabled className="gap-2">
-                <ClipboardList className="w-5 h-5" />
-                설문 완료
+              <Button size="sm" disabled variant="outline" className="gap-1.5 text-xs h-8 text-status-stable border-status-stable/30">
+                <Check className="w-3.5 h-3.5" />
+                완료됨
               </Button>
             ) : (
-              <Button asChild size="lg" className="gap-2">
+              <Button asChild size="sm" className="gap-1.5 text-xs h-8">
                 <Link href="/student/survey">
-                  <ClipboardList className="w-5 h-5" />
+                  <ClipboardList className="w-3.5 h-3.5" />
                   설문 하러가기
                 </Link>
               </Button>
@@ -596,51 +609,66 @@ export function StudentMode() {
         </CardContent>
       </Card>
 
-      {/* Summary Section */}
-      <Card className="border-0 shadow-md bg-card/80 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-base font-medium">최근 평균</CardTitle>
-          <CardDescription>최근 7일간의 평균 점수</CardDescription>
+      {/* ─── Summary Section ─── */}
+      <Card className="border border-border/60">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-semibold text-foreground">최근 평균</CardTitle>
+              <CardDescription className="text-xs mt-0.5">최근 7일간의 평균 점수</CardDescription>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground text-center py-6">로딩 중...</p>
+            <div className="grid grid-cols-3 gap-4">
+              {[1,2,3].map(i => (
+                <div key={i} className="space-y-2.5">
+                  <div className="h-3.5 bg-muted rounded animate-pulse w-16" />
+                  <div className="h-2.5 bg-muted rounded animate-pulse w-24" />
+                  <div className="h-3 bg-muted rounded animate-pulse w-12" />
+                </div>
+              ))}
+            </div>
           ) : (
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 gap-4 divide-x divide-border/50">
               {/* Achievement */}
-              <div className="space-y-3">
+              <div className="space-y-3 pr-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">성취도</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">성취도</span>
                   <TrendIcon trend={achievementTrend} />
                 </div>
+                <div className="space-y-1">
+                  <span className="text-lg font-semibold text-foreground tabular-nums">{averages.achievement.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground"> / 5</span>
+                </div>
                 <MetricDots value={averages.achievement} />
-                <span className="text-xs text-muted-foreground">
-                  평균 {averages.achievement.toFixed(1)}점
-                </span>
               </div>
-              
+
               {/* Adaptability */}
-              <div className="space-y-3">
+              <div className="space-y-3 px-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">적응도</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">적응도</span>
                   <TrendIcon trend={adaptabilityTrend} />
                 </div>
+                <div className="space-y-1">
+                  <span className="text-lg font-semibold text-foreground tabular-nums">{averages.adaptability.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground"> / 5</span>
+                </div>
                 <MetricDots value={averages.adaptability} />
-                <span className="text-xs text-muted-foreground">
-                  평균 {averages.adaptability.toFixed(1)}점
-                </span>
               </div>
-              
+
               {/* Relationship */}
-              <div className="space-y-3">
+              <div className="space-y-3 pl-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">인간관계</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">인간관계</span>
                   <TrendIcon trend={relationshipTrend} />
                 </div>
+                <div className="space-y-1">
+                  <span className="text-lg font-semibold text-foreground tabular-nums">{averages.relationship.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground"> / 5</span>
+                </div>
                 <MetricDots value={averages.relationship} />
-                <span className="text-xs text-muted-foreground">
-                  평균 {averages.relationship.toFixed(1)}점
-                </span>
               </div>
             </div>
           )}
@@ -648,16 +676,18 @@ export function StudentMode() {
       </Card>
 
       {/* Trend Visualization */}
-      <Card className="border-0 shadow-md bg-card/80 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-base font-medium">최근 7일 추이</CardTitle>
-          <CardDescription>지난 일주일간의 변화 그래프</CardDescription>
+      <Card className="border border-border/60">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-foreground">최근 7일 추이</CardTitle>
+          <CardDescription className="text-xs">지난 일주일간의 변화 그래프</CardDescription>
         </CardHeader>
-        <CardContent className="pl-8">
+        <CardContent className="pl-8 pt-2">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground text-center py-6">로딩 중...</p>
+            <div className="h-40 bg-muted/30 rounded-lg animate-pulse" />
           ) : surveyHistory.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">아직 설문 데이터가 없습니다</p>
+            <div className="h-40 flex items-center justify-center">
+              <p className="text-sm text-muted-foreground">아직 설문 데이터가 없습니다</p>
+            </div>
           ) : (
             <TrendChart data={surveyHistory} />
           )}
@@ -665,56 +695,67 @@ export function StudentMode() {
       </Card>
 
       {/* Survey History Table */}
-      <Card className="border-0 shadow-md bg-card/80 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-base font-medium">설문 기록</CardTitle>
-          <CardDescription>과거 설문 응답 내역</CardDescription>
+      <Card className="border border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold text-foreground">설문 기록</CardTitle>
+          <CardDescription className="text-xs">과거 설문 응답 내역</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground text-center py-6">로딩 중...</p>
+            <div className="space-y-2">
+              {[1,2,3].map(i => <div key={i} className="h-10 bg-muted/30 rounded animate-pulse" />)}
+            </div>
           ) : surveyHistory.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">아직 설문 데이터가 없습니다</p>
+            <div className="py-10 text-center">
+              <p className="text-sm text-muted-foreground">아직 설문 데이터가 없습니다</p>
+            </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-lg border border-border/40">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">날짜</th>
-                      <th className="text-center py-3 px-2 font-medium text-muted-foreground">성취도</th>
-                      <th className="text-center py-3 px-2 font-medium text-muted-foreground">적응도</th>
-                      <th className="text-center py-3 px-2 font-medium text-muted-foreground">인간관계</th>
+                    <tr className="border-b border-border/40 bg-muted/30">
+                      <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">날짜</th>
+                      <th className="text-center py-2.5 px-3 text-xs font-medium text-muted-foreground">성취도</th>
+                      <th className="text-center py-2.5 px-3 text-xs font-medium text-muted-foreground">적응도</th>
+                      <th className="text-center py-2.5 px-3 text-xs font-medium text-muted-foreground">인간관계</th>
                     </tr>
                   </thead>
                   <tbody>
                     {displayedHistory.map((record, index) => (
-                      <tr key={record.date} className={cn("border-b last:border-0", index === 0 && "bg-primary/5")}>
-                        <td className="py-3 px-2 text-foreground">
-                          {formatFullDate(record.date)}
-                          {index === 0 && <span className="ml-2 text-xs text-primary font-medium">오늘</span>}
+                      <tr key={record.date} className={cn(
+                        "border-b border-border/30 last:border-0 transition-colors hover:bg-muted/20",
+                        index === 0 && "bg-primary/[0.03]"
+                      )}>
+                        <td className="py-2.5 px-3 text-foreground text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span>{formatFullDate(record.date)}</span>
+                            {index === 0 && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary rounded">오늘</span>
+                            )}
+                          </div>
                         </td>
-                        <td className="py-3 px-2 text-center">
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className="font-medium">{record.achievement}</span>
-                            <span className="text-xs text-muted-foreground hidden sm:inline">
-                              ({getScoreLabel(record.achievement)})
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="text-sm font-semibold text-foreground">{record.achievement}</span>
+                            <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                              {getScoreLabel(record.achievement)}
                             </span>
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-center">
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className="font-medium">{record.adaptability}</span>
-                            <span className="text-xs text-muted-foreground hidden sm:inline">
-                              ({getScoreLabel(record.adaptability)})
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="text-sm font-semibold text-foreground">{record.adaptability}</span>
+                            <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                              {getScoreLabel(record.adaptability)}
                             </span>
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-center">
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className="font-medium">{record.relationship}</span>
-                            <span className="text-xs text-muted-foreground hidden sm:inline">
-                              ({getScoreLabel(record.relationship)})
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="text-sm font-semibold text-foreground">{record.relationship}</span>
+                            <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                              {getScoreLabel(record.relationship)}
                             </span>
                           </span>
                         </td>
@@ -723,13 +764,14 @@ export function StudentMode() {
                   </tbody>
                 </table>
               </div>
-              
+
               {surveyHistory.length > 5 && (
-                <div className="mt-4 text-center">
-                  <Button 
-                    variant="ghost" 
+                <div className="mt-3 text-center">
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => setShowAllHistory(!showAllHistory)}
+                    className="text-xs h-7 text-muted-foreground hover:text-foreground"
                   >
                     {showAllHistory ? "접기" : `더 보기 (${surveyHistory.length - 5}개)`}
                   </Button>
@@ -741,15 +783,15 @@ export function StudentMode() {
       </Card>
 
       {/* Insight Card */}
-      <Card className="border-0 shadow-md bg-gradient-to-br from-primary/5 to-transparent">
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-lg">💡</span>
+      <Card className="border border-primary/20 bg-primary/[0.02]">
+        <CardContent className="py-4 px-5">
+          <div className="flex gap-3.5">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/12 flex items-center justify-center">
+              <span className="text-base leading-none">💡</span>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">AI 인사이트</p>
-              <p className="text-sm leading-relaxed text-muted-foreground">
+            <div className="space-y-1 pt-0.5">
+              <p className="text-xs font-semibold text-primary uppercase tracking-wide">AI 인사이트</p>
+              <p className="text-sm leading-relaxed text-foreground/80">
                 {getInsight()}
               </p>
             </div>
@@ -759,74 +801,66 @@ export function StudentMode() {
 
       {/* Confirmed Meeting Card */}
       {confirmedMeetings.length > 0 && (
-        <Card className="border-0 shadow-md bg-gradient-to-r from-risk-low/10 to-risk-low/5 border-l-4 border-l-risk-low">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-risk-low" />
+        <Card className="border border-status-stable/30 bg-status-stable/[0.03]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-status-stable" />
               예정된 미팅
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {confirmedMeetings.map(meeting => (
-                <div key={meeting.id} className="flex items-center justify-between p-3 bg-background/50 rounded-lg">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {meeting.confirmedSlot?.date} {meeting.confirmedSlot?.time}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      목적: {meeting.purpose}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-risk-low" />
-                    <span className="text-xs text-risk-low font-medium">확정</span>
-                  </div>
+          <CardContent className="pt-0 space-y-2">
+            {confirmedMeetings.map(meeting => (
+              <div key={meeting.id} className="flex items-center justify-between p-3 bg-card/60 rounded-lg border border-border/40">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {meeting.confirmedSlot?.date} {meeting.confirmedSlot?.time}
+                  </p>
+                  <p className="text-xs text-muted-foreground">목적: {meeting.purpose}</p>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-status-stable" />
+                  <span className="text-xs text-status-stable font-medium">확정</span>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
 
       {/* Pending Meeting Request Card */}
       {pendingMeetingRequests.length > 0 && (
-        <Card className="border-0 shadow-md bg-gradient-to-r from-primary/10 to-primary/5 border-l-4 border-l-primary animate-in fade-in duration-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
+        <Card className="border border-primary/30 bg-primary/[0.03] animate-in fade-in duration-300">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />
               미팅 요청
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded">NEW</span>
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded-md">NEW</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {pendingMeetingRequests.map(meeting => (
-                <div key={meeting.id} className="p-4 bg-background/50 rounded-lg space-y-3">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {meeting.mentorName} 멘토가 미팅을 요청했습니다
+          <CardContent className="pt-0 space-y-2.5">
+            {pendingMeetingRequests.map(meeting => (
+              <div key={meeting.id} className="p-3.5 bg-card/60 rounded-lg border border-border/40 space-y-2.5">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {meeting.mentorName} 멘토가 미팅을 요청했습니다
+                  </p>
+                  <p className="text-xs text-muted-foreground">목적: {meeting.purpose}</p>
+                  {meeting.message && (
+                    <p className="text-xs text-foreground/80 mt-2 p-2.5 bg-muted/30 rounded-lg border border-border/30">
+                      {meeting.message}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      목적: {meeting.purpose}
-                    </p>
-                    {meeting.message && (
-                      <p className="text-sm text-foreground mt-2 p-2 bg-muted/30 rounded">
-                        {meeting.message}
-                      </p>
-                    )}
-                  </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full gap-2"
-                    onClick={() => handleOpenAvailabilityModal(meeting.id)}
-                  >
-                    <Calendar className="w-4 h-4" />
-                    가능한 시간 선택하기
-                  </Button>
+                  )}
                 </div>
-              ))}
-            </div>
+                <Button
+                  size="sm"
+                  className="w-full h-8 gap-1.5 text-xs"
+                  onClick={() => handleOpenAvailabilityModal(meeting.id)}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  가능한 시간 선택하기
+                </Button>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
