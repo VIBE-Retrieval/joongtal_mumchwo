@@ -6,9 +6,10 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from AI.agent.agent_service import decide
-from AI.llm.llm_interpreter import interpret
+from AI.llm.llm_interpreter import generate_encouragement, interpret
 from backend.ai_module.process_ml_service import run_process_ml
-from backend.repositories import survey_repository
+from backend.models import Student
+from backend.repositories import meeting_repository, survey_repository
 
 
 @dataclass
@@ -103,13 +104,61 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
     }
     agent_result = decide(agent_input)
 
-    survey_repository.save_intervention_history(
+    intervention = survey_repository.save_intervention_history(
         session,
         student_id=payload.student_id,
         record_date=payload.survey_date,
         agent_result=agent_result,
         llm_summary=llm_result["state_summary"],
     )
+
+    action_type = agent_result["action_type"]
+
+    if action_type == "ENCOURAGE_MESSAGE":
+        encourage_msg = generate_encouragement(
+            {
+                "risk_score": ml_result["risk_score"],
+                "risk_level": ml_result["risk_level"],
+                "risk_trend": ml_result["risk_trend"],
+                "feature_snapshot": ml_result["feature_snapshot"],
+            },
+            llm_result,
+        )
+        intervention.llm_summary = encourage_msg
+        intervention.status = "COMPLETED"
+
+    elif action_type in ("ALERT_MENTOR", "EMERGENCY"):
+        if action_type == "EMERGENCY":
+            student = session.get(Student, payload.student_id)
+            student_name = student.name if student else payload.student_id
+            meeting_repository.create_meeting(
+                session,
+                student_id=payload.student_id,
+                mentor_id="SYSTEM",
+                mentor_name="AI 긴급 요청",
+                student_name=student_name,
+                purpose=f"[긴급] {agent_result['action_reason']}",
+                message=llm_result["state_summary"],
+                proposed_slots=[],
+            )
+
+    elif action_type == "REQUEST_MEETING":
+        student = session.get(Student, payload.student_id)
+        student_name = student.name if student else payload.student_id
+        meeting_repository.create_meeting(
+            session,
+            student_id=payload.student_id,
+            mentor_id="SYSTEM",
+            mentor_name="AI 자동 요청",
+            student_name=student_name,
+            purpose=agent_result["action_reason"],
+            message=llm_result["state_summary"],
+            proposed_slots=[],
+        )
+        intervention.status = "COMPLETED"
+
+    elif action_type == "NONE":
+        intervention.status = "COMPLETED"
 
     session.commit()
 
