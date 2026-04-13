@@ -182,6 +182,11 @@ export default function LandingPage() {
                 로그인
               </Button>
             </Link>
+            <Link href="/ai-test">
+              <Button size="lg" variant="outline" className="px-8">
+                AI 테스트 해보기
+              </Button>
+            </Link>
           </div>
         </div>
         <footer className="shrink-0 py-8 border-t border-border/50">

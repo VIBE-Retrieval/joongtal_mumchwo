@@ -67,10 +67,10 @@ def extract_features(df: pd.DataFrame) -> pd.DataFrame:
         + working["adaptation_score"]
         + working["relationship_score"]
     ) / 3.0
-    # total_delta_7d = daily_avg(today) - daily_avg(7 days ago), per student
+    # total_delta_7d = daily_avg(last day in 7d window) - daily_avg(first day in 7d window), per student
     working["total_delta_7d"] = working["_daily_avg"] - working.groupby("student_id")[
         "_daily_avg"
-    ].shift(7)
+    ].shift(6)
 
     feature_df = working.dropna(
         subset=[

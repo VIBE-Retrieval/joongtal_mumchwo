@@ -215,7 +215,7 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
         summary: "면접 합격 후 입과 등록"
       }],
       enrollmentDate: dateStr,
-      attendance: 100,
+      attendance: 0,
       assignmentsCompleted: 0,
       totalAssignments: 0,
       lastContact: "오늘",
