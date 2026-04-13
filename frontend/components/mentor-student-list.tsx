@@ -248,42 +248,6 @@ function StudentRecord({
                 )}
               </div>
 
-              {/* Progress Stats */}
-              <div className="bg-muted/30 rounded-xl p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">출석률</span>
-                  <span className="text-lg font-semibold">{student.attendance}%</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className={cn(
-                      "h-full rounded-full transition-all",
-                      student.attendance > 80 ? "bg-risk-low" : student.attendance > 60 ? "bg-risk-medium" : "bg-risk-high"
-                    )}
-                    style={{ width: `${student.attendance}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-muted/30 rounded-xl p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">과제 완료</span>
-                  <span className="text-lg font-semibold">{student.assignmentsCompleted}/{student.totalAssignments}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{ width: `${student.totalAssignments > 0 ? (student.assignmentsCompleted / student.totalAssignments) * 100 : 0}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-muted/30 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">마지막 연락</span>
-                  <span className="text-sm font-medium">{student.lastContact}</span>
-                </div>
-              </div>
             </div>
 
             {/* Center Column - Trend & AI Summary */}
