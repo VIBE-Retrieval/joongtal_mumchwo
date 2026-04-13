@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from backend.models import (
     DailySurvey,
+    InterventionFeedback,
     InterventionHistory,
     InterviewAssessment,
     InterviewRiskHistory,
+    Meeting,
     ProcessRiskHistory,
     Student,
 )
@@ -120,6 +122,25 @@ def create_student(
 def get_student_by_email(session: Session, email: str) -> Student | None:
     stmt = select(Student).where(Student.email == email)
     return session.scalar(stmt)
+
+
+def delete_student(session: Session, student_id: str) -> bool:
+    student = session.get(Student, student_id)
+    if student is None:
+        return False
+    for model in (
+        InterventionFeedback,
+        InterventionHistory,
+        ProcessRiskHistory,
+        InterviewRiskHistory,
+        InterviewAssessment,
+        DailySurvey,
+        Meeting,
+    ):
+        session.execute(delete(model).where(model.student_id == student_id))
+    session.delete(student)
+    session.flush()
+    return True
 
 
 def get_all_students(session: Session) -> list[dict]:

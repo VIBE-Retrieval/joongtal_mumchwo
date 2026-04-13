@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn, formatPhone } from "@/lib/utils"
-import { Search, ChevronLeft, ChevronRight, MessageCircle, Calendar, FileText, User, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Clock, X } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, MessageCircle, Calendar, FileText, User, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Clock, X, Trash2 } from "lucide-react"
 import { useStudents, getKoreanInitial, KOREAN_INITIALS, type Student, type RiskLevel } from "@/contexts/student-context"
 import { useMessages } from "@/contexts/message-context"
 import { useMeetings, type TimeSlot } from "@/contexts/meeting-context"
@@ -82,7 +82,7 @@ function TrendChart({ data, riskLevel }: { data: number[]; riskLevel: RiskLevel 
   )
 }
 
-function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeeting }: { student: Student; onCompleteCare?: () => void; onSendMessage?: () => void; onRequestMeeting?: () => void }) {
+function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeeting, onDelete }: { student: Student; onCompleteCare?: () => void; onSendMessage?: () => void; onRequestMeeting?: () => void; onDelete?: () => void }) {
   const riskColors: Record<RiskLevel, { bg: string; text: string; label: string; border: string; icon: typeof CheckCircle }> = {
     low: { bg: "bg-risk-low/15", text: "text-risk-low", label: "낮음", border: "border-risk-low/30", icon: CheckCircle },
     medium: { bg: "bg-risk-medium/15", text: "text-risk-medium", label: "보통", border: "border-risk-medium/30", icon: Clock },
@@ -136,17 +136,30 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
                   </div>
                   <p className="text-lg text-muted-foreground mt-1">{student.courseName} · {student.currentWeek}주차</p>
                 </div>
-                <div className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl",
-                  riskStyle.bg
-                )}>
-                  <RiskIcon className={cn("w-5 h-5", riskStyle.text)} />
-                  <span className={cn("font-semibold", riskStyle.text)}>
-                    위험도 {riskStyle.label}
-                  </span>
-                  <span className={cn("text-2xl font-bold ml-2", riskStyle.text)}>
-                    {student.riskScore}
-                  </span>
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl",
+                    riskStyle.bg
+                  )}>
+                    <RiskIcon className={cn("w-5 h-5", riskStyle.text)} />
+                    <span className={cn("font-semibold", riskStyle.text)}>
+                      위험도 {riskStyle.label}
+                    </span>
+                    <span className={cn("text-2xl font-bold ml-2", riskStyle.text)}>
+                      {student.riskScore}
+                    </span>
+                  </div>
+                  {onDelete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={onDelete}
+                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      title="학생 삭제"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  )}
                 </div>
               </div>
               
@@ -367,7 +380,7 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
 }
 
 export function MentorStudentList() {
-  const { students, completeCare } = useStudents()
+  const { students, completeCare, removeStudent } = useStudents()
   const { sendEncouragementMessage } = useMessages()
   const { requestMeeting, getPendingConfirmationsForMentor, confirmSlot, markMentorNotified } = useMeetings()
   const { toast } = useToast()
@@ -395,6 +408,10 @@ export function MentorStudentList() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState("")
   
+  // Delete confirmation modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   // Availability confirmation modal state
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
   const pendingConfirmations = getPendingConfirmationsForMentor()
@@ -447,6 +464,28 @@ export function MentorStudentList() {
   const handleCompleteCare = () => {
     if (currentStudent) {
       completeCare(currentStudent.id)
+    }
+  }
+
+  // Handle delete student
+  const handleDeleteConfirm = async () => {
+    if (!currentStudent) return
+    setIsDeleting(true)
+    const success = await removeStudent(currentStudent.id)
+    setIsDeleting(false)
+    setDeleteModalOpen(false)
+    if (success) {
+      setCurrentIndex(prev => Math.max(0, prev - 1))
+      toast({
+        title: "학생 삭제 완료",
+        description: `${currentStudent.name} 학생이 삭제되었습니다.`,
+      })
+    } else {
+      toast({
+        title: "삭제 실패",
+        description: "학생을 삭제하는 중 오류가 발생했습니다.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -644,7 +683,7 @@ export function MentorStudentList() {
                 className="flex-1 flex items-center justify-center px-20 py-6"
                 style={{ overflow: 'hidden' }}
               >
-                {currentStudent && <StudentRecord student={currentStudent} onCompleteCare={handleCompleteCare} onSendMessage={handleOpenMessageModal} onRequestMeeting={handleOpenMeetingModal} />}
+                {currentStudent && <StudentRecord student={currentStudent} onCompleteCare={handleCompleteCare} onSendMessage={handleOpenMessageModal} onRequestMeeting={handleOpenMeetingModal} onDelete={() => setDeleteModalOpen(true)} />}
               </div>
 
               {/* Page Indicator - Fixed at bottom */}
@@ -681,6 +720,27 @@ export function MentorStudentList() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>학생 삭제</DialogTitle>
+            <DialogDescription>
+              <span className="font-semibold text-foreground">{currentStudent?.name}</span> 학생을 삭제하면 면접 기록, 설문 데이터, 위험도 이력 등 모든 관련 데이터가 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)} disabled={isDeleting}>
+              취소
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting} className="gap-2">
+              <Trash2 className="w-4 h-4" />
+              {isDeleting ? "삭제 중..." : "삭제"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Encouragement Message Modal */}
       <Dialog open={messageModalOpen} onOpenChange={setMessageModalOpen}>

@@ -193,7 +193,7 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
     const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`
 
     const student: Student = {
-      id: `student-from-${applicantId}`,
+      id: applicant.studentId ?? `student-from-${applicantId}`,
       name: applicant.name,
       birthDate: applicant.birthDate,
       phone: applicant.phone,

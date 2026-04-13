@@ -27,9 +27,9 @@ const roleConfig: Record<UserRole, { icon: string; label: string; description: s
 }
 
 const roleDefaults: Record<UserRole, { email: string; birthDate: string }> = {
-  student:     { email: "student@test.com",     birthDate: "20000101" },
-  interviewer: { email: "interviewer@test.com",  birthDate: "19900615" },
-  mentor:      { email: "mentor@test.com",       birthDate: "19850320" },
+  student:     { email: "wob0217@gmail.com", birthDate: "19980217" },
+  interviewer: { email: "interviewer@test.com", birthDate: "19900615" },
+  mentor:      { email: "mentor@test.com", birthDate: "19850320" },
 }
 
 function LoginPageInner() {

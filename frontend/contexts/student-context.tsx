@@ -110,6 +110,7 @@ interface StudentContextType {
   careNeededCount: number
   newRiskCount: number
   addStudent: (student: Student) => void
+  removeStudent: (studentId: string) => Promise<boolean>
   completeCare: (studentId: string) => void
   getStudentById: (studentId: string) => Student | undefined
 }
@@ -142,6 +143,18 @@ export function StudentProvider({ children }: { children: ReactNode }) {
 
   const addStudent = useCallback((student: Student) => {
     setStudents(prev => [student, ...prev])
+  }, [])
+
+  const removeStudent = useCallback(async (studentId: string): Promise<boolean> => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${studentId}`, {
+      method: "DELETE",
+    })
+    const json = await res.json().catch(() => ({}))
+    if (json.code === 200) {
+      setStudents(prev => prev.filter(s => s.id !== studentId))
+      return true
+    }
+    return false
   }, [])
 
   const completeCare = useCallback((studentId: string) => {
@@ -200,6 +213,7 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     careNeededCount: careNeededStudents.length,
     newRiskCount: newRiskStudents.length,
     addStudent,
+    removeStudent,
     completeCare,
     getStudentById
   }

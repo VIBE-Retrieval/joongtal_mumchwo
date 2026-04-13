@@ -145,6 +145,13 @@ def list_students(session: Session) -> dict:
     }
 
 
+def delete_student(session: Session, student_id: str) -> bool:
+    deleted = student_repository.delete_student(session, student_id)
+    if deleted:
+        session.commit()
+    return deleted
+
+
 def register_student(
     session: Session,
     name: str,
