@@ -207,33 +207,45 @@ export default function LandingPage() {
         className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800"
         aria-labelledby="similarity-heading cta-heading"
       >
-        {/* 유사도 기반 군집 — 3D 네트워크 */}
+        {/* 유사도 시각화 — 텍스트 + 3D 오브제 */}
         <div
           id="similarity-map"
-          className="w-full px-6 pt-20 pb-8 md:pt-24 md:pb-12"
+          className="w-full px-6 pt-20 pb-12 md:pt-28 md:pb-16"
         >
-          <div className="max-w-5xl mx-auto w-full">
-            <ScrollReveal>
-              <div className="text-center space-y-4 mb-10 md:mb-12">
-                <span className="inline-block text-xs font-semibold tracking-widest text-primary uppercase">
-                  학생 유사도 기반 분류
-                </span>
-                <h2
-                  id="similarity-heading"
-                  className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white text-balance"
-                >
-                  비슷한 상태의 학생을 한눈에
-                </h2>
-                <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-pretty max-w-2xl mx-auto text-[15px] md:text-base">
-                  학생의 설문, 학습 데이터, 변화 추이를 기반으로
-                  유사한 상태의 학생들을 군집화하여
-                  위험 패턴을 직관적으로 파악할 수 있습니다.
-                </p>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal delay={80}>
-              <LandingStudentNetworkLazy />
-            </ScrollReveal>
+          <div className="max-w-6xl mx-auto w-full">
+            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+              <ScrollReveal direction="left">
+                <div className="space-y-6 lg:max-w-xl">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+                    유사도 시각화
+                  </p>
+                  <h2
+                    id="similarity-heading"
+                    className="text-3xl font-semibold leading-[1.2] tracking-tight text-[#2d2d2d] text-balance dark:text-white md:text-4xl"
+                  >
+                    학생의 변화는, 구조로 보입니다
+                  </h2>
+                  <p className="whitespace-pre-line text-[15px] leading-relaxed text-neutral-600 dark:text-neutral-400 md:text-base">
+                    {`설문, 학습 데이터, 최근 변화 추이를 기반으로
+유사한 상태의 학생들을 공간상에 배치해
+위험군의 패턴을 직관적으로 파악합니다.`}
+                  </p>
+                  <ul className="flex flex-wrap gap-2 pt-1">
+                    {["유사도 매핑", "위험 신호", "변화 추이", "설문·학습 통합"].map((kw) => (
+                      <li
+                        key={kw}
+                        className="rounded-full border border-neutral-200/90 bg-white/60 px-3 py-1 text-xs text-[#2d2d2d]/80 dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-300"
+                      >
+                        {kw}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </ScrollReveal>
+              <ScrollReveal direction="right" delay={90}>
+                <LandingStudentNetworkLazy />
+              </ScrollReveal>
+            </div>
           </div>
         </div>
 
