@@ -38,6 +38,8 @@ def _fallback_feature_row(
     daily_avgs = [(ach[i] + ada[i] + rel[i]) / 3.0 for i in range(n)]
     if n >= 8:
         total_delta_7d = daily_avgs[-1] - daily_avgs[-8]
+    elif n >= 2:
+        total_delta_7d = daily_avgs[-1] - daily_avgs[0]
     else:
         total_delta_7d = 0.0
     return {

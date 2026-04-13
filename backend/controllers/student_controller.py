@@ -73,6 +73,14 @@ def list_students(db: Session = Depends(get_db)):
     return _ok(data)
 
 
+@router.delete("/{student_id}")
+def delete_student(student_id: str, db: Session = Depends(get_db)):
+    deleted = student_service.delete_student(db, student_id)
+    if not deleted:
+        return _nf()
+    return _ok({"student_id": student_id})
+
+
 @router.get("/{student_id}/process-risk")
 def get_process_risk(student_id: str, db: Session = Depends(get_db)):
     data = student_service.get_process_risk(db, student_id)

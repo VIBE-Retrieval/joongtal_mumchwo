@@ -193,7 +193,7 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
     const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`
 
     const student: Student = {
-      id: `student-from-${applicantId}`,
+      id: applicant.studentId ?? `student-from-${applicantId}`,
       name: applicant.name,
       birthDate: applicant.birthDate,
       phone: applicant.phone,
@@ -215,7 +215,7 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
         summary: "면접 합격 후 입과 등록"
       }],
       enrollmentDate: dateStr,
-      attendance: 100,
+      attendance: 0,
       assignmentsCompleted: 0,
       totalAssignments: 0,
       lastContact: "오늘",

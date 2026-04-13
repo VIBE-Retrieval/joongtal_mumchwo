@@ -74,7 +74,22 @@ def get_daily_surveys_last_7_days(
         )
         .order_by(DailySurvey.survey_date.asc())
     )
-    return session.scalars(stmt).all()
+    rows = session.scalars(stmt).all()
+
+    if len(rows) < 7:
+        fallback_stmt = (
+            select(DailySurvey)
+            .where(
+                DailySurvey.student_id == student_id,
+                DailySurvey.survey_date <= end_date,
+            )
+            .order_by(DailySurvey.survey_date.desc())
+            .limit(7)
+        )
+        fallback_rows = session.scalars(fallback_stmt).all()
+        return list(reversed(fallback_rows))
+
+    return rows
 
 
 def get_recent_risk_scores_before(

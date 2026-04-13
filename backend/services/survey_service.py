@@ -119,7 +119,11 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
         "risk_score": ml_result["risk_score"],
         "risk_level": ml_result["risk_level"],
         "risk_trend": ml_result["risk_trend"],
+        "feature_snapshot": ml_result["feature_snapshot"],
+        "risk_reason": llm_result["risk_reason"],
+        "risk_type": llm_result["risk_type"],
         "action_type": agent_result["action_type"],
         "priority": agent_result["priority"],
+        "action_reason": agent_result["action_reason"],
         "state_summary": llm_result["state_summary"],
     }
