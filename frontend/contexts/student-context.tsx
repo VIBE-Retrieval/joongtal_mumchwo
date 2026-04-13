@@ -72,6 +72,7 @@ function mapToStudent(item: {
   risk_level: string
   risk_trend: string
   recommended_action: string
+  llm_summary?: string
   risk_history?: number[]
   education_level?: string | null
 }): Student {
@@ -97,7 +98,7 @@ function mapToStudent(item: {
     riskScore,
     recentChange: 0,
     trend: item.risk_history?.length ? item.risk_history : [riskScore],
-    aiSummary: item.recommended_action,
+    aiSummary: item.llm_summary?.trim() || item.recommended_action || "",
     mentorNotes: "",
     interventions: [],
     enrollmentDate: item.created_at ?? "",

@@ -47,6 +47,7 @@ def list_student_risks(session: Session) -> dict:
                 "risk_trend": risk_trend,
                 "recommended_action": recommended,
                 "risk_history": row.get("risk_history", []),
+                "llm_summary": row.get("llm_summary", ""),
             }
         )
 

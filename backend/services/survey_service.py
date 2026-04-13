@@ -6,7 +6,11 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from AI.agent.agent_service import decide
-from AI.llm.llm_interpreter import generate_encouragement, interpret
+from AI.llm.llm_interpreter import (
+    generate_encouragement,
+    generate_mentor_summary,
+    interpret,
+)
 from backend.ai_module.process_ml_service import run_process_ml
 from backend.models import Student
 from backend.repositories import meeting_repository, survey_repository
@@ -103,13 +107,14 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
         "action_effective_rate": feedback_stats["action_effective_rate"],
     }
     agent_result = decide(agent_input)
+    mentor_summary = generate_mentor_summary(agent_result, llm_result)
 
     intervention = survey_repository.save_intervention_history(
         session,
         student_id=payload.student_id,
         record_date=payload.survey_date,
         agent_result=agent_result,
-        llm_summary=llm_result["state_summary"],
+        llm_summary=mentor_summary,
     )
 
     action_type = agent_result["action_type"]
@@ -125,7 +130,6 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
             },
             llm_result,
         )
-        intervention.llm_summary = encourage_msg
         intervention.status = "COMPLETED"
         execution_detail = encourage_msg
 
