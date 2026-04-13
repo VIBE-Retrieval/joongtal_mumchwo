@@ -14,6 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+
+type CareFeedbackType = "false_alarm" | "recovered" | "observe"
 
 function TrendChart({ data, riskLevel }: { data: number[]; riskLevel: RiskLevel }) {
   if (!data || data.length === 0) {
@@ -90,7 +93,21 @@ function TrendChart({ data, riskLevel }: { data: number[]; riskLevel: RiskLevel 
   )
 }
 
-function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeeting, onDelete }: { student: Student; onCompleteCare?: () => void; onSendMessage?: () => void; onRequestMeeting?: () => void; onDelete?: () => void }) {
+function StudentRecord({
+  student,
+  onCompleteCare,
+  onSendMessage,
+  onRequestMeeting,
+  onDelete,
+  isCompletingCare = false,
+}: {
+  student: Student
+  onCompleteCare?: () => void
+  onSendMessage?: () => void
+  onRequestMeeting?: () => void
+  onDelete?: () => void
+  isCompletingCare?: boolean
+}) {
   const riskColors: Record<RiskLevel, { bg: string; text: string; label: string; border: string; icon: typeof CheckCircle }> = {
     low: { bg: "bg-risk-low/15", text: "text-risk-low", label: "낮음", border: "border-risk-low/30", icon: CheckCircle },
     medium: { bg: "bg-risk-medium/15", text: "text-risk-medium", label: "보통", border: "border-risk-medium/30", icon: Clock },
@@ -375,9 +392,10 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
                 size="lg" 
                 className="gap-2 bg-risk-low hover:bg-risk-low/90 text-white"
                 onClick={onCompleteCare}
+                disabled={isCompletingCare}
               >
                 <CheckCircle className="w-5 h-5" />
-                케어 완료
+                {isCompletingCare ? "처리 중..." : "케어 완료"}
               </Button>
             ) : (
               <Button size="lg" className="gap-2">
@@ -423,6 +441,10 @@ export function MentorStudentList() {
   // Delete confirmation modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [careFeedbackModalOpen, setCareFeedbackModalOpen] = useState(false)
+  const [careFeedbackType, setCareFeedbackType] = useState<CareFeedbackType>("observe")
+  const [careRecoveryDaysInput, setCareRecoveryDaysInput] = useState("")
+  const [isCompletingCare, setIsCompletingCare] = useState(false)
 
   // Availability confirmation modal state
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
@@ -474,9 +496,38 @@ export function MentorStudentList() {
 
   // Handle care complete
   const handleCompleteCare = () => {
-    if (currentStudent) {
-      completeCare(currentStudent.id)
+    if (!currentStudent || isCompletingCare) return
+    setCareFeedbackType("observe")
+    setCareRecoveryDaysInput("")
+    setCareFeedbackModalOpen(true)
+  }
+
+  const handleCloseCareFeedbackModal = () => {
+    if (isCompletingCare) return
+    setCareFeedbackModalOpen(false)
+  }
+
+  const handleSubmitCareFeedback = () => {
+    if (!currentStudent || isCompletingCare) return
+
+    const parsedRecoveryDays = Number.parseInt(careRecoveryDaysInput, 10)
+    if (careFeedbackType === "recovered" && (!Number.isFinite(parsedRecoveryDays) || parsedRecoveryDays < 1 || parsedRecoveryDays > 30)) {
+      return
     }
+
+    setIsCompletingCare(true)
+    completeCare(currentStudent.id, {
+      isFalseAlarm: careFeedbackType === "false_alarm",
+      recoveryDays: careFeedbackType === "recovered" ? parsedRecoveryDays : null,
+    })
+    setCareFeedbackModalOpen(false)
+    setTimeout(() => {
+      setIsCompletingCare(false)
+    }, 300)
+    toast({
+      title: "케어 완료 처리",
+      description: `${currentStudent.name} 학생 케어 결과가 기록되었습니다.`,
+    })
   }
 
   // Handle delete student
@@ -695,7 +746,16 @@ export function MentorStudentList() {
                 className="flex-1 flex items-center justify-center px-20 py-6"
                 style={{ overflow: 'hidden' }}
               >
-                {currentStudent && <StudentRecord student={currentStudent} onCompleteCare={handleCompleteCare} onSendMessage={handleOpenMessageModal} onRequestMeeting={handleOpenMeetingModal} onDelete={() => setDeleteModalOpen(true)} />}
+                {currentStudent && (
+                  <StudentRecord
+                    student={currentStudent}
+                    onCompleteCare={handleCompleteCare}
+                    onSendMessage={handleOpenMessageModal}
+                    onRequestMeeting={handleOpenMeetingModal}
+                    onDelete={() => setDeleteModalOpen(true)}
+                    isCompletingCare={isCompletingCare}
+                  />
+                )}
               </div>
 
               {/* Page Indicator - Fixed at bottom */}
@@ -732,6 +792,66 @@ export function MentorStudentList() {
           )}
         </div>
       </div>
+
+      {/* Care Feedback Modal */}
+      <Dialog open={careFeedbackModalOpen} onOpenChange={handleCloseCareFeedbackModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>케어 결과 기록</DialogTitle>
+            <DialogDescription>개입 결과를 선택하면 케어 완료로 처리됩니다.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Label className="text-sm font-medium">이 개입이 실제로 필요했나요?</Label>
+            <RadioGroup value={careFeedbackType} onValueChange={(v) => setCareFeedbackType(v as CareFeedbackType)}>
+              <div className="flex items-start gap-3 rounded-lg border p-3">
+                <RadioGroupItem value="false_alarm" id="care-false-alarm" className="mt-0.5" />
+                <Label htmlFor="care-false-alarm" className="font-normal">오탐이었음 - 이 학생의 자연스러운 패턴</Label>
+              </div>
+              <div className="flex items-start gap-3 rounded-lg border p-3">
+                <RadioGroupItem value="recovered" id="care-recovered" className="mt-0.5" />
+                <Label htmlFor="care-recovered" className="font-normal">개입 후 회복됨</Label>
+              </div>
+              <div className="flex items-start gap-3 rounded-lg border p-3">
+                <RadioGroupItem value="observe" id="care-observe" className="mt-0.5" />
+                <Label htmlFor="care-observe" className="font-normal">지속 관찰 필요 (개선 없음)</Label>
+              </div>
+            </RadioGroup>
+
+            {careFeedbackType === "recovered" && (
+              <div className="space-y-2">
+                <Label htmlFor="care-recovery-days">회복까지 며칠 걸렸나요?</Label>
+                <Input
+                  id="care-recovery-days"
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={careRecoveryDaysInput}
+                  onChange={(e) => setCareRecoveryDaysInput(e.target.value)}
+                  placeholder="1~30"
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleCloseCareFeedbackModal} disabled={isCompletingCare}>
+              취소
+            </Button>
+            <Button
+              onClick={handleSubmitCareFeedback}
+              disabled={
+                isCompletingCare ||
+                (careFeedbackType === "recovered" &&
+                  !(
+                    Number.parseInt(careRecoveryDaysInput, 10) >= 1 &&
+                    Number.parseInt(careRecoveryDaysInput, 10) <= 30
+                  ))
+              }
+            >
+              {isCompletingCare ? "처리 중..." : "기록 완료"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Modal */}
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
