@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -23,6 +23,27 @@ class DailySurveyInput:
     achievement_score: int
     adaptation_score: int
     relationship_score: int
+
+
+def _generate_emergency_slots() -> list[str]:
+    now = datetime.now()
+    slots: list[str] = []
+    candidate = now.replace(minute=0, second=0, microsecond=0)
+
+    if candidate.hour >= 17:
+        candidate = (candidate + timedelta(days=1)).replace(hour=9)
+    elif candidate.hour < 9:
+        candidate = candidate.replace(hour=9)
+    else:
+        candidate = candidate + timedelta(hours=1)
+
+    while len(slots) < 3:
+        if candidate.weekday() < 5 and 9 <= candidate.hour < 17:
+            slots.append(candidate.strftime("%Y-%m-%d %H:%M"))
+        candidate += timedelta(hours=2)
+        if candidate.hour >= 17:
+            candidate = (candidate + timedelta(days=1)).replace(hour=9)
+    return slots
 
 
 def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
@@ -147,7 +168,7 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
                 student_name=student_name,
                 purpose=f"[긴급] {agent_result['action_reason']}",
                 message=llm_result["state_summary"],
-                proposed_slots=[],
+                proposed_slots=_generate_emergency_slots(),
             )
 
     elif action_type == "REQUEST_MEETING":
