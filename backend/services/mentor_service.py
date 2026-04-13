@@ -40,10 +40,12 @@ def list_student_risks(session: Session) -> dict:
                 "phone": row["phone"],
                 "email": row["email"],
                 "course_name": row["course_name"],
+                "education_level": row.get("education_level") or "기타",
                 "risk_score": risk_score,
                 "risk_level": risk_level,
                 "risk_trend": risk_trend,
                 "recommended_action": recommended,
+                "risk_history": row.get("risk_history", []),
             }
         )
 

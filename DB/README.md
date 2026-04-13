@@ -25,3 +25,9 @@ Database Agent (AGENTS/db-agent.md)
 
 - [Database Documentation](../Docs/db/)
 - [Architecture Documentation](../Docs/architecture/)
+
+## Manual Migration
+
+- File: `DB/migrations/20260413_add_students_education_level.sql`
+- Purpose: add `students.education_level` (nullable, default `"기타"`)
+- Apply this SQL to existing databases before deploying backend changes.

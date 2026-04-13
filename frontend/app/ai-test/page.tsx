@@ -2,7 +2,17 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertCircle, ArrowLeft, Minus, TrendingDown, TrendingUp } from "lucide-react"
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowLeft,
+  Bell,
+  CalendarPlus,
+  MessageCircle,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,6 +49,8 @@ type PipelineResult = {
   priority: "LOW" | "MEDIUM" | "HIGH" | string
   action_reason: string
   state_summary: string
+  execution_detail: string | null
+  execution_status: string
 }
 
 function formatDateISO(d: Date) {
@@ -93,6 +105,38 @@ function TrendIcon({ trend }: { trend: string }) {
   if (trend === "UP") return <TrendingUp className="w-4 h-4 text-risk-high" />
   if (trend === "DOWN") return <TrendingDown className="w-4 h-4 text-risk-low" />
   return <Minus className="w-4 h-4 text-muted-foreground" />
+}
+
+function executionClass(action: string) {
+  if (action === "EMERGENCY") return "bg-red-500/15 text-red-600 border-red-500/30"
+  if (action === "REQUEST_MEETING") return "bg-orange-500/15 text-orange-600 border-orange-500/30"
+  if (action === "ALERT_MENTOR") return "bg-yellow-500/15 text-yellow-700 border-yellow-500/30"
+  if (action === "ENCOURAGE_MESSAGE" || action === "ENCOURAGE_MSG") {
+    return "bg-blue-500/15 text-blue-600 border-blue-500/30"
+  }
+  return "bg-muted text-muted-foreground border-border"
+}
+
+function ExecutionIcon({ action }: { action: string }) {
+  if (action === "EMERGENCY") return <AlertTriangle className="w-4 h-4" />
+  if (action === "REQUEST_MEETING") return <CalendarPlus className="w-4 h-4" />
+  if (action === "ALERT_MENTOR") return <Bell className="w-4 h-4" />
+  if (action === "ENCOURAGE_MESSAGE" || action === "ENCOURAGE_MSG") {
+    return <MessageCircle className="w-4 h-4" />
+  }
+  return <Minus className="w-4 h-4" />
+}
+
+function executionFallbackText(action: string) {
+  if (action === "ALERT_MENTOR") return "멘토 대시보드 알림에 등록되었습니다."
+  if (action === "REQUEST_MEETING") {
+    return "AI가 자동으로 미팅 요청을 생성했습니다. 멘토가 일정을 확정합니다."
+  }
+  if (action === "EMERGENCY") {
+    return "긴급 미팅 요청이 생성되고 멘토에게 긴급 알림이 전송되었습니다."
+  }
+  if (action === "NONE") return "현재 상태가 안정적입니다. 별도 개입이 필요하지 않습니다."
+  return "실행 결과가 기록되었습니다."
 }
 
 function ScoreSlider({
@@ -408,6 +452,31 @@ export default function AITestPage() {
                   <p className="text-xs text-muted-foreground mb-1">action_reason</p>
                   <p className="text-sm leading-relaxed">{result.action_reason}</p>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <CardTitle>STEP 6: 실행 결과</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Badge variant="outline" className={cn("gap-1", executionClass(result.action_type))}>
+                  <ExecutionIcon action={result.action_type} />
+                  {result.execution_status}
+                </Badge>
+
+                {result.execution_detail ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">발송된 격려 메시지</p>
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg text-sm leading-relaxed text-blue-900">
+                      {result.execution_detail}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {executionFallbackText(result.action_type)}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

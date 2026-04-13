@@ -105,6 +105,7 @@ def create_student(
     birth_date: str,
     phone: str | None = None,
     course_name: str | None = None,
+    education_level: str | None = "기타",
 ) -> Student:
     student = Student(
         student_id=student_id,
@@ -113,6 +114,7 @@ def create_student(
         birth_date=birth_date,
         phone=phone,
         course_name=course_name,
+        education_level=education_level,
     )
     session.add(student)
     session.flush()

@@ -113,6 +113,7 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
     )
 
     action_type = agent_result["action_type"]
+    execution_detail: str | None = None
 
     if action_type == "ENCOURAGE_MESSAGE":
         encourage_msg = generate_encouragement(
@@ -126,6 +127,7 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
         )
         intervention.llm_summary = encourage_msg
         intervention.status = "COMPLETED"
+        execution_detail = encourage_msg
 
     elif action_type in ("ALERT_MENTOR", "EMERGENCY"):
         if action_type == "EMERGENCY":
@@ -175,4 +177,12 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
         "priority": agent_result["priority"],
         "action_reason": agent_result["action_reason"],
         "state_summary": llm_result["state_summary"],
+        "execution_detail": execution_detail,
+        "execution_status": {
+            "ENCOURAGE_MESSAGE": "메시지 발송 완료",
+            "ALERT_MENTOR": "멘토 알림 전송",
+            "REQUEST_MEETING": "미팅 요청 생성",
+            "EMERGENCY": "긴급 미팅 생성 + 멘토 알림",
+            "NONE": "개입 없음",
+        }.get(action_type, action_type),
     }

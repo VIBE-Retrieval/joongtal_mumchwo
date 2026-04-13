@@ -28,6 +28,7 @@ class RegisterStudentBody(BaseModel):
     birth_date: str = Field(min_length=8, max_length=8)
     phone: str | None = None
     course_name: str | None = None
+    education_level: str = "기타"
 
     @field_validator("birth_date")
     @classmethod
@@ -44,6 +45,14 @@ class RegisterStudentBody(BaseModel):
         digits = v.replace("-", "").replace(" ", "")
         return digits
 
+    @field_validator("education_level")
+    @classmethod
+    def validate_education_level(cls, v: str) -> str:
+        allowed = {"고졸", "전문대졸", "대졸", "석사", "기타"}
+        if v not in allowed:
+            raise ValueError("education_level must be one of: 고졸, 전문대졸, 대졸, 석사, 기타")
+        return v
+
 
 @router.post("")
 def register_student(body: RegisterStudentBody, db: Session = Depends(get_db)):
@@ -55,6 +64,7 @@ def register_student(body: RegisterStudentBody, db: Session = Depends(get_db)):
             birth_date=body.birth_date,
             phone=body.phone,
             course_name=body.course_name,
+            education_level=body.education_level,
         )
     except ValueError as e:
         return JSONResponse(

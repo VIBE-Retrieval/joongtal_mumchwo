@@ -71,6 +71,7 @@ function mapStudentRowToApplicant(row: {
   course_name: string | null
   created_at: string
   has_interview: boolean
+  education_level?: string | null
 }): Applicant {
   return {
     id: row.student_id,
@@ -79,7 +80,7 @@ function mapStudentRowToApplicant(row: {
     birthDate: birthDateFromYyyymmdd(row.birth_date),
     phone: row.phone ?? "",
     appliedCourse: row.course_name ?? "",
-    educationLevel: "기타",
+    educationLevel: (row.education_level as EducationLevel) ?? "기타",
     major: undefined,
     targetJob: undefined,
     status: row.has_interview ? "PASSED" : "PENDING_INTERVIEW",

@@ -137,6 +137,7 @@ def list_students(session: Session) -> dict:
                 "birth_date": row["student"].birth_date,
                 "phone": row["student"].phone,
                 "course_name": row["student"].course_name,
+                "education_level": row["student"].education_level or "기타",
                 "created_at": row["student"].created_at.isoformat(),
                 "has_interview": row["has_interview"],
             }
@@ -159,6 +160,7 @@ def register_student(
     birth_date: str,
     phone: str | None = None,
     course_name: str | None = None,
+    education_level: str = "기타",
 ) -> dict:
     existing = student_repository.get_student_by_email(session, email)
     if existing:
@@ -173,6 +175,7 @@ def register_student(
         birth_date,
         phone=phone,
         course_name=course_name,
+        education_level=education_level,
     )
     session.commit()
     return {"student_id": student.student_id}

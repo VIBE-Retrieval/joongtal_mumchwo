@@ -12,6 +12,8 @@ router = APIRouter(prefix="/mentor", tags=["mentor"])
 @router.get("/students/risks")
 def get_students_risks(db: Session = Depends(get_db)):
     data = mentor_service.list_student_risks(db)
+    for item in data.get("items", []):
+        item.setdefault("risk_history", [])
     return {"code": 200, "message": "success", "data": data}
 
 

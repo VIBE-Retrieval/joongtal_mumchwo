@@ -71,6 +71,8 @@ function mapToStudent(item: {
   risk_level: string
   risk_trend: string
   recommended_action: string
+  risk_history?: number[]
+  education_level?: string | null
 }): Student {
   const riskLevel = mapRiskLevel(item.risk_level)
   const riskScore = Math.round(item.risk_score * 100)
@@ -83,12 +85,12 @@ function mapToStudent(item: {
     courseName: item.course_name ?? "",
     targetJob: undefined,
     currentWeek: 1,
-    educationLevel: "기타",
+    educationLevel: (item.education_level as EducationLevel) ?? "기타",
     major: undefined,
     riskLevel,
     riskScore,
     recentChange: 0,
-    trend: [riskScore],
+    trend: item.risk_history?.length ? item.risk_history : [riskScore],
     aiSummary: item.recommended_action,
     mentorNotes: "",
     interventions: [],

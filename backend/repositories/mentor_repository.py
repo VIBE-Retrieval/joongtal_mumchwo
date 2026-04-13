@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections import defaultdict
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -46,6 +48,39 @@ def _latest_interview_risk_by_student(session: Session) -> dict[str, InterviewRi
     return {r.student_id: r for r in session.scalars(stmt).all()}
 
 
+def _recent_risk_history_by_student(
+    session: Session, student_ids: list[str], limit: int = 14
+) -> dict[str, list[float]]:
+    if not student_ids:
+        return {}
+
+    ranked = (
+        select(
+            ProcessRiskHistory.student_id.label("sid"),
+            ProcessRiskHistory.date.label("risk_date"),
+            ProcessRiskHistory.risk_score.label("risk_score"),
+            func.row_number()
+            .over(
+                partition_by=ProcessRiskHistory.student_id,
+                order_by=ProcessRiskHistory.date.desc(),
+            )
+            .label("rn"),
+        )
+        .where(ProcessRiskHistory.student_id.in_(student_ids))
+    ).subquery()
+
+    stmt = (
+        select(ranked.c.sid, ranked.c.risk_date, ranked.c.risk_score)
+        .where(ranked.c.rn <= limit)
+        .order_by(ranked.c.sid.asc(), ranked.c.risk_date.asc())
+    )
+
+    history_by_sid: dict[str, list[float]] = defaultdict(list)
+    for sid, _risk_date, risk_score in session.execute(stmt).all():
+        history_by_sid[str(sid)].append(float(risk_score))
+    return dict(history_by_sid)
+
+
 def get_all_students_with_risk(session: Session) -> list[dict]:
     """
     students 전체를 기준으로 최신 process_risk / interview_risk를 LEFT JOIN 형태로 병합.
@@ -71,6 +106,9 @@ def get_all_students_with_risk(session: Session) -> list[dict]:
         process_by_sid.setdefault(r.student_id, r)
 
     interview_by_sid = _latest_interview_risk_by_student(session)
+    history_by_sid = _recent_risk_history_by_student(
+        session, [s.student_id for s in students], limit=14
+    )
 
     out: list[dict] = []
     for s in students:
@@ -84,10 +122,12 @@ def get_all_students_with_risk(session: Session) -> list[dict]:
                 "phone": s.phone,
                 "email": s.email,
                 "course_name": s.course_name,
+                "education_level": s.education_level,
                 "process_risk_score": pr.risk_score if pr is not None else None,
                 "process_risk_level": pr.risk_level if pr is not None else None,
                 "process_risk_trend": pr.risk_trend if pr is not None else None,
                 "interview_risk_score": ir.dropout_risk_score if ir is not None else None,
+                "risk_history": history_by_sid.get(s.student_id, []),
             }
         )
     return out

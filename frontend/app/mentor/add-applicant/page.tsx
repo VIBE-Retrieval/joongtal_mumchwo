@@ -95,6 +95,7 @@ export default function AddApplicantPage() {
           birth_date: birthDateFormatted,
           phone,
           course_name: appliedCourse,
+          education_level: educationLevel || "기타",
         }),
       })
 

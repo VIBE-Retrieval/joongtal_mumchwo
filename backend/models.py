@@ -30,6 +30,7 @@ class Student(Base):
     birth_date: Mapped[str] = mapped_column(String(8), nullable=False, default="")
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     course_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    education_level: Mapped[str | None] = mapped_column(String(32), nullable=True, default="기타")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
