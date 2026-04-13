@@ -9,16 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default:
+          'bg-primary text-primary-foreground hover:bg-[color-mix(in_srgb,var(--primary)_90%,#000000)] active:bg-[color-mix(in_srgb,var(--primary)_82%,#000000)]',
         destructive:
           'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
-          'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'border bg-background shadow-xs hover:bg-[color-mix(in_srgb,var(--primary)_10%,var(--background))] hover:text-foreground hover:border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] dark:bg-input/30 dark:border-input dark:hover:bg-[color-mix(in_srgb,var(--primary)_18%,transparent)]',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost:
-          'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'hover:bg-[color-mix(in_srgb,var(--primary)_12%,var(--background))] hover:text-foreground dark:hover:bg-[color-mix(in_srgb,var(--primary)_14%,transparent)]',
+        link: 'text-primary underline-offset-4 hover:underline hover:text-[color-mix(in_srgb,var(--primary)_78%,#000000)]',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

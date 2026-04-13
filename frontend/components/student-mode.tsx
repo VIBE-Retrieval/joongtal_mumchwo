@@ -116,7 +116,7 @@ function TrendChart({ data }: { data: SurveyRecord[] }) {
           <path
             d={createPath('achievement')}
             fill="none"
-            stroke="oklch(0.60 0.10 250)"
+            stroke="var(--chart-1)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -126,7 +126,7 @@ function TrendChart({ data }: { data: SurveyRecord[] }) {
           <path
             d={createPath('adaptability')}
             fill="none"
-            stroke="oklch(0.70 0.08 180)"
+            stroke="var(--chart-2)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -136,7 +136,7 @@ function TrendChart({ data }: { data: SurveyRecord[] }) {
           <path
             d={createPath('relationship')}
             fill="none"
-            stroke="oklch(0.65 0.12 45)"
+            stroke="var(--chart-3)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -147,9 +147,9 @@ function TrendChart({ data }: { data: SurveyRecord[] }) {
             const x = (i / xDenom) * 100
             return (
               <g key={i}>
-                <circle cx={x} cy={getY(d.achievement)} r="2.5" fill="oklch(0.60 0.10 250)" />
-                <circle cx={x} cy={getY(d.adaptability)} r="2.5" fill="oklch(0.70 0.08 180)" />
-                <circle cx={x} cy={getY(d.relationship)} r="2.5" fill="oklch(0.65 0.12 45)" />
+                <circle cx={x} cy={getY(d.achievement)} r="2.5" fill="var(--chart-1)" />
+                <circle cx={x} cy={getY(d.adaptability)} r="2.5" fill="var(--chart-2)" />
+                <circle cx={x} cy={getY(d.relationship)} r="2.5" fill="var(--chart-3)" />
               </g>
             )
           })}
@@ -173,15 +173,15 @@ function TrendChart({ data }: { data: SurveyRecord[] }) {
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 rounded-full" style={{ backgroundColor: 'oklch(0.60 0.10 250)' }} />
+          <div className="w-3 h-0.5 rounded-full bg-[var(--chart-1)]" />
           <span className="text-muted-foreground">성취도</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 rounded-full" style={{ backgroundColor: 'oklch(0.70 0.08 180)' }} />
+          <div className="w-3 h-0.5 rounded-full bg-[var(--chart-2)]" />
           <span className="text-muted-foreground">적응도</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 rounded-full" style={{ backgroundColor: 'oklch(0.65 0.12 45)' }} />
+          <div className="w-3 h-0.5 rounded-full bg-[var(--chart-3)]" />
           <span className="text-muted-foreground">인간관계</span>
         </div>
       </div>

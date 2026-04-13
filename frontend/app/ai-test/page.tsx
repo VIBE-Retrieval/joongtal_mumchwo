@@ -97,7 +97,7 @@ function actionClass(action: string) {
   if (action === "EMERGENCY") return "bg-red-500/15 text-red-600 border-red-500/30"
   if (action === "REQUEST_MEETING") return "bg-orange-500/15 text-orange-600 border-orange-500/30"
   if (action === "ALERT_MENTOR") return "bg-yellow-500/15 text-yellow-700 border-yellow-500/30"
-  if (action === "ENCOURAGE_MESSAGE") return "bg-blue-500/15 text-blue-600 border-blue-500/30"
+  if (action === "ENCOURAGE_MESSAGE") return "bg-primary/12 text-primary border-primary/30"
   return "bg-muted text-muted-foreground border-border"
 }
 
@@ -112,7 +112,7 @@ function executionClass(action: string) {
   if (action === "REQUEST_MEETING") return "bg-orange-500/15 text-orange-600 border-orange-500/30"
   if (action === "ALERT_MENTOR") return "bg-yellow-500/15 text-yellow-700 border-yellow-500/30"
   if (action === "ENCOURAGE_MESSAGE" || action === "ENCOURAGE_MSG") {
-    return "bg-blue-500/15 text-blue-600 border-blue-500/30"
+    return "bg-primary/12 text-primary border-primary/30"
   }
   return "bg-muted text-muted-foreground border-border"
 }
@@ -468,7 +468,7 @@ export default function AITestPage() {
                 {result.execution_detail ? (
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">발송된 격려 메시지</p>
-                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg text-sm leading-relaxed text-blue-900">
+                    <div className="bg-primary/[0.06] border-l-4 border-primary p-4 rounded-lg text-sm leading-relaxed text-foreground">
                       {result.execution_detail}
                     </div>
                   </div>

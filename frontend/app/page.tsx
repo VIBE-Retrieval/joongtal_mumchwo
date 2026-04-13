@@ -61,7 +61,7 @@ export default function LandingPage() {
           {/* Left — text */}
           <ScrollReveal direction="left">
             <div className="space-y-8">
-              <span className="inline-block text-xs font-semibold tracking-widest text-indigo-400 uppercase">
+              <span className="inline-block text-xs font-semibold tracking-widest text-primary uppercase">
                 AI 위험 분석 엔진
               </span>
               <h2 id="features-heading" className="text-3xl md:text-4xl font-bold text-white leading-tight">
@@ -92,7 +92,7 @@ export default function LandingPage() {
 
           {/* Right — mock dashboard */}
           <ScrollReveal direction="right" delay={150}>
-            <div className="rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl shadow-indigo-500/10">
+            <div className="rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl shadow-primary/15">
               {/* browser chrome */}
               <div className="bg-neutral-900 px-4 py-3 flex items-center gap-2 border-b border-neutral-800">
                 <span className="w-3 h-3 rounded-full bg-red-500/60" />
@@ -121,7 +121,7 @@ export default function LandingPage() {
 
           <ScrollReveal>
             <div className="text-center mb-16">
-              <span className="inline-block text-xs font-semibold tracking-widest text-indigo-600 dark:text-indigo-400 uppercase mb-3">
+              <span className="inline-block text-xs font-semibold tracking-widest text-primary uppercase mb-3">
                 역할별 워크플로우
               </span>
               <h2 id="roles-heading" className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white">
@@ -185,7 +185,7 @@ export default function LandingPage() {
                     <ul className="flex flex-col gap-2 pt-1">
                       {role.features.map((f, j) => (
                         <li key={j} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                          <svg className="w-4 h-4 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <svg className="w-4 h-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                           {f}
