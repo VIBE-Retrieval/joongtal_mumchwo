@@ -116,20 +116,22 @@ def submit_daily_survey(session: Session, payload: DailySurveyInput) -> dict:
         agent_result=agent_result,
         llm_summary=mentor_summary,
     )
+    student_insight = generate_encouragement(
+        {
+            "risk_score": ml_result["risk_score"],
+            "risk_level": ml_result["risk_level"],
+            "risk_trend": ml_result["risk_trend"],
+            "feature_snapshot": ml_result["feature_snapshot"],
+        },
+        llm_result,
+    )
+    intervention.student_insight = student_insight
 
     action_type = agent_result["action_type"]
     execution_detail: str | None = None
 
     if action_type == "ENCOURAGE_MESSAGE":
-        encourage_msg = generate_encouragement(
-            {
-                "risk_score": ml_result["risk_score"],
-                "risk_level": ml_result["risk_level"],
-                "risk_trend": ml_result["risk_trend"],
-                "feature_snapshot": ml_result["feature_snapshot"],
-            },
-            llm_result,
-        )
+        encourage_msg = student_insight
         intervention.status = "COMPLETED"
         execution_detail = encourage_msg
 

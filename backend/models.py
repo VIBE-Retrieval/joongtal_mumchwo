@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Optional
 
 from sqlalchemy import JSON, Date, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -124,6 +125,9 @@ class InterventionHistory(Base):
     priority: Mapped[str] = mapped_column(String(16), nullable=False)
     action_reason: Mapped[str] = mapped_column(String(512), nullable=False)
     llm_summary: Mapped[str] = mapped_column(String(1024), nullable=False)
+    student_insight: Mapped[Optional[str]] = mapped_column(
+        String(1024), nullable=True, default=None
+    )
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="PENDING")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 

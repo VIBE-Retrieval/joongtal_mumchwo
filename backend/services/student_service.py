@@ -112,17 +112,25 @@ def get_progress(session: Session, student_id: str) -> dict:
 
 
 def get_care_message(session: Session, student_id: str) -> dict:
-    row = student_repository.get_latest_encourage_message(session, student_id)
-    if row is not None:
+    inv = student_repository.get_latest_intervention(session, student_id)
+    if inv is not None and inv.action_type == "ENCOURAGE_MESSAGE":
         return {
             "student_id": student_id,
-            "message": row.llm_summary,
+            "message": inv.student_insight or inv.llm_summary,
             "has_message": True,
         }
     return {
         "student_id": student_id,
-        "message": DEFAULT_CARE_MESSAGE,
+        "message": "",
         "has_message": False,
+    }
+
+
+def get_ai_insight(session: Session, student_id: str) -> dict:
+    inv = student_repository.get_latest_intervention(session, student_id)
+    return {
+        "student_id": student_id,
+        "insight": (inv.student_insight or "") if inv is not None else "",
     }
 
 
