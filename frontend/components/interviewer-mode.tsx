@@ -115,44 +115,59 @@ function RiskGauge({ score, level }: { score: number; level: RiskLevel }) {
     HIGH: "text-risk-high",
   }
 
+  // arc 전체 길이 ≈ 141.37 (r=45 반원)
+  const ARC = 141.37
+  const lowEnd  = ARC * 0.35  // 0~35 green
+  const midEnd  = ARC * 0.65  // 35~65 yellow
+
+  const levelHex: Record<RiskLevel, string> = {
+    LOW:    "#22c55e",
+    MEDIUM: "#f59e0b",
+    HIGH:   "#ef4444",
+  }
+
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative w-28 h-14 overflow-hidden">
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative w-36 h-[72px] overflow-hidden">
         <svg viewBox="0 0 100 50" className="w-full h-full">
-          <path
-            d="M 5 50 A 45 45 0 0 1 95 50"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="8"
-            strokeLinecap="round"
-            className="text-muted"
-          />
-          <path
-            d="M 5 50 A 45 45 0 0 1 95 50"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={`${(score / 100) * 141.37} 141.37`}
-            className={levelColors[level]}
-          />
+          {/* 배경 트랙 */}
+          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="currentColor"
+            strokeWidth="9" strokeLinecap="butt" className="text-muted" />
+
+          {/* 구간 색 — 녹/황/적 */}
+          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#22c55e"
+            strokeWidth="9" strokeLinecap="butt" opacity="0.35"
+            strokeDasharray={`${lowEnd} ${ARC}`} strokeDashoffset="0" />
+          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#f59e0b"
+            strokeWidth="9" strokeLinecap="butt" opacity="0.35"
+            strokeDasharray={`${midEnd - lowEnd} ${ARC}`} strokeDashoffset={-lowEnd} />
+          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#ef4444"
+            strokeWidth="9" strokeLinecap="butt" opacity="0.35"
+            strokeDasharray={`${ARC - midEnd} ${ARC}`} strokeDashoffset={-midEnd} />
+
+          {/* 실제 점수 채움 — 현재 레벨 색 */}
+          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none"
+            stroke={levelHex[level]} strokeWidth="9" strokeLinecap="round"
+            strokeDasharray={`${(score / 100) * ARC} ${ARC}`} />
+
+          {/* 바늘 */}
           <g transform={`rotate(${rotation}, 50, 50)`}>
-            <line
-              x1="50"
-              y1="50"
-              x2="50"
-              y2="15"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              className="text-foreground"
-            />
-            <circle cx="50" cy="50" r="4" className="fill-foreground" />
+            <line x1="50" y1="50" x2="50" y2="13"
+              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+              className="text-foreground" />
+            <circle cx="50" cy="50" r="3.5" className="fill-foreground" />
           </g>
+
+          {/* 구간 레이블 */}
+          <text x="7"  y="48" fontSize="5.5" fill="#22c55e" opacity="0.7" textAnchor="middle">낮음</text>
+          <text x="50" y="13" fontSize="5.5" fill="#f59e0b" opacity="0.7" textAnchor="middle">보통</text>
+          <text x="93" y="48" fontSize="5.5" fill="#ef4444" opacity="0.7" textAnchor="middle">높음</text>
         </svg>
       </div>
+
+      {/* 점수 숫자 — 크고 선명하게 */}
       <div className="text-center">
-        <span className={cn("text-xl font-semibold", levelColors[level])}>{score}</span>
+        <span className={cn("text-3xl font-bold tabular-nums", levelColors[level])}>{score}</span>
         <span className="text-sm text-muted-foreground ml-1">/ 100</span>
       </div>
     </div>
@@ -539,21 +554,79 @@ export function InterviewerMode() {
         </div>
       </div>
 
-      {/* MIDDLE: Left (Evaluation) + Right (Analysis) */}
+      {/* MIDDLE: Left (Evaluation + Actions) + Right (Analysis) — 독립 스크롤 */}
       <div className="flex-1 grid grid-cols-[1fr_360px] min-h-0 overflow-hidden">
-        {/* LEFT: Evaluation Cards */}
-        <div className="overflow-y-auto p-5 space-y-4">
-          {evaluationCategories.map((category) => (
-            <EvaluationCard
-              key={category.key}
-              category={category}
-              value={currentCandidate.evaluation[category.key]}
-              onChange={(field, val) => updateEvaluationLocal(category.key, field, val as string & number)}
-            />
-          ))}
+        {/* LEFT: 면접 질문 카드(스크롤) + 하단 액션 버튼(고정) */}
+        <div className="flex flex-col min-h-0 overflow-hidden">
+          {/* 면접 질문 — 독립 스크롤 영역 */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {evaluationCategories.map((category) => (
+              <EvaluationCard
+                key={category.key}
+                category={category}
+                value={currentCandidate.evaluation[category.key]}
+                onChange={(field, val) => updateEvaluationLocal(category.key, field, val as string & number)}
+              />
+            ))}
+          </div>
+
+          {/* 액션 버튼 — 왼쪽 패널 하단 고정 */}
+          <div className="flex-shrink-0 border-t border-border/60 bg-card/70 backdrop-blur-sm px-5 py-3">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="text-xs text-muted-foreground">
+                  평가 완료{" "}
+                  <span className="font-semibold text-foreground tabular-nums">{completedCount}</span>
+                  <span className="text-muted-foreground/60"> / {applicants.length}명</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={saveStatus === "saving" || isSaving}
+                    className="h-8 gap-1.5 text-xs"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    {saveStatus === "saving" ? "저장 중..." : saveStatus === "saved" ? "저장됨 ✓" : "임시저장"}
+                  </Button>
+                  <div className="w-px h-5 bg-border" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDecision("HOLD")}
+                    className="h-8 gap-1.5 text-xs border-risk-medium/40 text-risk-medium hover:bg-risk-medium/8 hover:border-risk-medium/60"
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    보류
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDecision("FAILED")}
+                    className="h-8 gap-1.5 text-xs border-risk-high/40 text-risk-high hover:bg-risk-high/8 hover:border-risk-high/60"
+                  >
+                    <ThumbsDown className="w-3.5 h-3.5" />
+                    불합격
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleDecision("PASSED")}
+                    className="h-8 gap-1.5 text-xs bg-risk-low text-white hover:bg-risk-low/90"
+                  >
+                    <ThumbsUp className="w-3.5 h-3.5" />
+                    합격
+                  </Button>
+                </div>
+              </div>
+              {saveError && (
+                <p className="text-xs text-destructive bg-destructive/8 border border-destructive/20 rounded-lg px-3 py-1.5">{saveError}</p>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT: Real-Time Analysis */}
+        {/* RIGHT: Real-Time Analysis — 독립 스크롤 */}
         <div className="border-l border-border/60 bg-muted/20 p-5 overflow-y-auto">
           <div className="space-y-4">
             {/* Header */}
@@ -619,10 +692,10 @@ export function InterviewerMode() {
             </Card>
 
             {/* AI Explanation */}
-            <Card className="border border-border/60">
+            <Card className="border border-primary/20 bg-primary/[0.03]">
               <CardContent className="p-4">
-                <p className="text-xs font-medium text-muted-foreground mb-2">AI 분석 설명</p>
-                <p className="text-xs text-foreground/80 leading-relaxed">
+                <p className="text-sm font-bold text-foreground mb-2.5">AI 분석 설명</p>
+                <p className="text-sm text-foreground/85 leading-relaxed">
                   {analysis.explanation}
                 </p>
               </CardContent>
@@ -631,65 +704,6 @@ export function InterviewerMode() {
         </div>
       </div>
 
-      {/* BOTTOM: Actions */}
-      <div className="flex-shrink-0 border-t border-border/60 bg-card/60 backdrop-blur-sm px-6 py-3">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-4">
-            <div className="text-xs text-muted-foreground">
-              평가 완료{" "}
-              <span className="font-semibold text-foreground tabular-nums">{completedCount}</span>
-              <span className="text-muted-foreground/60"> / {applicants.length}명</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSave}
-                disabled={saveStatus === "saving" || isSaving}
-                className="h-8 gap-1.5 text-xs"
-              >
-                <Save className="w-3.5 h-3.5" />
-                {saveStatus === "saving" ? "저장 중..." : "임시 저장"}
-              </Button>
-
-              <div className="w-px h-5 bg-border" />
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDecision("HOLD")}
-                className="h-8 gap-1.5 text-xs border-risk-medium/40 text-risk-medium hover:bg-risk-medium/8 hover:border-risk-medium/60"
-              >
-                <Clock className="w-3.5 h-3.5" />
-                보류
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDecision("FAILED")}
-                className="h-8 gap-1.5 text-xs border-risk-high/40 text-risk-high hover:bg-risk-high/8 hover:border-risk-high/60"
-              >
-                <ThumbsDown className="w-3.5 h-3.5" />
-                불합격
-              </Button>
-
-              <Button
-                size="sm"
-                onClick={() => handleDecision("PASSED")}
-                className="h-8 gap-1.5 text-xs bg-risk-low text-white hover:bg-risk-low/90"
-              >
-                <ThumbsUp className="w-3.5 h-3.5" />
-                합격
-              </Button>
-            </div>
-          </div>
-          {saveError && (
-            <p className="text-xs text-destructive bg-destructive/8 border border-destructive/20 rounded-lg px-3 py-1.5">{saveError}</p>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

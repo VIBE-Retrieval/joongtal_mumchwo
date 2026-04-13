@@ -58,7 +58,7 @@ export default function InterviewerDashboard() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-screen overflow-hidden flex flex-col bg-background">
       {/* Header */}
       <header className="border-b border-border/60 bg-card/70 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">

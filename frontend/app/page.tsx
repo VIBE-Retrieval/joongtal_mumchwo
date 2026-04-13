@@ -124,21 +124,21 @@ export default function LandingPage() {
             <ScrollReveal direction="left">
               <div className="space-y-6 lg:max-w-xl">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-                  유사도 시각화
+                  AI 위험군 분석
                 </p>
                 <h2
                   id="similarity-heading"
                   className="text-3xl font-semibold leading-[1.2] tracking-tight text-neutral-900 text-balance md:text-4xl"
                 >
-                  학생의 변화는, 구조로 보입니다
+                  비슷한 패턴에서<br />위험 신호를 읽습니다
                 </h2>
                 <p className="whitespace-pre-line text-[15px] leading-relaxed text-neutral-600 md:text-base">
-                  {`설문, 학습 데이터, 최근 변화 추이를 기반으로
-유사한 상태의 학생들을 공간상에 배치해
-위험군의 패턴을 직관적으로 파악합니다.`}
+                  {`AI가 수천 명의 학생 데이터에서 패턴을 학습해
+과거에 중도탈락한 학생들과 유사한 상태의
+재학생을 조기에 감지합니다.`}
                 </p>
                 <ul className="flex flex-wrap gap-2 pt-1">
-                  {["유사도 기반 분류", "군집 시각화", "위험 패턴 탐지"].map((kw) => (
+                  {["과거 데이터 기반 학습", "위험 패턴 자동 감지", "조기 개입 권고"].map((kw) => (
                     <li
                       key={kw}
                       className="rounded-full border border-neutral-300 bg-white/70 px-3 py-1 text-xs text-neutral-600"
