@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.models import InterventionHistory
@@ -26,3 +27,16 @@ def create_encourage_message(
     )
     session.add(row)
     return row
+
+
+def get_encourage_messages(session: Session, student_id: str) -> list[InterventionHistory]:
+    stmt = (
+        select(InterventionHistory)
+        .where(
+            InterventionHistory.student_id == student_id,
+            InterventionHistory.action_type == "ENCOURAGE_MESSAGE",
+        )
+        .order_by(InterventionHistory.created_at.desc())
+        .limit(50)
+    )
+    return list(session.scalars(stmt).all())

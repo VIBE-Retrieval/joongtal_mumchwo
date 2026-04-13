@@ -84,17 +84,28 @@ def _build_action_scores(agent_input: dict[str, Any]) -> dict[str, float]:
         scores["EMERGENCY"] += 0.2
 
     # Step 2. Adjustments
-    if false_alarm_rate >= 0.4:
-        scores["ALERT_MENTOR"] -= 0.2
-        scores["REQUEST_MEETING"] -= 0.2
-        scores["EMERGENCY"] -= 0.2
+    if false_alarm_rate >= 0.7:
+        # 오탐이 70% 이상 → 자연스러운 패턴으로 간주
+        scores["ALERT_MENTOR"] -= 0.5
+        scores["REQUEST_MEETING"] -= 0.5
+        scores["EMERGENCY"] -= 0.7
+        scores["ENCOURAGE_MESSAGE"] += 0.2
+    elif false_alarm_rate >= 0.4:
+        # 오탐이 40% 이상 → 개입 점수 차감
+        scores["ALERT_MENTOR"] -= 0.3
+        scores["REQUEST_MEETING"] -= 0.3
+        scores["EMERGENCY"] -= 0.4
+
+    # 행동 상한선: false_alarm_rate가 높으면 EMERGENCY 차단
+    if false_alarm_rate >= 0.5:
+        scores["EMERGENCY"] = min(scores["EMERGENCY"], scores["ALERT_MENTOR"] - 0.01)
 
     if avg_recovery_days <= 3.0 and past_high_risk_count > 0:
         scores["REQUEST_MEETING"] -= 0.1
         scores["EMERGENCY"] -= 0.1
 
-    if action_effective_rate >= 0.7 and last_action_type in scores:
-        scores[last_action_type] += 0.15
+    if action_effective_rate >= 0.7:
+        scores[last_action_type] = scores.get(last_action_type, 0) + 0.15
 
     if interview_risk_score >= 0.7:
         scores["ALERT_MENTOR"] += 0.1

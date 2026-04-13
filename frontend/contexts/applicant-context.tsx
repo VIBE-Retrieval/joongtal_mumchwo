@@ -71,6 +71,7 @@ function mapStudentRowToApplicant(row: {
   course_name: string | null
   created_at: string
   has_interview: boolean
+  interview_status?: string | null
   education_level?: string | null
 }): Applicant {
   return {
@@ -83,7 +84,7 @@ function mapStudentRowToApplicant(row: {
     educationLevel: (row.education_level as EducationLevel) ?? "기타",
     major: undefined,
     targetJob: undefined,
-    status: row.has_interview ? "PASSED" : "PENDING_INTERVIEW",
+    status: (row.interview_status as ApplicantStatus) ?? (row.has_interview ? "PASSED" : "PENDING_INTERVIEW"),
     registeredAt: new Date(row.created_at),
     registeredBy: "",
     studentId: row.student_id,
@@ -150,6 +151,7 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
 
   // Interviewer: Update interview result (PASSED/FAILED/HOLD)
   const updateInterviewResult = useCallback((applicantId: string, status: "PASSED" | "FAILED" | "HOLD", notes?: string) => {
+    const studentId = applicants.find(a => a.id === applicantId)?.studentId
     setApplicants(prev => prev.map(a => 
       a.id === applicantId 
         ? { 
@@ -161,7 +163,18 @@ export function ApplicantProvider({ children }: { children: ReactNode }) {
           } 
         : a
     ))
-  }, [])
+
+    if (studentId) {
+      const base = process.env.NEXT_PUBLIC_API_URL
+      if (base) {
+        fetch(`${base}/students/${studentId}/interview-status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        }).catch(() => {})
+      }
+    }
+  }, [applicants])
 
   // Interviewer: Save evaluation (mark as reviewed but keep pending)
   const saveEvaluation = useCallback((applicantId: string) => {

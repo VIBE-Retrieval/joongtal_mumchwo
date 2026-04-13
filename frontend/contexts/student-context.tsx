@@ -124,8 +124,12 @@ interface StudentContextType {
   newRiskCount: number
   addStudent: (student: Student) => void
   removeStudent: (studentId: string) => Promise<boolean>
-  completeCare: (studentId: string) => void
+  completeCare: (
+    studentId: string,
+    feedback?: { isFalseAlarm: boolean; recoveryDays: number | null }
+  ) => void
   getStudentById: (studentId: string) => Student | undefined
+  refetchStudents: () => void
 }
 
 const StudentContext = createContext<StudentContextType | null>(null)
@@ -133,7 +137,7 @@ const StudentContext = createContext<StudentContextType | null>(null)
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<Student[]>([])
 
-  useEffect(() => {
+  const refetchStudents = useCallback(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/mentor/students/risks`)
       .then(res => res.json())
       .then(json => {
@@ -143,6 +147,10 @@ export function StudentProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    refetchStudents()
+  }, [refetchStudents])
 
   const careNeededStudents = useMemo(() => 
     students.filter(s => s.isCareNeeded), 
@@ -170,15 +178,22 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     return false
   }, [])
 
-  const completeCare = useCallback((studentId: string) => {
+  const completeCare = useCallback((
+    studentId: string,
+    feedback?: { isFalseAlarm: boolean; recoveryDays: number | null }
+  ) => {
+    const isFalseAlarm = feedback?.isFalseAlarm ?? false
+    const recoveryDays = feedback?.recoveryDays ?? null
     // Call API
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/consultings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         student_id: studentId,
-        mentor_feedback: "케어 완료",
-        action_effective: 1,
+        is_false_alarm: isFalseAlarm,
+        recovery_days: recoveryDays,
+        mentor_feedback: null,
+        action_effective: null,
       }),
     }).catch(() => {})
 
@@ -186,7 +201,9 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     setStudents(prev => prev.map(student => {
       if (student.id !== studentId) return student
 
-      const newRiskScore = Math.max(30, student.riskScore - 20)
+      const newRiskScore = isFalseAlarm
+        ? Math.round(student.riskScore * 0.6)
+        : Math.max(30, student.riskScore - 20)
       const newRiskLevel: RiskLevel = newRiskScore > 65 ? "high" : newRiskScore > 35 ? "medium" : "low"
 
       const today = new Date()
@@ -228,7 +245,8 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     addStudent,
     removeStudent,
     completeCare,
-    getStudentById
+    getStudentById,
+    refetchStudents,
   }
 
   return (

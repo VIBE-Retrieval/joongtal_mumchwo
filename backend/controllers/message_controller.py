@@ -25,3 +25,9 @@ def send_encouragement(body: SendEncouragementRequest, db: Session = Depends(get
         mentor_id=body.mentor_id,
     )
     return {"code": 200, "message": "success", "data": data}
+
+
+@router.get("/student/{student_id}")
+def get_student_messages(student_id: str, db: Session = Depends(get_db)):
+    data = message_service.get_messages(db, student_id)
+    return {"code": 200, "message": "success", "data": data}

@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Users, AlertTriangle, Bell, CheckCircle, User, X, ChevronRight, UserPlus, TrendingUp } from "lucide-react"
 import { useStudents, type Student } from "@/contexts/student-context"
 import { useNotifications } from "@/contexts/notification-context"
@@ -21,15 +25,38 @@ function getInitials(name: string) {
   return name.length > 0 ? name.charAt(0) : "?"
 }
 
-function CareNeededCard({ student, onComplete }: { student: Student; onComplete: () => void }) {
+function CareNeededCard({
+  student,
+  onComplete,
+}: {
+  student: Student
+  onComplete: (feedback: { isFalseAlarm: boolean; recoveryDays: number | null }) => void
+}) {
   const [isCompleting, setIsCompleting] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [resultType, setResultType] = useState<"false_alarm" | "recovered" | "observe">("observe")
+  const [recoveryDaysInput, setRecoveryDaysInput] = useState("")
 
-  const handleComplete = () => {
+  const parsedRecoveryDays = Number.parseInt(recoveryDaysInput, 10)
+  const isRecoveryInputValid = Number.isFinite(parsedRecoveryDays) && parsedRecoveryDays >= 1 && parsedRecoveryDays <= 30
+
+  const handleSubmitFeedback = () => {
+    if (isCompleting) return
+    const recoveryDays =
+      resultType === "recovered" && Number.isFinite(parsedRecoveryDays)
+        ? Math.min(30, Math.max(1, parsedRecoveryDays))
+        : null
+
     setIsCompleting(true)
+    setIsDialogOpen(false)
     setTimeout(() => {
-      onComplete()
+      onComplete({
+        isFalseAlarm: resultType === "false_alarm",
+        recoveryDays,
+      })
       setIsCompleted(true)
+      setIsCompleting(false)
     }, 300)
   }
 
@@ -68,16 +95,72 @@ function CareNeededCard({ student, onComplete }: { student: Student; onComplete:
         )}>
           {student.riskScore}점
         </span>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 px-2.5 text-xs gap-1 text-risk-low border-risk-low/30 hover:bg-risk-low/8 hover:text-risk-low hover:border-risk-low/50"
-          onClick={handleComplete}
-          disabled={isCompleting}
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            if (!isCompleting) setIsDialogOpen(open)
+          }}
         >
-          <CheckCircle className="w-3 h-3" />
-          완료
-        </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 px-2.5 text-xs gap-1 text-risk-low border-risk-low/30 hover:bg-risk-low/8 hover:text-risk-low hover:border-risk-low/50"
+            onClick={() => setIsDialogOpen(true)}
+            disabled={isCompleting}
+          >
+            <CheckCircle className="w-3 h-3" />
+            완료
+          </Button>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>케어 결과 기록</DialogTitle>
+              <DialogDescription>개입 결과를 선택하면 케어 완료로 처리됩니다.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <Label className="text-sm font-medium">이 개입이 실제로 필요했나요?</Label>
+              <RadioGroup value={resultType} onValueChange={(v) => setResultType(v as "false_alarm" | "recovered" | "observe")}>
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <RadioGroupItem value="false_alarm" id={`false-alarm-${student.id}`} className="mt-0.5" />
+                  <Label htmlFor={`false-alarm-${student.id}`} className="font-normal">오탐이었음 - 이 학생의 자연스러운 패턴</Label>
+                </div>
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <RadioGroupItem value="recovered" id={`recovered-${student.id}`} className="mt-0.5" />
+                  <Label htmlFor={`recovered-${student.id}`} className="font-normal">개입 후 회복됨</Label>
+                </div>
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <RadioGroupItem value="observe" id={`observe-${student.id}`} className="mt-0.5" />
+                  <Label htmlFor={`observe-${student.id}`} className="font-normal">지속 관찰 필요 (개선 없음)</Label>
+                </div>
+              </RadioGroup>
+              {resultType === "recovered" && (
+                <div className="space-y-2">
+                  <Label htmlFor={`recovery-days-${student.id}`}>회복까지 며칠 걸렸나요?</Label>
+                  <Input
+                    id={`recovery-days-${student.id}`}
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={recoveryDaysInput}
+                    onChange={(e) => setRecoveryDaysInput(e.target.value)}
+                    placeholder="1~30"
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCompleting}>
+                취소
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSubmitFeedback}
+                disabled={isCompleting || (resultType === "recovered" && !isRecoveryInputValid)}
+              >
+                {isCompleting ? "처리 중..." : "기록 완료"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
@@ -242,7 +325,12 @@ export default function MentorDashboard() {
     newRiskCount,
     careNeededStudents,
     completeCare,
+    refetchStudents,
   } = useStudents()
+
+  useEffect(() => {
+    refetchStudents()
+  }, [refetchStudents])
 
   useEffect(() => {
     const storedUser = localStorage.getItem("auth-user")
@@ -457,7 +545,7 @@ export default function MentorDashboard() {
                       <CareNeededCard
                         key={student.id}
                         student={student}
-                        onComplete={() => completeCare(student.id)}
+                        onComplete={(feedback) => completeCare(student.id, feedback)}
                       />
                     ))}
                   </div>

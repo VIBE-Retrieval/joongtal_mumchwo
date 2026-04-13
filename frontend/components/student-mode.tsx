@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { ClipboardList, TrendingDown, TrendingUp, Minus, Bell, Heart, Calendar, Check, Clock } from "lucide-react"
+import { ClipboardList, TrendingDown, TrendingUp, Minus, Bell, Heart, Calendar, Check, Clock, AlertTriangle } from "lucide-react"
 import { useMessages } from "@/contexts/message-context"
 import { useMeetings, type TimeSlot } from "@/contexts/meeting-context"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -212,7 +212,17 @@ export function StudentMode() {
   const [isLoading, setIsLoading] = useState(true)
   const [studentId, setStudentId] = useState("")
   const [careMessage, setCareMessage] = useState<string | null>(null)
-  const [careMessageRead, setCareMessageRead] = useState(false)
+  const [careMessageRead, setCareMessageRead] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false
+    try {
+      const raw = localStorage.getItem("auth-user")
+      const user = raw ? JSON.parse(raw) : null
+      const sid = user?.id ?? ""
+      return sid ? localStorage.getItem(`care-read-${sid}`) === "true" : false
+    } catch {
+      return false
+    }
+  })
   const [aiInsight, setAiInsight] = useState<string | null>(null)
   const [isInsightLoading, setIsInsightLoading] = useState(true)
 
@@ -232,6 +242,8 @@ export function StudentMode() {
     }
     const sid = user.id ?? ""
     setStudentId(sid)
+    const alreadyRead = localStorage.getItem(`care-read-${sid}`) === "true"
+    setCareMessageRead(alreadyRead)
 
     if (!sid) {
       setIsLoading(false)
@@ -293,7 +305,13 @@ export function StudentMode() {
       })
   }, [])
   
-  const { getMessagesForStudent, getUnreadCountForStudent, markAsRead, markAllAsReadForStudent } = useMessages()
+  const {
+    getMessagesForStudent,
+    fetchMessagesForStudent,
+    getUnreadCountForStudent,
+    markAsRead,
+    markAllAsReadForStudent,
+  } = useMessages()
   const { 
     getMeetingsForStudent, 
     getPendingRequestsForStudent, 
@@ -314,8 +332,15 @@ export function StudentMode() {
   const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false)
   const [currentMeetingId, setCurrentMeetingId] = useState<string | null>(null)
   const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([])
+
+  useEffect(() => {
+    if (!studentId) return
+    fetchMessagesForStudent(studentId)
+  }, [studentId, fetchMessagesForStudent])
   
   const currentMeeting = currentMeetingId ? allMeetings.find(m => m.id === currentMeetingId) : null
+  const isEmergencyMeeting = (meeting: { mentorName: string; purpose: string }) =>
+    meeting.mentorName === "AI 긴급 요청" || meeting.purpose.startsWith("[긴급]")
   
   const handleOpenNotifications = () => {
     setNotificationOpen(true)
@@ -428,12 +453,19 @@ export function StudentMode() {
                       "p-3 rounded-lg border transition-colors cursor-pointer",
                       careMessageRead ? "bg-muted/30" : "bg-primary/5 border-primary/20"
                     )}
-                    onClick={() => setCareMessageRead(true)}
+                    onClick={() => {
+                      setCareMessageRead(true)
+                      try {
+                        const raw = localStorage.getItem("auth-user")
+                        const user = raw ? JSON.parse(raw) : null
+                        if (user?.id) localStorage.setItem(`care-read-${user.id}`, "true")
+                      } catch {}
+                    }}
                   >
                     <div className="flex items-start gap-2">
                       <Heart className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-xs font-medium text-foreground mb-1">멘토 케어 메시지</p>
+                        <p className="text-xs font-medium text-foreground mb-1">AI 케어 메시지</p>
                         <p className="text-xs text-muted-foreground">{careMessage}</p>
                       </div>
                     </div>
@@ -859,11 +891,26 @@ export function StudentMode() {
           </CardHeader>
           <CardContent className="pt-0 space-y-2.5">
             {pendingMeetingRequests.map(meeting => (
-              <div key={meeting.id} className="p-3.5 bg-card/60 rounded-lg border border-border/40 space-y-2.5">
+              <div
+                key={meeting.id}
+                className={cn(
+                  "p-3.5 rounded-lg border space-y-2.5",
+                  isEmergencyMeeting(meeting)
+                    ? "bg-red-500/10 border-red-500/30"
+                    : "bg-card/60 border-border/40"
+                )}
+              >
                 <div className="space-y-0.5">
-                  <p className="text-sm font-medium text-foreground">
-                    {meeting.mentorName} 멘토가 미팅을 요청했습니다
-                  </p>
+                  {isEmergencyMeeting(meeting) ? (
+                    <p className="text-sm font-semibold text-red-700 flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4" />
+                      ⚠️ 긴급 미팅 요청
+                    </p>
+                  ) : (
+                    <p className="text-sm font-medium text-foreground">
+                      {meeting.mentorName} 멘토가 미팅을 요청했습니다
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">목적: {meeting.purpose}</p>
                   {meeting.message && (
                     <p className="text-xs text-foreground/80 mt-2 p-2.5 bg-muted/30 rounded-lg border border-border/30">
@@ -871,14 +918,24 @@ export function StudentMode() {
                     </p>
                   )}
                 </div>
-                <Button
-                  size="sm"
-                  className="w-full h-8 gap-1.5 text-xs"
-                  onClick={() => handleOpenAvailabilityModal(meeting.id)}
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  가능한 시간 선택하기
-                </Button>
+                {meeting.proposedSlots.length > 0 ? (
+                  <Button
+                    size="sm"
+                    className="w-full h-8 gap-1.5 text-xs"
+                    onClick={() => handleOpenAvailabilityModal(meeting.id)}
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    가능한 시간 선택하기
+                  </Button>
+                ) : isEmergencyMeeting(meeting) ? (
+                  <p className="text-xs text-red-700 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                    멘토가 곧 직접 연락드릴 예정입니다.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    제안된 시간이 없습니다.
+                  </p>
+                )}
               </div>
             ))}
           </CardContent>
@@ -893,7 +950,14 @@ export function StudentMode() {
             <DialogDescription>
               {currentMeeting && (
                 <>
-                  <span className="font-medium text-foreground">{currentMeeting.mentorName}</span> 멘토가 제안한 시간 중 가능한 시간을 선택해주세요.
+                  {isEmergencyMeeting(currentMeeting) ? (
+                    <span className="font-medium text-red-700">⚠️ 긴급 미팅 요청</span>
+                  ) : (
+                    <span className="font-medium text-foreground">{currentMeeting.mentorName}</span>
+                  )}{" "}
+                  {isEmergencyMeeting(currentMeeting)
+                    ? "건입니다. 아래 안내를 확인해주세요."
+                    : "멘토가 제안한 시간 중 가능한 시간을 선택해주세요."}
                   <br />
                   <span className="text-xs">목적: {currentMeeting.purpose}</span>
                 </>
@@ -932,8 +996,15 @@ export function StudentMode() {
                   })}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-4">
-                제안된 시간이 없습니다.
+              <p className={cn(
+                "text-center py-4",
+                currentMeeting && isEmergencyMeeting(currentMeeting)
+                  ? "text-red-700"
+                  : "text-muted-foreground"
+              )}>
+                {currentMeeting && isEmergencyMeeting(currentMeeting)
+                  ? "멘토가 곧 직접 연락드릴 예정입니다."
+                  : "제안된 시간이 없습니다."}
               </p>
             )}
           </div>

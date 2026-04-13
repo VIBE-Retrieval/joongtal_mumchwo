@@ -27,6 +27,7 @@ const ENCOURAGEMENT_TEMPLATES = [
 interface MessageContextType {
   messages: EncouragementMessage[]
   getMessagesForStudent: (studentId: string) => EncouragementMessage[]
+  fetchMessagesForStudent: (studentId: string) => void
   getUnreadCountForStudent: (studentId: string) => number
   sendEncouragementMessage: (studentId: string, customMessage?: string) => void
   markAsRead: (messageId: string) => void
@@ -48,12 +49,48 @@ function getStoredUser(): { id: string; name: string } | null {
 
 export function MessageProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<EncouragementMessage[]>([])
+  const [fetchedStudentIds, setFetchedStudentIds] = useState<Set<string>>(new Set())
 
   const getMessagesForStudent = useCallback((studentId: string) => {
     return messages
       .filter(m => m.studentId === studentId)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
   }, [messages])
+
+  const fetchMessagesForStudent = useCallback((studentId: string) => {
+    const sid = studentId.trim()
+    if (!sid || fetchedStudentIds.has(sid)) return
+
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
+    if (!apiBase) return
+
+    fetch(`${apiBase}/messages/student/${sid}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json?.code !== 200 || !Array.isArray(json?.data?.messages)) return
+
+        const fetched: EncouragementMessage[] = json.data.messages.map((m: {
+          message_id: string
+          student_id: string
+          message: string
+          mentor_id: string | null
+          mentor_name: string | null
+          sent_at: string
+        }) => ({
+          id: m.message_id,
+          studentId: m.student_id,
+          mentorId: m.mentor_id ?? "unknown",
+          mentorName: m.mentor_name ?? "멘토",
+          message: m.message,
+          timestamp: new Date(m.sent_at),
+          isRead: true,
+        }))
+
+        setMessages(prev => [...fetched, ...prev.filter(p => p.studentId !== sid)])
+        setFetchedStudentIds(prev => new Set([...prev, sid]))
+      })
+      .catch(() => {})
+  }, [fetchedStudentIds])
 
   const getUnreadCountForStudent = useCallback((studentId: string) => {
     return messages.filter(m => m.studentId === studentId && !m.isRead).length
@@ -103,11 +140,20 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({
     messages,
     getMessagesForStudent,
+    fetchMessagesForStudent,
     getUnreadCountForStudent,
     sendEncouragementMessage,
     markAsRead,
     markAllAsReadForStudent
-  }), [messages, getMessagesForStudent, getUnreadCountForStudent, sendEncouragementMessage, markAsRead, markAllAsReadForStudent])
+  }), [
+    messages,
+    getMessagesForStudent,
+    fetchMessagesForStudent,
+    getUnreadCountForStudent,
+    sendEncouragementMessage,
+    markAsRead,
+    markAllAsReadForStudent,
+  ])
 
   return (
     <MessageContext.Provider value={value}>

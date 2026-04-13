@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Optional
@@ -31,7 +31,8 @@ class Student(Base):
     birth_date: Mapped[str] = mapped_column(String(8), nullable=False, default="")
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     course_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    education_level: Mapped[str | None] = mapped_column(String(32), nullable=True, default="기타")
+    education_level: Mapped[str | None] = mapped_column(String(32), nullable=True, default="湲고?")
+    interview_status: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
@@ -149,3 +150,4 @@ class Meeting(Base):
     student_notified: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     mentor_notified: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+

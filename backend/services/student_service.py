@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import uuid
 from datetime import date
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from AI.utils.risk_utils import get_risk_level
 from backend.repositories import student_repository
 
-DEFAULT_CARE_MESSAGE = "오늘도 충분히 잘하고 있어요. 천천히 나아가도 괜찮습니다."
+DEFAULT_CARE_MESSAGE = "?ㅻ뒛??異⑸텇???섑븯怨??덉뼱?? 泥쒖쿇???섏븘媛??愿쒖갖?듬땲??"
 
 
 def get_process_risk(session: Session, student_id: str) -> dict | None:
@@ -95,11 +95,11 @@ def get_progress(session: Session, student_id: str) -> dict:
     if pr is None:
         emotion_state, emotion_label = "보통", "😐"
     elif pr.risk_level == "HIGH" and pr.risk_trend == "UP":
-        emotion_state, emotion_label = "주의", "😟"
+        emotion_state, emotion_label = "위험", "😟"
     elif pr.risk_level == "MEDIUM":
-        emotion_state, emotion_label = "보통", "😐"
+        emotion_state, emotion_label = "주의", "😕"
     elif pr.risk_level == "LOW":
-        emotion_state, emotion_label = "안정", "🙂"
+        emotion_state, emotion_label = "안정", "😊"
     else:
         emotion_state, emotion_label = "보통", "😐"
 
@@ -145,7 +145,8 @@ def list_students(session: Session) -> dict:
                 "birth_date": row["student"].birth_date,
                 "phone": row["student"].phone,
                 "course_name": row["student"].course_name,
-                "education_level": row["student"].education_level or "기타",
+                "education_level": row["student"].education_level or "湲고?",
+                "interview_status": row["interview_status"],
                 "created_at": row["student"].created_at.isoformat(),
                 "has_interview": row["has_interview"],
             }
@@ -153,6 +154,13 @@ def list_students(session: Session) -> dict:
         ]
     }
 
+
+
+def update_interview_status(session: Session, student_id: str, status: str) -> dict:
+    if status not in ("PASSED", "FAILED", "HOLD"):
+        return {"success": False}
+    ok = student_repository.update_interview_status(session, student_id, status)
+    return {"success": ok}
 
 def delete_student(session: Session, student_id: str) -> bool:
     deleted = student_repository.delete_student(session, student_id)
@@ -168,11 +176,11 @@ def register_student(
     birth_date: str,
     phone: str | None = None,
     course_name: str | None = None,
-    education_level: str = "기타",
+    education_level: str = "湲고?",
 ) -> dict:
     existing = student_repository.get_student_by_email(session, email)
     if existing:
-        raise ValueError("이미 등록된 이메일입니다.")
+        raise ValueError("?대? ?깅줉???대찓?쇱엯?덈떎.")
 
     student_id = "STU-" + uuid.uuid4().hex[:8].upper()
     student = student_repository.create_student(
@@ -187,3 +195,5 @@ def register_student(
     )
     session.commit()
     return {"student_id": student.student_id}
+
+
