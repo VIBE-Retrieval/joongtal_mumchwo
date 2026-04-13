@@ -106,6 +106,7 @@ def get_all_students_with_risk(session: Session) -> list[dict]:
         process_by_sid.setdefault(r.student_id, r)
 
     interview_by_sid = _latest_interview_risk_by_student(session)
+    latest_inv_by_sid = get_latest_intervention_by_student(session)
     history_by_sid = _recent_risk_history_by_student(
         session, [s.student_id for s in students], limit=14
     )
@@ -114,6 +115,7 @@ def get_all_students_with_risk(session: Session) -> list[dict]:
     for s in students:
         pr = process_by_sid.get(s.student_id)
         ir = interview_by_sid.get(s.student_id)
+        inv = latest_inv_by_sid.get(s.student_id)
         out.append(
             {
                 "student_id": s.student_id,
@@ -129,6 +131,7 @@ def get_all_students_with_risk(session: Session) -> list[dict]:
                 "process_risk_trend": pr.risk_trend if pr is not None else None,
                 "interview_risk_score": ir.dropout_risk_score if ir is not None else None,
                 "risk_history": history_by_sid.get(s.student_id, []),
+                "llm_summary": inv.llm_summary if inv is not None else "",
             }
         )
     return out

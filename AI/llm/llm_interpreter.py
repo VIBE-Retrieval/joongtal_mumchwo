@@ -180,6 +180,41 @@ def generate_encouragement(ml_result: dict, llm_result: dict) -> str:
         return fallback_message
 
 
+def generate_mentor_summary(agent_result: dict, llm_result: dict) -> str:
+    fallback_message = "현재 학생 상태에 대한 자동 분석이 완료되었습니다."
+
+    try:
+        required_agent = {"action_type", "priority", "action_reason"}
+        required_llm = {"state_summary", "risk_reason", "risk_type"}
+        if not required_agent.issubset(agent_result.keys()):
+            return fallback_message
+        if not required_llm.issubset(llm_result.keys()):
+            return fallback_message
+
+        system_prompt = (
+            "당신은 훈련생 관리 시스템의 AI 분석관입니다.\n"
+            "멘토에게 학생의 현재 위험 상태와 대응 근거를 간결하게 보고하세요.\n"
+            "규칙: 수치나 점수를 직접 언급하지 말고, 전문적이고 객관적인 톤으로 2~3문장으로 작성하세요."
+        )
+        user_prompt = (
+            "아래 정보를 바탕으로 멘토용 요약 보고를 작성하세요.\n\n"
+            f"- state_summary: {llm_result.get('state_summary', '')}\n"
+            f"- risk_reason: {llm_result.get('risk_reason', '')}\n"
+            f"- risk_type: {llm_result.get('risk_type', '')}\n"
+            f"- action_type: {agent_result.get('action_type', '')}\n"
+            f"- priority: {agent_result.get('priority', '')}\n"
+            f"- action_reason: {agent_result.get('action_reason', '')}\n\n"
+            "출력은 JSON 없이 plain text 한국어 문장으로만 작성하세요."
+        )
+
+        text = _call_llm(system_prompt, user_prompt).strip()
+        if not text:
+            return fallback_message
+        return text
+    except Exception:
+        return fallback_message
+
+
 if __name__ == "__main__":
     ml_result = {
         "risk_score": 0.75,
