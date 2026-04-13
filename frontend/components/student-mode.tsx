@@ -212,7 +212,17 @@ export function StudentMode() {
   const [isLoading, setIsLoading] = useState(true)
   const [studentId, setStudentId] = useState("")
   const [careMessage, setCareMessage] = useState<string | null>(null)
-  const [careMessageRead, setCareMessageRead] = useState(false)
+  const [careMessageRead, setCareMessageRead] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false
+    try {
+      const raw = localStorage.getItem("auth-user")
+      const user = raw ? JSON.parse(raw) : null
+      const sid = user?.id ?? ""
+      return sid ? localStorage.getItem(`care-read-${sid}`) === "true" : false
+    } catch {
+      return false
+    }
+  })
   const [aiInsight, setAiInsight] = useState<string | null>(null)
   const [isInsightLoading, setIsInsightLoading] = useState(true)
 
@@ -232,6 +242,8 @@ export function StudentMode() {
     }
     const sid = user.id ?? ""
     setStudentId(sid)
+    const alreadyRead = localStorage.getItem(`care-read-${sid}`) === "true"
+    setCareMessageRead(alreadyRead)
 
     if (!sid) {
       setIsLoading(false)
@@ -293,7 +305,13 @@ export function StudentMode() {
       })
   }, [])
   
-  const { getMessagesForStudent, getUnreadCountForStudent, markAsRead, markAllAsReadForStudent } = useMessages()
+  const {
+    getMessagesForStudent,
+    fetchMessagesForStudent,
+    getUnreadCountForStudent,
+    markAsRead,
+    markAllAsReadForStudent,
+  } = useMessages()
   const { 
     getMeetingsForStudent, 
     getPendingRequestsForStudent, 
@@ -314,6 +332,11 @@ export function StudentMode() {
   const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false)
   const [currentMeetingId, setCurrentMeetingId] = useState<string | null>(null)
   const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([])
+
+  useEffect(() => {
+    if (!studentId) return
+    fetchMessagesForStudent(studentId)
+  }, [studentId, fetchMessagesForStudent])
   
   const currentMeeting = currentMeetingId ? allMeetings.find(m => m.id === currentMeetingId) : null
   const isEmergencyMeeting = (meeting: { mentorName: string; purpose: string }) =>
@@ -430,7 +453,14 @@ export function StudentMode() {
                       "p-3 rounded-lg border transition-colors cursor-pointer",
                       careMessageRead ? "bg-muted/30" : "bg-primary/5 border-primary/20"
                     )}
-                    onClick={() => setCareMessageRead(true)}
+                    onClick={() => {
+                      setCareMessageRead(true)
+                      try {
+                        const raw = localStorage.getItem("auth-user")
+                        const user = raw ? JSON.parse(raw) : null
+                        if (user?.id) localStorage.setItem(`care-read-${user.id}`, "true")
+                      } catch {}
+                    }}
                   >
                     <div className="flex items-start gap-2">
                       <Heart className="w-4 h-4 text-primary mt-0.5 shrink-0" />

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from "react"
 
@@ -127,8 +127,8 @@ export function MeetingProvider({ children }: { children: ReactNode }) {
   // Mentor requests a meeting with proposed time slots
   const requestMeeting = useCallback(
     (studentId: string, studentName: string, purpose: string, message: string, proposedSlots: TimeSlot[]) => {
-      let mentorId = "mentor-1"
-      let mentorName = "김멘토"
+      let mentorId = ""
+      let mentorName = ""
       if (typeof window !== "undefined") {
         const stored = localStorage.getItem("auth-user")
         if (stored) {
@@ -329,3 +329,5 @@ export function useMeetings() {
   }
   return context
 }
+
+

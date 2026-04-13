@@ -389,10 +389,11 @@ export function InterviewerMode() {
     ctxUpdateEvaluation(id, currentCandidate.evaluation)
     updateInterviewResult(id, decision)
 
+    if (currentCandidate.studentId) {
+      await handleSave()
+    }
+
     if (decision === "PASSED") {
-      if (currentCandidate.studentId) {
-        await handleSave()
-      }
       const student = convertToStudent(id, currentCandidate.evaluation)
       if (student) addStudent(student)
     }

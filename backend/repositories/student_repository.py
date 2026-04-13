@@ -155,6 +155,16 @@ def get_all_students(session: Session) -> list[dict]:
         {
             "student": student,
             "has_interview": student.student_id in interviewed_ids,
+            "interview_status": student.interview_status,
         }
         for student in students
     ]
+
+
+def update_interview_status(session: Session, student_id: str, status: str) -> bool:
+    student = session.get(Student, student_id)
+    if student is None:
+        return False
+    student.interview_status = status
+    session.commit()
+    return True

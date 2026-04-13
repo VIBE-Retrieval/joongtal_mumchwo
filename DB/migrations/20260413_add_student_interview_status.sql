@@ -1,0 +1,2 @@
+﻿ALTER TABLE students ADD COLUMN IF NOT EXISTS interview_status VARCHAR(16);
+

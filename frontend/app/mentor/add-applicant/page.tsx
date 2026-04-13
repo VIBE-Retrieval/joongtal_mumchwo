@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChevronLeft, UserPlus, Save } from "lucide-react"
 import { type EducationLevel } from "@/contexts/student-context"
 import { useApplicants } from "@/contexts/applicant-context"
+import { AuthProvider, useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 
 const COURSE_OPTIONS = [
@@ -37,9 +38,10 @@ const TARGET_JOBS = [
   "DevOps 엔지니어"
 ]
 
-export default function AddApplicantPage() {
+function AddApplicantPageContent() {
   const router = useRouter()
   const { registerApplicant } = useApplicants()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -112,7 +114,7 @@ export default function AddApplicantPage() {
             educationLevel: educationLevel as EducationLevel,
             major: major || undefined,
             targetJob: targetJob || undefined,
-            registeredBy: "mentor-1",
+            registeredBy: user?.id ?? "",
           },
           json.data.student_id
         )
@@ -313,5 +315,13 @@ export default function AddApplicantPage() {
         </form>
       </main>
     </div>
+  )
+}
+
+export default function AddApplicantPage() {
+  return (
+    <AuthProvider>
+      <AddApplicantPageContent />
+    </AuthProvider>
   )
 }

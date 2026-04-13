@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
@@ -54,6 +54,10 @@ class RegisterStudentBody(BaseModel):
         return v
 
 
+class InterviewStatusBody(BaseModel):
+    status: str
+
+
 @router.post("")
 def register_student(body: RegisterStudentBody, db: Session = Depends(get_db)):
     try:
@@ -80,6 +84,18 @@ def register_student(body: RegisterStudentBody, db: Session = Depends(get_db)):
 @router.get("")
 def list_students(db: Session = Depends(get_db)):
     data = student_service.list_students(db)
+    return _ok(data)
+
+
+@router.patch("/{student_id}/interview-status")
+def patch_interview_status(
+    student_id: str,
+    body: InterviewStatusBody,
+    db: Session = Depends(get_db),
+):
+    data = student_service.update_interview_status(db, student_id, body.status)
+    if not data["success"]:
+        return _nf()
     return _ok(data)
 
 
@@ -129,3 +145,4 @@ def get_care_message(student_id: str, db: Session = Depends(get_db)):
 def get_ai_insight(student_id: str, db: Session = Depends(get_db)):
     data = student_service.get_ai_insight(db, student_id)
     return _ok(data)
+
