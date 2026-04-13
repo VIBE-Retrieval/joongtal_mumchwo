@@ -112,7 +112,51 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Section 3: Roles ─────────────────────────────────── */}
+      {/* ── Section 3: 유사도 네트워크 맵 ────────────────────── */}
+      {/* 어두운 배경 — 캔버스와 자연스럽게 어우러지도록 */}
+      <section
+        id="similarity-map"
+        className="min-h-screen flex items-center bg-[#0b0b0f] px-6 py-20"
+        aria-labelledby="similarity-heading"
+      >
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <ScrollReveal direction="left">
+              <div className="space-y-6 lg:max-w-xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+                  유사도 시각화
+                </p>
+                <h2
+                  id="similarity-heading"
+                  className="text-3xl font-semibold leading-[1.2] tracking-tight text-white text-balance md:text-4xl"
+                >
+                  학생의 변화는, 구조로 보입니다
+                </h2>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-neutral-400 md:text-base">
+                  {`설문, 학습 데이터, 최근 변화 추이를 기반으로
+유사한 상태의 학생들을 공간상에 배치해
+위험군의 패턴을 직관적으로 파악합니다.`}
+                </p>
+                <ul className="flex flex-wrap gap-2 pt-1">
+                  {["유사도 기반 분류", "군집 시각화", "위험 패턴 탐지"].map((kw) => (
+                    <li
+                      key={kw}
+                      className="rounded-full border border-neutral-700/80 bg-neutral-800/40 px-3 py-1 text-xs text-neutral-300"
+                    >
+                      {kw}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal direction="right" delay={90}>
+              <LandingStudentNetworkLazy />
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 4: Roles ─────────────────────────────────── */}
       <section
         id="roles"
         className="min-h-screen flex items-center bg-white dark:bg-neutral-900 px-6 py-20"
@@ -202,53 +246,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Section 4: 유사도 맵 + Stats + CTA + Footer ─────── */}
+      {/* ── Section 5: Stats + CTA + Footer ─────────────────── */}
       <section
-        className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800"
-        aria-labelledby="similarity-heading cta-heading"
+        className="flex flex-col bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800"
+        aria-labelledby="cta-heading"
       >
-        {/* 유사도 시각화 — 텍스트 + 3D 오브제 */}
-        <div
-          id="similarity-map"
-          className="w-full px-6 pt-20 pb-12 md:pt-28 md:pb-16"
-        >
-          <div className="max-w-6xl mx-auto w-full">
-            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-              <ScrollReveal direction="left">
-                <div className="space-y-6 lg:max-w-xl">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-                    유사도 시각화
-                  </p>
-                  <h2
-                    id="similarity-heading"
-                    className="text-3xl font-semibold leading-[1.2] tracking-tight text-[#2d2d2d] text-balance dark:text-white md:text-4xl"
-                  >
-                    학생의 변화는, 구조로 보입니다
-                  </h2>
-                  <p className="whitespace-pre-line text-[15px] leading-relaxed text-neutral-600 dark:text-neutral-400 md:text-base">
-                    {`설문, 학습 데이터, 최근 변화 추이를 기반으로
-유사한 상태의 학생들을 공간상에 배치해
-위험군의 패턴을 직관적으로 파악합니다.`}
-                  </p>
-                  <ul className="flex flex-wrap gap-2 pt-1">
-                    {["유사도 기반 분류", "군집 시각화", "위험 패턴 탐지"].map((kw) => (
-                      <li
-                        key={kw}
-                        className="rounded-full border border-neutral-200/90 bg-white/60 px-3 py-1 text-xs text-[#2d2d2d]/80 dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-300"
-                      >
-                        {kw}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </ScrollReveal>
-              <ScrollReveal direction="right" delay={90}>
-                <LandingStudentNetworkLazy />
-              </ScrollReveal>
-            </div>
-          </div>
-        </div>
-
         {/* Stats */}
         <ScrollReveal>
           <div className="max-w-4xl mx-auto w-full px-6 pt-24 pb-12">
@@ -268,7 +270,7 @@ export default function LandingPage() {
         </ScrollReveal>
 
         {/* CTA */}
-        <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="flex-1 flex items-center justify-center px-6 py-20">
           <ScrollReveal delay={100}>
             <div className="max-w-2xl mx-auto text-center space-y-6">
               <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white">
