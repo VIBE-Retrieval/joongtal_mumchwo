@@ -146,6 +146,40 @@ def interpret(ml_result: dict) -> dict:
         return FALLBACK_RESULT.copy()
 
 
+def generate_encouragement(ml_result: dict, llm_result: dict) -> str:
+    fallback_message = (
+        "오늘도 충분히 잘하고 있어요. 어려운 순간도 있지만, 포기하지 않는 당신을 응원합니다."
+    )
+
+    try:
+        required_ml = {"risk_score", "risk_level", "risk_trend", "feature_snapshot"}
+        required_llm = {"state_summary", "risk_reason", "risk_type"}
+        if not required_ml.issubset(ml_result.keys()):
+            return fallback_message
+        if not required_llm.issubset(llm_result.keys()):
+            return fallback_message
+
+        system_prompt = (
+            "당신은 교육 훈련생을 응원하는 멘토입니다.\n"
+            "학생의 상태를 파악하고 따뜻한 격려 메시지를 작성하세요.\n"
+            "규칙: 위험 점수나 수치를 직접 언급하지 마세요. 따뜻하고 진심 어린 톤. 2~3문장."
+        )
+        user_prompt = (
+            "아래 정보를 바탕으로 학생에게 보낼 격려 메시지를 2~3문장으로 작성하세요.\n\n"
+            f"- risk_type: {llm_result.get('risk_type', '')}\n"
+            f"- state_summary: {llm_result.get('state_summary', '')}\n"
+            f"- risk_reason: {llm_result.get('risk_reason', '')}\n\n"
+            "출력은 JSON 없이 plain text로만 작성하세요."
+        )
+
+        text = _call_llm(system_prompt, user_prompt).strip()
+        if not text:
+            return fallback_message
+        return text
+    except Exception:
+        return fallback_message
+
+
 if __name__ == "__main__":
     ml_result = {
         "risk_score": 0.75,

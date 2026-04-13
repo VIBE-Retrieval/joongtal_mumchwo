@@ -202,7 +202,23 @@ Agent는 최종 행동을 결정하는 계층이다.
 
 ---
 
-## 7.3 행동 유형
+## 7.3 실행 동작
+
+| action_type | 실행 내용 |
+|---|---|
+| NONE | 개입 없음. 기록만 저장. |
+| ENCOURAGE_MESSAGE | LLM이 위험 맥락 기반 격려 메시지 생성 → 학생에게 전달 |
+| ALERT_MENTOR | 멘토 알림 대시보드에 PENDING 상태로 표시 |
+| REQUEST_MEETING | 미팅 요청 자동 생성 (mentor_id=SYSTEM, 슬롯 미정) |
+| EMERGENCY | 긴급 미팅 요청 자동 생성 + 멘토 긴급 알림 |
+
+실행은 survey_service.py 내 Agent 판단 직후 수행된다.
+실행 완료 시 InterventionHistory.status = "COMPLETED".
+ALERT_MENTOR / EMERGENCY는 멘토 확인 전까지 status = "PENDING" 유지.
+
+---
+
+## 7.4 행동 유형
 
 - NONE
 - ENCOURAGE_MESSAGE
@@ -212,7 +228,7 @@ Agent는 최종 행동을 결정하는 계층이다.
 
 ---
 
-## 7.4 핵심 원칙
+## 7.5 핵심 원칙
 
 Agent는 단순 규칙 기반이 아니라:
 
