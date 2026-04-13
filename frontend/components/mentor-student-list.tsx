@@ -275,7 +275,9 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
               
               <div className="bg-muted/30 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium">14일 참여도 추이</span>
+                  <span className="text-sm font-medium">
+                    {student.trend.length > 0 ? `${student.trend.length}일 참여도 추이` : "참여도 추이"}
+                  </span>
                   <div className={cn("flex items-center gap-1 text-sm font-medium", changeColor)}>
                     <TrendIcon className="w-4 h-4" />
                     <span>{changeDirection}{student.recentChange.toFixed(1)}%</span>
@@ -283,7 +285,7 @@ function StudentRecord({ student, onCompleteCare, onSendMessage, onRequestMeetin
                 </div>
                 <TrendChart data={student.trend} riskLevel={student.riskLevel} />
                 <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>14일 전</span>
+                  <span>{student.trend.length > 1 ? `${student.trend.length}일 전` : "시작"}</span>
                   <span>오늘</span>
                 </div>
               </div>
