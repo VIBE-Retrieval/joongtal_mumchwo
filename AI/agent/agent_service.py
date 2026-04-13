@@ -34,7 +34,6 @@ def _clamp_score(value: float) -> float:
 
 
 def _build_action_scores(agent_input: dict[str, Any]) -> dict[str, float]:
-    interview_risk_score = float(agent_input.get("interview_risk_score", 0.5))
     process_risk_score = float(agent_input["process_risk_score"])
     risk_level = str(agent_input["risk_level"])
     risk_trend = str(agent_input["risk_trend"])
@@ -106,10 +105,6 @@ def _build_action_scores(agent_input: dict[str, Any]) -> dict[str, float]:
 
     if action_effective_rate >= 0.7:
         scores[last_action_type] = scores.get(last_action_type, 0) + 0.15
-
-    if interview_risk_score >= 0.7:
-        scores["ALERT_MENTOR"] += 0.1
-        scores["REQUEST_MEETING"] += 0.1
 
     return {k: _clamp_score(v) for k, v in scores.items()}
 

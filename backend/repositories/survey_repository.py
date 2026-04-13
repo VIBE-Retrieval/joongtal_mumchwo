@@ -225,7 +225,7 @@ def get_latest_interview_risk_score(session: Session, student_id: str) -> float:
         .limit(1)
     )
     row = session.scalar(stmt)
-    return float(row) if row is not None else 0.5
+    return float(row) if row is not None else 0.0
 
 
 def save_intervention_history(

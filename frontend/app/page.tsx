@@ -112,6 +112,194 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Pipeline 1: 면접 ML ──────────────────────────────── */}
+      <section
+        id="pipeline-interview"
+        className="bg-white py-24 px-6"
+        aria-labelledby="pipeline1-heading"
+      >
+        <div className="max-w-6xl mx-auto space-y-16">
+          <ScrollReveal>
+            <div className="text-center space-y-4">
+              <span className="inline-block text-xs font-semibold tracking-widest text-primary uppercase">
+                핵심 기능 1 · 면접 단계 예측
+              </span>
+              <h2
+                id="pipeline1-heading"
+                className="text-3xl md:text-4xl font-bold text-neutral-900 leading-tight"
+              >
+                입과 전에 이미<br />위험을 봅니다
+              </h2>
+              <p className="text-neutral-500 text-sm leading-relaxed max-w-lg mx-auto">
+                과거 중도탈락자 데이터로 학습한 ML 모델이<br />
+                면접 채점 즉시 중탈 위험도를 예측합니다
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={100}>
+            <div className="overflow-x-auto pb-2">
+              <div className="flex items-stretch gap-0 w-fit mx-auto">
+                {(
+                  [
+                    { num: "01", icon: "🗃️", title: "중탈 데이터 수집", desc: "과거 중도탈락자·수료자의\n면접 응답 데이터", accent: false },
+                    { num: "02", icon: "🤖", title: "ML 모델 학습",    desc: "RandomForest로\n0/1 레이블 패턴 학습",  accent: false },
+                    { num: "03", icon: "📝", title: "면접 채점",        desc: "성취도·적응도·인간관계\n3항목 평가",         accent: true  },
+                    { num: "04", icon: "⚡", title: "위험도 예측",      desc: "dropout_risk_score\n0~1 즉시 계산",       accent: true  },
+                    { num: "05", icon: "🎯", title: "입과 결정",        desc: "데이터 기반\n합격·보류·불합격",           accent: false },
+                  ] as const
+                ).map((step, i, arr) => (
+                  <div key={i} className="flex items-center">
+                    <div
+                      className={`w-40 rounded-2xl p-5 border-2 shadow-sm ${
+                        step.accent
+                          ? "border-primary/40 bg-primary/[0.04]"
+                          : "border-neutral-200 bg-white"
+                      }`}
+                    >
+                      <div className="text-2xl mb-3">{step.icon}</div>
+                      <div className="text-[10px] font-bold text-primary/50 tracking-widest mb-1">{step.num}</div>
+                      <div className="text-sm font-semibold text-neutral-900 mb-1.5 leading-snug">{step.title}</div>
+                      <div className="text-[11px] text-neutral-500 leading-relaxed whitespace-pre-line">{step.desc}</div>
+                    </div>
+                    {i < arr.length - 1 && (
+                      <div className="px-3 flex-shrink-0">
+                        <svg className="w-5 h-5 text-neutral-300" fill="none" viewBox="0 0 24 24">
+                          <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p className="mt-6 text-center text-[11px] text-primary">
+              면접관이 채점하는 순간, AI가 중탈 가능성을 계산합니다
+            </p>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ── Pipeline 2: 모니터링 루프 ────────────────────────── */}
+      <section
+        id="pipeline-monitoring"
+        className="bg-[#13131f] py-24 px-6"
+        aria-labelledby="pipeline2-heading"
+      >
+        <div className="max-w-6xl mx-auto space-y-14">
+          <ScrollReveal>
+            <div className="text-center space-y-4">
+              <span className="inline-block text-xs font-semibold tracking-widest text-primary uppercase">
+                핵심 기능 2 · 과정 중 모니터링
+              </span>
+              <h2
+                id="pipeline2-heading"
+                className="text-3xl md:text-4xl font-bold text-white leading-tight"
+              >
+                쓸수록 정확해지는 AI
+              </h2>
+              <p className="text-neutral-400 text-sm leading-relaxed max-w-lg mx-auto">
+                매일의 설문과 멘토 피드백이 AI 학습 데이터가 됩니다<br />
+                오탐이 줄고, 개입 타이밍이 정확해집니다
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={100}>
+            <div className="relative border border-white/[0.08] rounded-3xl p-6 md:p-10 bg-white/[0.02]">
+              {/* 루프 뱃지 */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap">
+                <span className="text-[11px] font-semibold text-primary bg-[#13131f] border border-white/10 px-3 py-1 rounded-full">
+                  ↻ 피드백 루프 — 쓸수록 개선됩니다
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+              <div className="min-w-[640px]">
+                {/* 상단: 순방향 ──→ */}
+                <div className="flex items-stretch gap-0">
+                  {(
+                    [
+                      { icon: "📋", title: "일일 설문",    desc: "성취도·적응도·인간관계\n매일 측정" },
+                      { icon: "📊", title: "7일 누적",     desc: "평균·변화량\n4개 feature 생성" },
+                      { icon: "🧠", title: "ML 위험 예측", desc: "risk_score·level\n·trend 계산" },
+                      { icon: "🤔", title: "Agent 판단",   desc: "위로·멘토 알림·긴급\n액션 타입 결정" },
+                    ] as const
+                  ).map((step, i, arr) => (
+                    <div key={i} className="flex items-center flex-1">
+                      <div className="flex-1 border border-white/10 rounded-xl p-4 bg-white/[0.03]">
+                        <div className="text-lg mb-2">{step.icon}</div>
+                        <div className="text-xs font-semibold text-white mb-1 leading-tight">{step.title}</div>
+                        <div className="text-[11px] text-neutral-500 leading-relaxed whitespace-pre-line">{step.desc}</div>
+                      </div>
+                      {i < arr.length - 1 && (
+                        <div className="px-2 flex-shrink-0">
+                          <svg className="w-4 h-4 text-white/20" fill="none" viewBox="0 0 24 24">
+                            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* 사이드 연결 화살표 */}
+                <div className="flex items-center justify-between my-4">
+                  <div className="flex flex-col items-center gap-0.5 text-[11px] text-primary font-semibold">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                      <path d="M12 19V5M6 11l6-6 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span>모델 개선</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5 text-[11px] text-neutral-500 font-medium">
+                    <span>액션 실행</span>
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                      <path d="M12 5v14M18 13l-6 6-6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* 하단: 역방향 ←── 피드백 루프 */}
+                <div className="flex items-stretch gap-0">
+                  {(
+                    [
+                      { icon: "🔄", title: "모델 재학습",  desc: "오탐 감소·개입\n타이밍 정밀화",            accent: true  },
+                      { icon: "📝", title: "피드백 학습",  desc: "괜찮았다 →\n다음엔 덜 개입",              accent: true  },
+                      { icon: "✅", title: "케어 완료",    desc: "멘토가 결과와\n개입 효과 기록",             accent: false },
+                      { icon: "💬", title: "액션 실행",    desc: "위로 메시지 or\n멘토 알림 or 긴급",        accent: false },
+                    ] as const
+                  ).map((step, i, arr) => (
+                    <div key={i} className="flex items-center flex-1">
+                      <div
+                        className={`flex-1 border rounded-xl p-4 ${
+                          step.accent
+                            ? "border-primary/25 bg-primary/[0.06]"
+                            : "border-white/10 bg-white/[0.03]"
+                        }`}
+                      >
+                        <div className="text-lg mb-2">{step.icon}</div>
+                        <div className={`text-xs font-semibold mb-1 leading-tight ${step.accent ? "text-primary" : "text-white"}`}>
+                          {step.title}
+                        </div>
+                        <div className="text-[11px] text-neutral-500 leading-relaxed whitespace-pre-line">{step.desc}</div>
+                      </div>
+                      {i < arr.length - 1 && (
+                        <div className="px-2 flex-shrink-0">
+                          <svg className="w-4 h-4 text-white/20" fill="none" viewBox="0 0 24 24">
+                            <path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* ── Section 3: 유사도 네트워크 맵 ────────────────────── */}
       {/* 밝은 배경 — 다크 카드가 강조 요소로 돋보이도록 */}
       <section

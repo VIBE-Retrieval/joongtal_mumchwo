@@ -1,16 +1,13 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, Save, CheckCircle2, ThumbsUp, ThumbsDown, Clock } from "lucide-react"
+import { ChevronLeft, Save, CheckCircle2, ThumbsUp, ThumbsDown, Clock } from "lucide-react"
 import { useApplicants } from "@/contexts/applicant-context"
 import { useStudents } from "@/contexts/student-context"
-
-type RiskLevel = "LOW" | "MEDIUM" | "HIGH"
 
 interface LocalEvaluation {
   achievement: { answer: string; rating: number }
@@ -69,109 +66,12 @@ const evaluationCategories = [
   },
 ]
 
-interface RiskAnalysis {
-  riskScore: number
-  riskLevel: RiskLevel
-  cluster: string
-  clusterLabel: string
-  explanation: string
-}
-
-function calculateRiskAnalysis(evaluation: LocalEvaluation): RiskAnalysis {
-  const avgRating = (
-    evaluation.achievement.rating +
-    evaluation.adaptability.rating +
-    evaluation.relationship.rating
-  ) / 3
-
-  const riskScore = Math.round(Math.max(0, Math.min(100, (5 - avgRating) * 25)))
-
-  let riskLevel: RiskLevel = "LOW"
-  let cluster = "A"
-  let clusterLabel = "우수 그룹"
-  let explanation = "지원자는 전반적으로 높은 성취도와 적응력을 보이며, 원활한 인간관계 능력을 갖추고 있습니다. 부트캠프 과정에 잘 적응할 것으로 예상됩니다."
-
-  if (riskScore > 60) {
-    riskLevel = "HIGH"
-    cluster = "C"
-    clusterLabel = "집중 지원 필요"
-    explanation = "지원자는 일부 영역에서 추가적인 지원이 필요할 수 있습니다. 입과 후 초기 적응 기간에 멘토링을 통한 밀착 관리를 권장합니다."
-  } else if (riskScore > 35) {
-    riskLevel = "MEDIUM"
-    cluster = "B"
-    clusterLabel = "일반 관리"
-    explanation = "지원자는 평균적인 수준의 준비도를 보입니다. 정기적인 체크인과 필요 시 추가 지원을 통해 성공적인 과정 이수가 가능할 것입니다."
-  }
-
-  return { riskScore, riskLevel, cluster, clusterLabel, explanation }
-}
-
-function RiskGauge({ score, level }: { score: number; level: RiskLevel }) {
-  const rotation = (score / 100) * 180 - 90
-
-  const levelColors: Record<RiskLevel, string> = {
-    LOW: "text-risk-low",
-    MEDIUM: "text-risk-medium",
-    HIGH: "text-risk-high",
-  }
-
-  // arc 전체 길이 ≈ 141.37 (r=45 반원)
-  const ARC = 141.37
-  const lowEnd  = ARC * 0.35  // 0~35 green
-  const midEnd  = ARC * 0.65  // 35~65 yellow
-
-  const levelHex: Record<RiskLevel, string> = {
-    LOW:    "#22c55e",
-    MEDIUM: "#f59e0b",
-    HIGH:   "#ef4444",
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative w-36 h-[72px] overflow-hidden">
-        <svg viewBox="0 0 100 50" className="w-full h-full">
-          {/* 배경 트랙 */}
-          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="currentColor"
-            strokeWidth="9" strokeLinecap="butt" className="text-muted" />
-
-          {/* 구간 색 — 녹/황/적 */}
-          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#22c55e"
-            strokeWidth="9" strokeLinecap="butt" opacity="0.35"
-            strokeDasharray={`${lowEnd} ${ARC}`} strokeDashoffset="0" />
-          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#f59e0b"
-            strokeWidth="9" strokeLinecap="butt" opacity="0.35"
-            strokeDasharray={`${midEnd - lowEnd} ${ARC}`} strokeDashoffset={-lowEnd} />
-          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#ef4444"
-            strokeWidth="9" strokeLinecap="butt" opacity="0.35"
-            strokeDasharray={`${ARC - midEnd} ${ARC}`} strokeDashoffset={-midEnd} />
-
-          {/* 실제 점수 채움 — 현재 레벨 색 */}
-          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none"
-            stroke={levelHex[level]} strokeWidth="9" strokeLinecap="round"
-            strokeDasharray={`${(score / 100) * ARC} ${ARC}`} />
-
-          {/* 바늘 */}
-          <g transform={`rotate(${rotation}, 50, 50)`}>
-            <line x1="50" y1="50" x2="50" y2="13"
-              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-              className="text-foreground" />
-            <circle cx="50" cy="50" r="3.5" className="fill-foreground" />
-          </g>
-
-          {/* 구간 레이블 */}
-          <text x="7"  y="48" fontSize="5.5" fill="#22c55e" opacity="0.7" textAnchor="middle">낮음</text>
-          <text x="50" y="13" fontSize="5.5" fill="#f59e0b" opacity="0.7" textAnchor="middle">보통</text>
-          <text x="93" y="48" fontSize="5.5" fill="#ef4444" opacity="0.7" textAnchor="middle">높음</text>
-        </svg>
-      </div>
-
-      {/* 점수 숫자 — 크고 선명하게 */}
-      <div className="text-center">
-        <span className={cn("text-3xl font-bold tabular-nums", levelColors[level])}>{score}</span>
-        <span className="text-sm text-muted-foreground ml-1">/ 100</span>
-      </div>
-    </div>
-  )
+function ratingButtonClass(score: number) {
+  if (score === 1) return "bg-risk-high/15 text-risk-high border-risk-high/30"
+  if (score === 2) return "bg-risk-high/8 text-risk-high/70 border-risk-high/20"
+  if (score === 3) return "bg-risk-medium/15 text-risk-medium border-risk-medium/30"
+  if (score === 4) return "bg-risk-low/8 text-risk-low/70 border-risk-low/20"
+  return "bg-risk-low/15 text-risk-low border-risk-low/30"
 }
 
 function EvaluationCard({
@@ -195,14 +95,10 @@ function EvaluationCard({
         <p className="text-xs text-primary/80 font-medium mt-0.5 ml-8">{category.subtitle}</p>
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
-        {/* Question */}
         <div className="bg-muted/40 rounded-lg p-3 border-l-2 border-primary/50">
-          <p className="text-xs text-foreground leading-relaxed">
-            {category.question}
-          </p>
+          <p className="text-xs text-foreground leading-relaxed">{category.question}</p>
         </div>
 
-        {/* Checklist */}
         <div className="bg-muted/20 rounded-lg p-3 border border-border/30">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">체크 항목</p>
           <ul className="space-y-1">
@@ -215,11 +111,8 @@ function EvaluationCard({
           </ul>
         </div>
 
-        {/* Answer textarea */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-            평가 의견
-          </label>
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">평가 의견</label>
           <Textarea
             value={value.answer}
             onChange={(e) => onChange("answer", e.target.value)}
@@ -228,43 +121,48 @@ function EvaluationCard({
           />
         </div>
 
-        {/* Rating */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-              평가 점수
-            </label>
-            <span className="text-sm font-bold text-primary tabular-nums">{value.rating}<span className="text-xs font-normal text-muted-foreground"> / 5</span></span>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">평가 점수</label>
+            <span className="text-sm font-bold text-primary tabular-nums">
+              {value.rating}
+              <span className="text-xs font-normal text-muted-foreground"> / 5</span>
+            </span>
           </div>
-          <Slider
-            value={[value.rating]}
-            onValueChange={([v]) => onChange("rating", v)}
-            min={1}
-            max={5}
-            step={1}
-            className="w-full"
-          />
-          <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-            <div className={cn(
-              "text-center p-2 rounded-lg transition-all border",
-              value.rating === 1 ? "bg-risk-high/10 text-risk-high border-risk-high/20 font-semibold" : "text-muted-foreground border-border/30 bg-muted/20"
-            )}>
-              <div className="font-bold mb-0.5">1점</div>
-              <div className="leading-tight">{category.ratingCriteria[1]}</div>
+
+          <div className="text-[10px] text-center text-muted-foreground">
+            3점 기준: {category.ratingCriteria[3]}
+          </div>
+
+          <div className="grid grid-cols-5 gap-2">
+            {[1, 2, 3, 4, 5].map((score) => {
+              const selected = value.rating === score
+              return (
+                <button
+                  key={score}
+                  type="button"
+                  onClick={() => onChange("rating", score)}
+                  className={cn(
+                    "h-9 rounded-md text-sm font-semibold border transition-colors",
+                    selected
+                      ? ratingButtonClass(score)
+                      : "bg-muted/40 text-muted-foreground border border-border/30"
+                  )}
+                >
+                  {score}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="flex items-start justify-between gap-4 text-[10px] text-muted-foreground">
+            <div className="max-w-[45%]">
+              <span className="font-semibold text-foreground">1점 </span>
+              {category.ratingCriteria[1]}
             </div>
-            <div className={cn(
-              "text-center p-2 rounded-lg transition-all border",
-              value.rating === 3 ? "bg-risk-medium/10 text-risk-medium border-risk-medium/20 font-semibold" : "text-muted-foreground border-border/30 bg-muted/20"
-            )}>
-              <div className="font-bold mb-0.5">3점</div>
-              <div className="leading-tight">{category.ratingCriteria[3]}</div>
-            </div>
-            <div className={cn(
-              "text-center p-2 rounded-lg transition-all border",
-              value.rating === 5 ? "bg-risk-low/10 text-risk-low border-risk-low/20 font-semibold" : "text-muted-foreground border-border/30 bg-muted/20"
-            )}>
-              <div className="font-bold mb-0.5">5점</div>
-              <div className="leading-tight">{category.ratingCriteria[5]}</div>
+            <div className="max-w-[45%] text-right">
+              <span className="font-semibold text-foreground">5점 </span>
+              {category.ratingCriteria[5]}
             </div>
           </div>
         </div>
@@ -272,6 +170,9 @@ function EvaluationCard({
     </Card>
   )
 }
+
+type Decision = "PASSED" | "FAILED" | "HOLD"
+type ListTab = "pending" | "evaluated" | "hold"
 
 export function InterviewerMode() {
   const {
@@ -283,16 +184,21 @@ export function InterviewerMode() {
   } = useApplicants()
   const { addStudent } = useStudents()
 
-  // Local evaluation overrides keyed by applicant ID (tracks in-progress edits)
+  const [view, setView] = useState<"list" | "form">("list")
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<ListTab>("pending")
+
   const [localEvaluations, setLocalEvaluations] = useState<Record<string, LocalEvaluation>>({})
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [decidedIds, setDecidedIds] = useState<Set<string>>(new Set())
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [mlResults, setMlResults] = useState<Record<string, { score: number; level: string }>>({})
+  const [visibleResults, setVisibleResults] = useState<Set<string>>(new Set())
+  const [pendingListDecision, setPendingListDecision] = useState<{ id: string; decision: Decision } | null>(null)
+
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState("")
 
-  // Pending candidates derived from applicant context (reactive to new registrations)
   const candidates = useMemo(() => {
     return applicants
       .filter(a => (a.status === "PENDING_INTERVIEW" || a.status === "HOLD") && !decidedIds.has(a.id))
@@ -308,24 +214,54 @@ export function InterviewerMode() {
       }))
   }, [applicants, localEvaluations, savedIds, decidedIds])
 
-  // Clamp currentIndex when candidates list shrinks
-  const safeIndex = Math.min(currentIndex, Math.max(0, candidates.length - 1))
-  const currentCandidate = candidates[safeIndex]
-
-  const analysis = useMemo(
-    () => currentCandidate ? calculateRiskAnalysis(currentCandidate.evaluation) : null,
-    [currentCandidate]
+  const selectedCandidate = useMemo(
+    () => candidates.find(candidate => candidate.id === selectedId) ?? null,
+    [candidates, selectedId]
   )
+
+  const pendingCandidates = useMemo(
+    () => candidates.filter(c => c.status !== "HOLD" && !c.isSaved),
+    [candidates]
+  )
+
+  const evaluatedCandidates = useMemo(
+    () => candidates.filter(c => c.status !== "HOLD" && c.isSaved),
+    [candidates]
+  )
+
+  const holdCandidates = useMemo(
+    () => candidates.filter(c => c.status === "HOLD"),
+    [candidates]
+  )
+
+  const listCandidates = useMemo(() => {
+    if (activeTab === "pending") return pendingCandidates
+    if (activeTab === "evaluated") return evaluatedCandidates
+    return holdCandidates
+  }, [activeTab, pendingCandidates, evaluatedCandidates, holdCandidates])
+
+  const openForm = useCallback((id: string) => {
+    setSelectedId(id)
+    setView("form")
+    setSaveStatus("idle")
+    setSaveError("")
+  }, [])
+
+  const goToList = useCallback(() => {
+    setView("list")
+    setSaveStatus("idle")
+    setSaveError("")
+  }, [])
 
   const updateEvaluationLocal = useCallback((
     category: keyof LocalEvaluation,
     field: "answer" | "rating",
     value: string | number
   ) => {
-    if (!currentCandidate) return
-    const id = currentCandidate.id
+    if (!selectedCandidate) return
+    const id = selectedCandidate.id
     setLocalEvaluations(prev => {
-      const current = prev[id] ?? currentCandidate.evaluation
+      const current = prev[id] ?? selectedCandidate.evaluation
       return {
         ...prev,
         [id]: {
@@ -334,14 +270,18 @@ export function InterviewerMode() {
         },
       }
     })
-    setSavedIds(prev => { const next = new Set(prev); next.delete(id); return next })
+    setSavedIds(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
     setSaveStatus("idle")
     setSaveError("")
-  }, [currentCandidate])
+  }, [selectedCandidate])
 
   const handleSave = useCallback(async () => {
-    if (!currentCandidate) return
-    const studentId = currentCandidate.studentId
+    if (!selectedCandidate) return
+    const studentId = selectedCandidate.studentId
     if (!studentId) {
       setSaveError("학생 DB 등록 후 면접 평가가 가능합니다.")
       return
@@ -351,7 +291,7 @@ export function InterviewerMode() {
     setSaveError("")
     setIsSaving(true)
 
-    const ev = currentCandidate.evaluation
+    const ev = selectedCandidate.evaluation
     const noteText = [ev.achievement.answer, ev.adaptability.answer, ev.relationship.answer]
       .filter(Boolean).join("\n") || null
 
@@ -378,11 +318,22 @@ export function InterviewerMode() {
       })
       const json = await res.json()
       if (json.code === 200) {
-        const id = currentCandidate.id
-        ctxUpdateEvaluation(id, currentCandidate.evaluation)
+        const id = selectedCandidate.id
+        ctxUpdateEvaluation(id, selectedCandidate.evaluation)
         ctxSaveEvaluation(id)
         setSavedIds(prev => new Set(prev).add(id))
+
+        const score = json?.data?.dropout_risk_score
+        const level = json?.data?.dropout_risk_level
+        if (typeof score === "number" && typeof level === "string") {
+          setMlResults(prev => ({
+            ...prev,
+            [id]: { score, level },
+          }))
+        }
+
         setSaveStatus("saved")
+        setView("list")
         setTimeout(() => setSaveStatus("idle"), 2000)
       } else {
         setSaveError(json.message ?? "저장에 실패했습니다.")
@@ -394,316 +345,291 @@ export function InterviewerMode() {
     } finally {
       setIsSaving(false)
     }
-  }, [currentCandidate, ctxUpdateEvaluation, ctxSaveEvaluation])
+  }, [selectedCandidate, ctxUpdateEvaluation, ctxSaveEvaluation])
 
-  const handleDecision = useCallback(async (decision: "PASSED" | "FAILED" | "HOLD") => {
-    if (!currentCandidate) return
-    const id = currentCandidate.id
+  const handleDecision = useCallback(async (decision: Decision) => {
+    if (!selectedCandidate) return
+    const id = selectedCandidate.id
 
-    // Sync local evaluation to context first
-    ctxUpdateEvaluation(id, currentCandidate.evaluation)
+    ctxUpdateEvaluation(id, selectedCandidate.evaluation)
     updateInterviewResult(id, decision)
 
-    if (currentCandidate.studentId) {
+    if (selectedCandidate.studentId) {
       await handleSave()
     }
 
     if (decision === "PASSED") {
-      const student = convertToStudent(id, currentCandidate.evaluation)
+      const student = convertToStudent(id, selectedCandidate.evaluation)
       if (student) addStudent(student)
     }
 
     setDecidedIds(prev => new Set(prev).add(id))
-    // Navigate: stay at same index (next candidate slides in) or step back if at end
-    setCurrentIndex(prev => Math.max(0, Math.min(prev, candidates.length - 2)))
+    setView("list")
     setSaveStatus("idle")
-  }, [currentCandidate, candidates.length, ctxUpdateEvaluation, updateInterviewResult, convertToStudent, addStudent, handleSave])
+  }, [selectedCandidate, ctxUpdateEvaluation, updateInterviewResult, handleSave, convertToStudent, addStudent])
 
-  const goToPrevious = () => {
-    if (safeIndex > 0) {
-      setCurrentIndex(safeIndex - 1)
-      setSaveStatus("idle")
-      setSaveError("")
-    }
-  }
+  useEffect(() => {
+    if (!pendingListDecision) return
+    if (!selectedCandidate) return
+    if (selectedCandidate.id !== pendingListDecision.id) return
 
-  const goToNext = () => {
-    if (safeIndex < candidates.length - 1) {
-      setCurrentIndex(safeIndex + 1)
-      setSaveStatus("idle")
-      setSaveError("")
-    }
-  }
-
-  const riskLevelLabels: Record<RiskLevel, string> = {
-    LOW: "낮음",
-    MEDIUM: "보통",
-    HIGH: "높음",
-  }
-
-  const clusters = [
-    { id: "A", label: "우수 그룹" },
-    { id: "B", label: "일반 관리" },
-    { id: "C", label: "집중 지원 필요" },
-  ]
+    const { decision } = pendingListDecision
+    setPendingListDecision(null)
+    void handleDecision(decision)
+  }, [pendingListDecision, selectedCandidate, handleDecision])
 
   const completedCount = applicants.filter(
     a => a.status === "PASSED" || a.status === "FAILED"
   ).length
 
-  // Empty state
-  if (candidates.length === 0) {
+  const toggleResultVisible = useCallback((id: string) => {
+    setVisibleResults(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const handleDecisionFromList = useCallback((id: string, decision: Decision) => {
+    setSelectedId(id)
+    setPendingListDecision({ id, decision })
+  }, [])
+
+  const getRiskLevelClass = (level: string) => {
+    if (level === "HIGH") return "text-risk-high"
+    if (level === "MEDIUM") return "text-risk-medium"
+    return "text-risk-low"
+  }
+
+  const getStatusBadge = (status: string) => {
+    if (status === "HOLD") {
+      return <span className="text-[11px] bg-risk-medium/12 text-risk-medium border border-risk-medium/20 px-2 py-0.5 rounded-full font-medium">보류</span>
+    }
+    return <span className="text-[11px] bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full font-medium">면접 대기</span>
+  }
+
+  if (view === "list") {
+    return (
+      <div className="h-full overflow-y-auto p-5 space-y-4">
+        <div className="flex items-center gap-2 border-b border-border/60 pb-3">
+          <Button
+            variant={activeTab === "pending" ? "default" : "outline"}
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => setActiveTab("pending")}
+          >
+            면접 대기
+            <span className="ml-1.5 text-[11px]">{pendingCandidates.length}</span>
+          </Button>
+          <Button
+            variant={activeTab === "evaluated" ? "default" : "outline"}
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => setActiveTab("evaluated")}
+          >
+            평가 완료
+            <span className="ml-1.5 text-[11px]">{evaluatedCandidates.length}</span>
+          </Button>
+          <Button
+            variant={activeTab === "hold" ? "default" : "outline"}
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => setActiveTab("hold")}
+          >
+            보류
+            <span className="ml-1.5 text-[11px]">{holdCandidates.length}</span>
+          </Button>
+        </div>
+
+        {listCandidates.length === 0 ? (
+          <div className="h-[360px] flex items-center justify-center p-8">
+            <div className="text-center space-y-3 max-w-xs">
+              <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-7 h-7 text-muted-foreground/50" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">표시할 지원자가 없습니다</p>
+                <p className="text-xs text-muted-foreground">현재 탭에 해당하는 지원자가 없습니다.</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {listCandidates.map(candidate => {
+              const result = mlResults[candidate.id]
+              const isResultVisible = visibleResults.has(candidate.id)
+              return (
+                <Card
+                  key={candidate.id}
+                  className="border border-border/60 hover:border-border transition-colors cursor-pointer"
+                  onClick={() => openForm(candidate.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-foreground">{candidate.name}</p>
+                          {getStatusBadge(candidate.status)}
+                          {candidate.isSaved && (
+                            <span className="text-[11px] bg-status-stable/10 text-status-stable border border-status-stable/20 px-2 py-0.5 rounded-full font-medium">
+                              면접 완료
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground flex items-center gap-3 flex-wrap">
+                          <span>생년월일: {candidate.birthDate}</span>
+                          <span className="text-border">•</span>
+                          <span>지원 과정: {candidate.appliedCourse}</span>
+                        </div>
+                      </div>
+
+                      {candidate.isSaved && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleResultVisible(candidate.id)
+                          }}
+                        >
+                          결과 확인
+                        </Button>
+                      )}
+                    </div>
+
+                    {candidate.isSaved && isResultVisible && result && (
+                      <div className="mt-3 border-t border-border/60 pt-3 space-y-3">
+                        <div className="text-xs">
+                          <p className="text-muted-foreground">ML 예측 결과</p>
+                          <div className="mt-1 flex items-center gap-3">
+                            <span className="font-medium text-foreground">점수: {(result.score * 100).toFixed(1)}</span>
+                            <span className={cn("font-semibold", getRiskLevelClass(result.level))}>위험도: {result.level}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDecisionFromList(candidate.id, "HOLD")
+                            }}
+                            className="h-8 gap-1.5 text-xs border-risk-medium/40 text-risk-medium hover:bg-risk-medium/8 hover:border-risk-medium/60"
+                          >
+                            <Clock className="w-3.5 h-3.5" />
+                            보류
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDecisionFromList(candidate.id, "FAILED")
+                            }}
+                            className="h-8 gap-1.5 text-xs border-risk-high/40 text-risk-high hover:bg-risk-high/8 hover:border-risk-high/60"
+                          >
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                            불합격
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDecisionFromList(candidate.id, "PASSED")
+                            }}
+                            className="h-8 gap-1.5 text-xs bg-risk-low text-white hover:bg-risk-low/90"
+                          >
+                            <ThumbsUp className="w-3.5 h-3.5" />
+                            합격
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (!selectedCandidate) {
     return (
       <div className="h-full flex items-center justify-center p-8">
         <div className="text-center space-y-3 max-w-xs">
-          <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-7 h-7 text-muted-foreground/50" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">대기 중인 지원자가 없습니다</p>
-            <p className="text-xs text-muted-foreground">멘토가 신규 지원자를 등록하면 여기에 표시됩니다.</p>
-          </div>
+          <p className="text-sm text-muted-foreground">선택된 지원자를 찾을 수 없습니다.</p>
+          <Button variant="outline" size="sm" onClick={goToList}>목록으로</Button>
         </div>
       </div>
     )
   }
 
-  if (!currentCandidate || !analysis) return null
-
   return (
-    <div className="h-full flex flex-col">
-      {/* TOP: Candidate Info + Navigation */}
-      <div className="flex-shrink-0 border-b border-border/60 bg-card/60 backdrop-blur-sm px-6 py-3.5">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-4">
-            {/* Candidate Info */}
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-base font-bold text-primary">
-                  {currentCandidate.name.charAt(0)}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base font-semibold text-foreground">{currentCandidate.name}</h2>
-                  {currentCandidate.status === "HOLD" && (
-                    <span className="text-[11px] bg-risk-medium/12 text-risk-medium border border-risk-medium/20 px-2 py-0.5 rounded-full font-medium">
-                      보류
-                    </span>
-                  )}
-                  {currentCandidate.isSaved && (
-                    <span className="text-[11px] text-status-stable flex items-center gap-0.5">
-                      <CheckCircle2 className="w-3 h-3" />
-                      저장됨
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                  <span>생년월일: {currentCandidate.birthDate}</span>
-                  <span className="text-border">·</span>
-                  <span>과정: {currentCandidate.appliedCourse}</span>
-                </div>
-              </div>
-            </div>
+    <div className="h-full flex flex-col min-h-0">
+      <div className="flex-shrink-0 border-b border-border/60 bg-card/60 backdrop-blur-sm px-5 py-3.5">
+        <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs" onClick={goToList}>
+          <ChevronLeft className="w-3.5 h-3.5" />
+          목록으로
+        </Button>
 
-            {/* Navigation Controls */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToPrevious}
-                disabled={safeIndex === 0}
-                className="h-8 gap-1 text-xs"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-                이전
-              </Button>
-
-              <div className="px-2.5 py-1 rounded-lg bg-muted/60 text-xs font-medium text-muted-foreground tabular-nums">
-                {safeIndex + 1} / {candidates.length}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNext}
-                disabled={safeIndex === candidates.length - 1}
-                className="h-8 gap-1 text-xs"
-              >
-                다음
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Button>
-
-              <div className="w-px h-5 bg-border mx-1" />
-
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSave}
-                disabled={saveStatus === "saving" || isSaving}
-                className="h-8 gap-1.5 text-xs"
-              >
-                <Save className="w-3.5 h-3.5" />
-                {saveStatus === "saving" ? "저장 중..." : saveStatus === "saved" ? "저장됨 ✓" : "임시 저장"}
-              </Button>
-            </div>
+        <div className="mt-2 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-base font-semibold text-foreground">{selectedCandidate.name}</h2>
+            {getStatusBadge(selectedCandidate.status)}
+            {selectedCandidate.isSaved && (
+              <span className="text-[11px] bg-status-stable/10 text-status-stable border border-status-stable/20 px-2 py-0.5 rounded-full font-medium">
+                면접 완료
+              </span>
+            )}
           </div>
-          {saveError && (
-            <p className="text-xs text-destructive bg-destructive/8 border border-destructive/20 rounded-lg px-3 py-1.5">{saveError}</p>
-          )}
+          <div className="mt-0.5 text-xs text-muted-foreground flex items-center gap-3 flex-wrap">
+            <span>생년월일: {selectedCandidate.birthDate}</span>
+            <span className="text-border">•</span>
+            <span>지원 과정: {selectedCandidate.appliedCourse}</span>
+          </div>
         </div>
+
+        {saveError && (
+          <p className="mt-2 text-xs text-destructive bg-destructive/8 border border-destructive/20 rounded-lg px-3 py-1.5">
+            {saveError}
+          </p>
+        )}
       </div>
 
-      {/* MIDDLE: Left (Evaluation + Actions) + Right (Analysis) — 독립 스크롤 */}
-      <div className="flex-1 grid grid-cols-[1fr_360px] min-h-0 overflow-hidden">
-        {/* LEFT: 면접 질문 카드(스크롤) + 하단 액션 버튼(고정) */}
-        <div className="flex flex-col min-h-0 overflow-hidden">
-          {/* 면접 질문 — 독립 스크롤 영역 */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            {evaluationCategories.map((category) => (
-              <EvaluationCard
-                key={category.key}
-                category={category}
-                value={currentCandidate.evaluation[category.key]}
-                onChange={(field, val) => updateEvaluationLocal(category.key, field, val as string & number)}
-              />
-            ))}
-          </div>
-
-          {/* 액션 버튼 — 왼쪽 패널 하단 고정 */}
-          <div className="flex-shrink-0 border-t border-border/60 bg-card/70 backdrop-blur-sm px-5 py-3">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="text-xs text-muted-foreground">
-                  평가 완료{" "}
-                  <span className="font-semibold text-foreground tabular-nums">{completedCount}</span>
-                  <span className="text-muted-foreground/60"> / {applicants.length}명</span>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleSave}
-                    disabled={saveStatus === "saving" || isSaving}
-                    className="h-8 gap-1.5 text-xs"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    {saveStatus === "saving" ? "저장 중..." : saveStatus === "saved" ? "저장됨 ✓" : "임시저장"}
-                  </Button>
-                  <div className="w-px h-5 bg-border" />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDecision("HOLD")}
-                    className="h-8 gap-1.5 text-xs border-risk-medium/40 text-risk-medium hover:bg-risk-medium/8 hover:border-risk-medium/60"
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                    보류
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDecision("FAILED")}
-                    className="h-8 gap-1.5 text-xs border-risk-high/40 text-risk-high hover:bg-risk-high/8 hover:border-risk-high/60"
-                  >
-                    <ThumbsDown className="w-3.5 h-3.5" />
-                    불합격
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleDecision("PASSED")}
-                    className="h-8 gap-1.5 text-xs bg-risk-low text-white hover:bg-risk-low/90"
-                  >
-                    <ThumbsUp className="w-3.5 h-3.5" />
-                    합격
-                  </Button>
-                </div>
-              </div>
-              {saveError && (
-                <p className="text-xs text-destructive bg-destructive/8 border border-destructive/20 rounded-lg px-3 py-1.5">{saveError}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT: Real-Time Analysis — 독립 스크롤 */}
-        <div className="border-l border-border/60 bg-muted/20 p-5 overflow-y-auto">
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="pb-1">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">실시간 분석</p>
-            </div>
-
-            {/* Risk Score + Level combined */}
-            <Card className="border border-border/60">
-              <CardContent className="p-4">
-                <p className="text-xs font-medium text-muted-foreground mb-3">위험 점수</p>
-                <RiskGauge score={analysis.riskScore} level={analysis.riskLevel} />
-                <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">위험 수준</span>
-                  <span className={cn(
-                    "px-2.5 py-1 rounded-lg text-xs font-semibold",
-                    analysis.riskLevel === "LOW" && "bg-risk-low/15 text-risk-low",
-                    analysis.riskLevel === "MEDIUM" && "bg-risk-medium/15 text-risk-medium",
-                    analysis.riskLevel === "HIGH" && "bg-risk-high/15 text-risk-high"
-                  )}>
-                    {riskLevelLabels[analysis.riskLevel]}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Cluster */}
-            <Card className="border border-border/60">
-              <CardContent className="p-4">
-                <p className="text-xs font-medium text-muted-foreground mb-3">유사 지원자 유형</p>
-                <div className="space-y-1.5">
-                  {clusters.map((c) => (
-                    <div
-                      key={c.id}
-                      className={cn(
-                        "flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150",
-                        c.id === analysis.cluster
-                          ? "bg-primary/8 border border-primary/25"
-                          : "bg-muted/40"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0",
-                        c.id === analysis.cluster
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        {c.id}
-                      </div>
-                      <span className={cn(
-                        "text-xs flex-1",
-                        c.id === analysis.cluster ? "text-foreground font-medium" : "text-muted-foreground"
-                      )}>
-                        {c.label}
-                      </span>
-                      {c.id === analysis.cluster && (
-                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">일치</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* AI Explanation */}
-            <Card className="border border-primary/20 bg-primary/[0.03]">
-              <CardContent className="p-4">
-                <p className="text-sm font-bold text-foreground mb-2.5">AI 분석 설명</p>
-                <p className="text-sm text-foreground/85 leading-relaxed">
-                  {analysis.explanation}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+      <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
+        {evaluationCategories.map((category) => (
+          <EvaluationCard
+            key={category.key}
+            category={category}
+            value={selectedCandidate.evaluation[category.key]}
+            onChange={(field, val) => updateEvaluationLocal(category.key, field, val)}
+          />
+        ))}
       </div>
 
+      <div className="flex-shrink-0 border-t border-border/60 bg-card/70 backdrop-blur-sm px-5 py-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-xs text-muted-foreground">
+            평가 완료 <span className="font-semibold text-foreground tabular-nums">{completedCount}</span>
+            <span className="text-muted-foreground/60"> / {applicants.length}명</span>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleSave}
+            disabled={saveStatus === "saving" || isSaving}
+            className="h-8 gap-1.5 text-xs"
+          >
+            <Save className="w-3.5 h-3.5" />
+            {saveStatus === "saving" ? "저장 중..." : saveStatus === "saved" ? "저장됨" : "저장"}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
