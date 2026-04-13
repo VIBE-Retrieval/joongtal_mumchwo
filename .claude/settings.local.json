@@ -20,7 +20,8 @@
       "Bash(uvicorn backend.main:app --host 0.0.0.0 --port 8000)",
       "Bash(curl -s -X OPTIONS http://localhost:8000/auth/login -H \"Origin: http://localhost:3000\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: Content-Type\" -D -)",
       "Bash(pip freeze:*)",
-      "Bash(pip3 freeze:*)"
+      "Bash(pip3 freeze:*)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

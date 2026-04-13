@@ -221,7 +221,6 @@ export default function LandingPage() {
         className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800"
         aria-labelledby="cta-heading"
       >
-<<<<<<< HEAD
         {/* Stats */}
         <ScrollReveal>
           <div className="max-w-4xl mx-auto w-full px-6 pt-24 pb-12">
@@ -237,24 +236,6 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-=======
-        <div className="flex-1 flex flex-col items-center justify-center py-12 md:py-16 min-h-0">
-          <div className="max-w-2xl mx-auto w-full text-center space-y-6">
-            <h2 id="cta-heading" className="text-2xl">
-              지금 바로 시작하세요
-            </h2>
-            <p className="text-muted-foreground">학생의 성공을 위한 첫 걸음을 내딛으세요</p>
-            <Link href="/login">
-              <Button size="lg" className="px-10">
-                로그인
-              </Button>
-            </Link>
-            <Link href="/ai-test">
-              <Button size="lg" variant="outline" className="px-8">
-                AI 테스트 해보기
-              </Button>
-            </Link>
->>>>>>> 001dfa5d3d20216be18477c55b6fc22a6f4adcbd
           </div>
         </ScrollReveal>
 
@@ -269,14 +250,21 @@ export default function LandingPage() {
                 AI가 학생의 신호를 먼저 읽고,<br />
                 여러분이 먼저 행동할 수 있도록 돕습니다.
               </p>
-              <Link href="/login">
-                <Button
-                  size="lg"
-                  className="px-10 bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-                >
-                  시작하기
-                </Button>
-              </Link>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Link href="/login">
+                  <Button
+                    size="lg"
+                    className="px-10 bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+                  >
+                    시작하기
+                  </Button>
+                </Link>
+                <Link href="/ai-test">
+                  <Button size="lg" variant="outline" className="px-8">
+                    AI 테스트 해보기
+                  </Button>
+                </Link>
+              </div>
             </div>
           </ScrollReveal>
         </div>
