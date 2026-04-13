@@ -78,6 +78,7 @@ def list_alerts(session: Session) -> dict:
 
     alerts = [
         {
+            "intervention_id": r.intervention_id,
             "student_id": r.student_id,
             "student_name": student_names.get(r.student_id, r.student_id),
             "action_type": r.action_type,
@@ -89,3 +90,11 @@ def list_alerts(session: Session) -> dict:
         for r in rows
     ]
     return {"alerts": alerts}
+
+
+def read_alert(session: Session, intervention_id: int) -> bool:
+    return mentor_repository.mark_alert_as_read(session, intervention_id)
+
+
+def read_all_alerts(session: Session) -> int:
+    return mentor_repository.mark_all_alerts_as_read(session)
