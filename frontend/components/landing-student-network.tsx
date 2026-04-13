@@ -16,10 +16,11 @@ export type StudentNodeDatum = {
   scale: number
 }
 
-const RISK_COLORS: Record<RiskLevel, string> = {
-  low: "#5f8f5e",
-  medium: "#c4873a",
-  high: "#b8443c",
+/** 브랜드 톤: 차분한 웜 그레이 → 액센트 #D97757 계열만 사용 */
+const NODE_COLORS: Record<RiskLevel, string> = {
+  low: "#9a938c",
+  medium: "#b88a72",
+  high: "#d97757",
 }
 
 const RISK_LABEL: Record<RiskLevel, string> = {
@@ -31,65 +32,99 @@ const RISK_LABEL: Record<RiskLevel, string> = {
 function randomRisk(bias: RiskLevel): RiskLevel {
   const r = Math.random()
   if (bias === "low") {
-    if (r < 0.72) return "low"
-    if (r < 0.93) return "medium"
+    if (r < 0.78) return "low"
+    if (r < 0.94) return "medium"
     return "high"
   }
   if (bias === "medium") {
-    if (r < 0.35) return "low"
-    if (r < 0.78) return "medium"
+    if (r < 0.38) return "low"
+    if (r < 0.8) return "medium"
     return "high"
   }
-  if (r < 0.18) return "low"
-  if (r < 0.55) return "medium"
+  if (r < 0.22) return "low"
+  if (r < 0.58) return "medium"
   return "high"
 }
 
-function generateGraph(): { nodes: StudentNodeDatum[]; edges: [number, number][] } {
+const tmpA = new THREE.Vector3()
+const tmpB = new THREE.Vector3()
+
+function dist(a: [number, number, number], b: [number, number, number]) {
+  tmpA.set(...a)
+  tmpB.set(...b)
+  return tmpA.distanceTo(tmpB)
+}
+
+/** 20~35개, 3개의 정돈된 군집 */
+function generateGraph(): {
+  nodes: StudentNodeDatum[]
+  hoverNeighborLines: [number, number][]
+} {
   const clusters: { center: [number, number, number]; count: number; bias: RiskLevel }[] = [
-    { center: [-2.7, 0.15, -0.5], count: 18, bias: "low" },
-    { center: [2.5, -0.35, 0.55], count: 20, bias: "medium" },
-    { center: [0.05, 1.85, 1.1], count: 16, bias: "high" },
+    { center: [-1.65, 0.05, -0.35], count: 10, bias: "low" },
+    { center: [1.75, -0.15, 0.25], count: 12, bias: "medium" },
+    { center: [0.02, 1.35, 0.55], count: 10, bias: "high" },
   ]
 
   const nodes: StudentNodeDatum[] = []
   let idx = 0
   for (const cl of clusters) {
     for (let i = 0; i < cl.count; i++) {
-      const t = (i / cl.count) * Math.PI * 2
-      const shell = 0.35 + Math.random() * 0.65
-      const x = cl.center[0] + Math.cos(t) * shell * 0.85 + (Math.random() - 0.5) * 0.45
-      const y = cl.center[1] + Math.sin(t * 1.3) * shell * 0.55 + (Math.random() - 0.5) * 0.5
-      const z = cl.center[2] + Math.sin(t * 0.7) * shell * 0.7 + (Math.random() - 0.5) * 0.55
+      const t = (i / Math.max(cl.count, 1)) * Math.PI * 2
+      const shell = 0.28 + Math.random() * 0.42
+      const spread = 0.52
+      const x = cl.center[0] + Math.cos(t) * shell * spread + (Math.random() - 0.5) * 0.22
+      const y = cl.center[1] + Math.sin(t * 1.15) * shell * spread * 0.65 + (Math.random() - 0.5) * 0.2
+      const z = cl.center[2] + Math.sin(t * 0.65) * shell * spread * 0.75 + (Math.random() - 0.5) * 0.22
       const risk = randomRisk(cl.bias)
-      const changePct = Math.round((Math.random() * 38 - 12) * 10) / 10
-      const scale = 0.065 + Math.random() * 0.055 + (risk === "high" ? 0.028 : risk === "medium" ? 0.012 : 0)
+      const changePct = Math.round((Math.random() * 28 - 8) * 10) / 10
+      const scale = 0.052 + Math.random() * 0.028 + (risk === "high" ? 0.018 : risk === "medium" ? 0.008 : 0)
       nodes.push({
         id: `S-${idx + 1}`,
         position: [x, y, z],
         risk,
         changePct,
-        color: RISK_COLORS[risk],
+        color: NODE_COLORS[risk],
         scale,
       })
       idx++
     }
   }
 
-  const edges: [number, number][] = []
-  const tmpA = new THREE.Vector3()
-  const tmpB = new THREE.Vector3()
+  const seen = new Set<string>()
+  const hoverNeighborLines: [number, number][] = []
+  const maxPer = 2
+  const maxDist = 1.02
+
   for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      tmpA.set(...nodes[i].position)
-      tmpB.set(...nodes[j].position)
-      const d = tmpA.distanceTo(tmpB)
-      if (d < 1.05) edges.push([i, j])
-      else if (d < 1.85 && Math.random() < 0.06) edges.push([i, j])
+    const near: { j: number; d: number }[] = []
+    for (let j = 0; j < nodes.length; j++) {
+      if (i === j) continue
+      const d = dist(nodes[i].position, nodes[j].position)
+      if (d < maxDist) near.push({ j, d })
+    }
+    near.sort((a, b) => a.d - b.d)
+    for (let k = 0; k < Math.min(maxPer, near.length); k++) {
+      const j = near[k].j
+      const a = Math.min(i, j)
+      const b = Math.max(i, j)
+      const key = `${a}-${b}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        hoverNeighborLines.push([a, b])
+      }
     }
   }
 
-  return { nodes, edges }
+  return { nodes, hoverNeighborLines }
+}
+
+function linesFromHovered(
+  hoveredIndex: number | null,
+  allPairs: [number, number][]
+): [number, number][] {
+  if (hoveredIndex === null) return []
+  return allPairs.filter(([a, b]) => a === hoveredIndex || b === hoveredIndex)
 }
 
 type TooltipState = {
@@ -100,28 +135,28 @@ type TooltipState = {
   top: number
 } | null
 
-function NetworkEdges({
+function HoverEdges({
   nodes,
-  edges,
+  pairs,
   dark,
 }: {
   nodes: StudentNodeDatum[]
-  edges: [number, number][]
+  pairs: [number, number][]
   dark: boolean
 }) {
-  const lineColor = dark ? "#7a7268" : "#9a8b7a"
-  const opacity = dark ? 0.28 : 0.22
+  if (pairs.length === 0) return null
+  const lineColor = dark ? "#e8a080" : "#c86b4e"
   return (
     <>
-      {edges.map(([a, b], i) => {
+      {pairs.map(([a, b], i) => {
         const pa = nodes[a].position
         const pb = nodes[b].position
         return (
           <Line
-            key={`e-${i}`}
+            key={`he-${i}`}
             points={[pa, pb]}
             color={lineColor}
-            opacity={opacity}
+            opacity={dark ? 0.14 : 0.12}
             transparent
             lineWidth={1}
           />
@@ -133,45 +168,52 @@ function NetworkEdges({
 
 function StudentSpheres({
   nodes,
+  hoveredIndex,
+  setHoveredIndex,
   onPointerEnter,
   onPointerMove,
   onPointerLeave,
 }: {
   nodes: StudentNodeDatum[]
-  onPointerEnter: (node: StudentNodeDatum, clientX: number, clientY: number) => void
+  hoveredIndex: number | null
+  setHoveredIndex: (i: number | null) => void
+  onPointerEnter: (node: StudentNodeDatum, index: number, clientX: number, clientY: number) => void
   onPointerMove: (clientX: number, clientY: number) => void
   onPointerLeave: () => void
 }) {
   return (
     <>
-      {nodes.map((node) => (
-        <mesh
-          key={node.id}
-          position={node.position}
-          scale={node.scale}
-          onPointerEnter={(e) => {
-            e.stopPropagation()
-            onPointerEnter(node, e.clientX, e.clientY)
-          }}
-          onPointerMove={(e) => {
-            e.stopPropagation()
-            onPointerMove(e.clientX, e.clientY)
-          }}
-          onPointerLeave={(e) => {
-            e.stopPropagation()
-            onPointerLeave()
-          }}
-        >
-          <sphereGeometry args={[1, 24, 24]} />
-          <meshStandardMaterial
-            color={node.color}
-            roughness={0.45}
-            metalness={0.12}
-            emissive={node.color}
-            emissiveIntensity={0.08}
-          />
-        </mesh>
-      ))}
+      {nodes.map((node, index) => {
+        const isHover = hoveredIndex === index
+        return (
+          <mesh
+            key={node.id}
+            position={node.position}
+            scale={node.scale * (isHover ? 1.06 : 1)}
+            onPointerEnter={(e) => {
+              e.stopPropagation()
+              setHoveredIndex(index)
+              onPointerEnter(node, index, e.clientX, e.clientY)
+            }}
+            onPointerMove={(e) => {
+              e.stopPropagation()
+              onPointerMove(e.clientX, e.clientY)
+            }}
+            onPointerLeave={(e) => {
+              e.stopPropagation()
+              setHoveredIndex(null)
+              onPointerLeave()
+            }}
+          >
+            <sphereGeometry args={[1, 20, 20]} />
+            <meshStandardMaterial
+              color={node.color}
+              roughness={0.9}
+              metalness={0}
+            />
+          </mesh>
+        )
+      })}
     </>
   )
 }
@@ -179,8 +221,8 @@ function StudentSpheres({
 function SceneBackground({ dark }: { dark: boolean }) {
   const { scene } = useThree()
   useEffect(() => {
-    const fogColor = dark ? 0x1c1915 : 0xf0ebe5
-    const density = dark ? 0.058 : 0.045
+    const fogColor = dark ? 0x1f1c18 : 0xf7f3ef
+    const density = dark ? 0.032 : 0.022
     scene.fog = new THREE.FogExp2(fogColor, density)
     return () => {
       scene.fog = null
@@ -201,7 +243,13 @@ function NetworkScene({
   dark: boolean
 }) {
   const [autoRotate, setAutoRotate] = useState(true)
-  const { nodes, edges } = useMemo(() => generateGraph(), [])
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const { nodes, hoverNeighborLines } = useMemo(() => generateGraph(), [])
+
+  const activeEdgePairs = useMemo(
+    () => linesFromHovered(hoveredIndex, hoverNeighborLines),
+    [hoveredIndex, hoverNeighborLines]
+  )
 
   const toLocal = useCallback(
     (clientX: number, clientY: number) => {
@@ -214,7 +262,7 @@ function NetworkScene({
   )
 
   const handleEnter = useCallback(
-    (node: StudentNodeDatum, cx: number, cy: number) => {
+    (node: StudentNodeDatum, _index: number, cx: number, cy: number) => {
       const { left, top } = toLocal(cx, cy)
       setTooltip({
         id: node.id,
@@ -242,18 +290,20 @@ function NetworkScene({
     clearTooltip()
   }, [clearTooltip])
 
-  const bg = dark ? "#1c1915" : "#f0ebe5"
+  const bg = dark ? "#1f1c18" : "#f7f3ef"
 
   return (
     <>
       <SceneBackground dark={dark} />
       <color attach="background" args={[bg]} />
-      <ambientLight intensity={dark ? 0.32 : 0.42} />
-      <directionalLight position={[6, 8, 5]} intensity={dark ? 0.75 : 0.85} />
-      <directionalLight position={[-4, -2, -6]} intensity={dark ? 0.18 : 0.22} color="#fff5ef" />
-      <NetworkEdges nodes={nodes} edges={edges} dark={dark} />
+      <ambientLight intensity={dark ? 0.38 : 0.5} />
+      <directionalLight position={[5, 6, 4]} intensity={dark ? 0.55 : 0.62} color="#fff8f4" />
+      <directionalLight position={[-3, -2, -4]} intensity={dark ? 0.12 : 0.16} color="#e8ddd4" />
+      <HoverEdges nodes={nodes} pairs={activeEdgePairs} dark={dark} />
       <StudentSpheres
         nodes={nodes}
+        hoveredIndex={hoveredIndex}
+        setHoveredIndex={setHoveredIndex}
         onPointerEnter={handleEnter}
         onPointerMove={handleMove}
         onPointerLeave={handleLeave}
@@ -261,13 +311,13 @@ function NetworkScene({
       <OrbitControls
         makeDefault
         enableDamping
-        dampingFactor={0.06}
-        minDistance={5}
-        maxDistance={16}
-        minPolarAngle={0.12}
-        maxPolarAngle={Math.PI - 0.12}
+        dampingFactor={0.08}
+        minDistance={5.2}
+        maxDistance={14}
+        minPolarAngle={0.1}
+        maxPolarAngle={Math.PI - 0.1}
         autoRotate={autoRotate}
-        autoRotateSpeed={0.35}
+        autoRotateSpeed={0.08}
         onStart={() => setAutoRotate(false)}
       />
     </>
@@ -304,8 +354,8 @@ export default function LandingStudentNetwork() {
 
   const twPad = tooltip
     ? {
-        left: Math.max(8, Math.min(tooltip.left + 12, (canvasShellRef.current?.clientWidth ?? 400) - 196)),
-        top: Math.max(8, Math.min(tooltip.top + 12, (canvasShellRef.current?.clientHeight ?? 400) - 100)),
+        left: Math.max(8, Math.min(tooltip.left + 10, (canvasShellRef.current?.clientWidth ?? 400) - 188)),
+        top: Math.max(8, Math.min(tooltip.top + 10, (canvasShellRef.current?.clientHeight ?? 400) - 92)),
       }
     : { left: 0, top: 0 }
 
@@ -313,16 +363,17 @@ export default function LandingStudentNetwork() {
     <div ref={containerRef} className="relative w-full">
       <div
         ref={canvasShellRef}
-        className={`relative h-[min(520px,72vh)] w-full overflow-hidden rounded-xl border shadow-sm ${
-          dark ? "border-neutral-700 bg-[#1c1915]" : "border-border bg-[#f0ebe5]"
+        className={`relative h-[min(360px,62vw)] w-full max-h-[420px] overflow-hidden rounded-2xl border md:h-[400px] md:max-h-[440px] ${
+          dark ? "border-neutral-700/80 bg-[#1f1c18]" : "border-[#e8e0d6] bg-[#f7f3ef]"
         }`}
         role="img"
-        aria-label="학생 유사도 기반 3D 네트워크 맵. 드래그로 회전, 스크롤로 확대할 수 있습니다."
+        aria-label="학생 유사도를 공간에 배치한 정제된 시각화. 드래그로 회전, 스크롤로 확대할 수 있습니다."
       >
         <Canvas
-          camera={{ position: [0, 0.35, 9.2], fov: 48, near: 0.1, far: 40 }}
+          className="!h-full !w-full"
+          camera={{ position: [0, 0.15, 9.8], fov: 42, near: 0.1, far: 32 }}
           gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-          dpr={[1, 2]}
+          dpr={[1, 1.75]}
         >
           <NetworkScene
             setTooltip={setTooltip}
@@ -335,16 +386,16 @@ export default function LandingStudentNetwork() {
 
       {tooltip && (
         <div
-          className="pointer-events-none absolute z-10 max-w-[200px] rounded-lg border border-border/80 bg-card/95 px-3 py-2 text-left text-xs shadow-md backdrop-blur-sm dark:border-neutral-600 dark:bg-neutral-900/95"
+          className="pointer-events-none absolute z-10 max-w-[188px] rounded-md border border-[#2d2d2d]/10 bg-[#fffcf9]/95 px-2.5 py-2 text-left text-[11px] text-[#2d2d2d] shadow-sm dark:border-white/10 dark:bg-[#2a2622]/95 dark:text-[#f5f0ea]"
           style={{ left: twPad.left, top: twPad.top }}
         >
-          <div className="font-semibold text-foreground">학생 {tooltip.id}</div>
-          <div className="mt-1 text-muted-foreground">
-            위험도: <span className="text-foreground">{tooltip.riskLabel}</span>
+          <div className="font-medium">학생 {tooltip.id}</div>
+          <div className="mt-1 text-[#2d2d2d]/65 dark:text-[#f5f0ea]/65">
+            위험도 <span className="text-[#2d2d2d] dark:text-[#f5f0ea]">{tooltip.riskLabel}</span>
           </div>
-          <div className="text-muted-foreground">
-            최근 변화:{" "}
-            <span className="font-medium tabular-nums text-foreground">
+          <div className="text-[#2d2d2d]/65 dark:text-[#f5f0ea]/65">
+            변화{" "}
+            <span className="tabular-nums text-[#2d2d2d] dark:text-[#f5f0ea]">
               {tooltip.changePct > 0 ? "+" : ""}
               {tooltip.changePct}%
             </span>
@@ -352,9 +403,9 @@ export default function LandingStudentNetwork() {
         </div>
       )}
 
-      <div className="pointer-events-none mt-3 space-y-1.5 text-center text-[11px] text-muted-foreground">
-        <p>드래그로 회전 · 스크롤로 확대 · 선은 유사도, 색은 위험도, 크기는 변화 강도를 나타냅니다</p>
-      </div>
+      <p className="pointer-events-none mt-2.5 text-center text-[10px] tracking-wide text-neutral-500 dark:text-neutral-500">
+        드래그 · 스크롤 — 포인트 위에서만 유사 연결 표시
+      </p>
     </div>
   )
 }
