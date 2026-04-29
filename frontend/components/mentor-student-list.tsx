@@ -291,11 +291,20 @@ function StudentRecord({
             </div>
           </div>
 
+          {/* Action guide */}
+          <div className="rounded-lg border border-primary/15 bg-primary/[0.03] px-3 py-2 mb-3 flex-shrink-0">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <span className="font-medium text-foreground">격려 메시지</span>는 학생 앱에 즉시 전달됩니다 ·
+              <span className="font-medium text-foreground"> 미팅 일정</span>을 요청하면 학생이 가능한 시간을 선택하고 멘토가 확정합니다 ·
+              <span className="font-medium text-foreground"> 케어 완료</span> 시 개입 결과를 입력해 AI 모델 재학습에 반영됩니다
+            </p>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex items-center justify-center gap-4 pt-4 border-t border-border/50 flex-shrink-0">
-            <Button 
-              variant="outline" 
-              size="lg" 
+            <Button
+              variant="outline"
+              size="lg"
               className="gap-2"
               onClick={onSendMessage}
             >
@@ -564,7 +573,7 @@ export function MentorStudentList() {
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
       {/* Top Search Bar - Fixed at top */}
-      <div className="flex-shrink-0 p-6 border-b bg-card/50">
+      <div className="flex-shrink-0 p-6 border-b bg-card/50 space-y-3">
         <div className="relative max-w-2xl mx-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
@@ -574,6 +583,9 @@ export function MentorStudentList() {
             className="pl-12 h-14 text-lg bg-background rounded-2xl border-2 shadow-sm"
           />
         </div>
+        <p className="text-xs text-muted-foreground text-center">
+          왼쪽 목록에서 학생을 선택하면 상세 분석 · AI 인사이트 · 메시지 전송 · 미팅 요청이 가능합니다. 🔴 NEW 표시는 오늘 새롭게 위험도가 감지된 학생입니다.
+        </p>
       </div>
 
       {/* Main Content Area - Uses CSS Grid for complete isolation */}

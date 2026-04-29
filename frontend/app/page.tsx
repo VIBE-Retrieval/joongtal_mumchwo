@@ -43,9 +43,19 @@ export default function LandingPage() {
                   시작하기
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="px-8" asChild>
+              <Button size="lg" variant="outline" className="px-8 border-white/60 text-white bg-transparent hover:bg-white/10 hover:text-white" asChild>
                 <a href="#features">더 알아보기</a>
               </Button>
+              <Link href="/features">
+                <Button size="lg" variant="outline" className="px-8 border-white/40 text-white/80 bg-transparent hover:bg-white/10 hover:text-white">
+                  핵심 기능 보기
+                </Button>
+              </Link>
+              <Link href="/ai-test">
+                <Button size="lg" variant="outline" className="px-8 border-primary/70 text-primary hover:bg-primary/10 hover:border-primary bg-black/20 backdrop-blur-sm">
+                  🧪 AI 파이프라인 테스트
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -345,6 +355,63 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Section: AI Pipeline Test CTA ───────────────────── */}
+      <section className="bg-white py-24 px-6" aria-label="AI 파이프라인 테스트">
+        <div className="max-w-6xl mx-auto">
+          <ScrollReveal>
+            <div className="rounded-3xl border-2 border-primary/20 bg-primary/[0.03] p-10 md:p-14 flex flex-col md:flex-row items-center gap-10">
+              {/* Left */}
+              <div className="flex-1 space-y-6">
+                <span className="inline-block text-xs font-semibold tracking-widest text-primary uppercase">
+                  직접 체험해보세요
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 leading-tight">
+                  AI 파이프라인을<br />지금 바로 실행해보세요
+                </h2>
+                <p className="text-neutral-500 text-sm leading-relaxed">
+                  실제 데모 데이터로 7일 설문 → ML 위험도 산출 → LLM 해석 → Agent 행동 결정까지<br />
+                  전체 파이프라인을 직접 돌려볼 수 있습니다. 피드백을 입력하면 Round 2에서 모델이 어떻게 달라지는지도 확인하세요.
+                </p>
+                <div className="flex flex-wrap gap-3 pt-2">
+                  {[
+                    { icon: "📋", label: "7일 설문 입력" },
+                    { icon: "🧠", label: "ML 위험도 산출" },
+                    { icon: "💬", label: "LLM 해석" },
+                    { icon: "🤖", label: "Agent 행동 결정" },
+                  ].map((step) => (
+                    <span key={step.label} className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-600 bg-neutral-100 border border-neutral-200 rounded-full px-3 py-1.5">
+                      <span>{step.icon}</span>{step.label}
+                    </span>
+                  ))}
+                </div>
+                <Link href="/ai-test">
+                  <Button size="lg" className="mt-2 gap-2 px-8">
+                    🧪 AI 파이프라인 테스트 해보기
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Right — step flow */}
+              <div className="flex-shrink-0 flex flex-col gap-3 w-full md:w-56">
+                {[
+                  { step: "STEP A", title: "1라운드 실행", desc: "7일 설문 데이터 입력 후 AI 분석" },
+                  { step: "STEP B", title: "케어 피드백", desc: "오탐·회복·관찰 중 결과 입력" },
+                  { step: "STEP C", title: "2라운드 실행", desc: "피드백 반영 후 결과 비교" },
+                ].map((s, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-md px-1.5 py-0.5 mt-0.5 shrink-0">{s.step}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-900">{s.title}</p>
+                      <p className="text-xs text-neutral-400 mt-0.5">{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* ── Section 4: Roles ─────────────────────────────────── */}
       <section
         id="roles"
@@ -505,8 +572,7 @@ export default function LandingPage() {
                 <Link href="/ai-test">
                   <Button
                     size="lg"
-                    variant="outline"
-                    className="px-8 border-white/20 text-white/80 hover:bg-white/[0.06] hover:text-white hover:border-white/40"
+                    className="px-8 bg-white/15 text-white border border-white/50 hover:bg-white/25 hover:border-white/70 backdrop-blur-sm shadow-none"
                   >
                     AI 테스트 해보기
                   </Button>

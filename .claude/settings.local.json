@@ -38,7 +38,9 @@
       "Bash(cmd.exe /c \"taskkill /PID 1100 /F\")",
       "Bash(cmd.exe /c \"netstat -ano | findstr :3000\")",
       "Read(//c/Users/hubo0/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/64b1dfb8-9a86-40f0-bd29-68f418a18e8c/e65812bb-52c8-42ec-a320-8292c18a0380/skills/docx/**)",
-      "Bash(pandoc \"C:\\\\Users\\\\hubo0\\\\OneDrive\\\\문서\\\\카카오톡 받은 파일\\\\AI 빌딩 리포트_v2.docx\" -o output.md)"
+      "Bash(pandoc \"C:\\\\Users\\\\hubo0\\\\OneDrive\\\\문서\\\\카카오톡 받은 파일\\\\AI 빌딩 리포트_v2.docx\" -o output.md)",
+      "Bash(python3 -c ':*)",
+      "mcp__code-review-graph__get_architecture_overview_tool"
     ]
   }
 }

@@ -491,6 +491,17 @@ export function StudentMode() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-5 px-6 py-8">
+      {/* Inline guide banner */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 flex items-start gap-3">
+        <span className="text-lg leading-none mt-0.5 flex-shrink-0">💡</span>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">사용 안내</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            매일 설문에 참여하면 AI가 학습 상태를 분석합니다. 7일치 데이터가 쌓이면 위험도 점수와 AI 인사이트가 자동으로 생성되며, 멘토가 필요 시 메시지나 미팅 요청을 보낼 수 있습니다.
+          </p>
+        </div>
+      </div>
+
       {/* Header with Notification Bell */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
@@ -522,7 +533,7 @@ export function StudentMode() {
           </PopoverTrigger>
           <PopoverContent align="end" className="w-80 p-0">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-sm">?뚮┝</h3>
+              <h3 className="font-semibold text-sm">알림</h3>
               {unreadCount > 0 && (
                 <Button 
                   variant="ghost" 
@@ -530,7 +541,7 @@ export function StudentMode() {
                   className="text-xs h-7"
                   onClick={handleMarkAllRead}
                 >
-                  紐⑤몢 ?쎌쓬 泥섎━
+                  모두 읽음 처리
                 </Button>
               )}
             </div>
@@ -661,7 +672,7 @@ export function StudentMode() {
               
               {!careMessage && messages.length === 0 && pendingMeetingRequests.length === 0 && confirmedMeetings.filter(m => !m.studentNotified).length === 0 && (
                 <div className="p-8 text-center text-muted-foreground text-sm">
-                  ?꾩쭅 ?뚮┝???놁뒿?덈떎
+                  새로운 알림이 없습니다
                 </div>
               )}
             </div>
@@ -756,7 +767,7 @@ export function StudentMode() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-sm font-semibold text-foreground">학습 현황</CardTitle>
-              <CardDescription className="text-xs mt-0.5">최근 7일간 학습 현황 요약</CardDescription>
+              <CardDescription className="text-xs mt-0.5">최근 7일간 설문 평균 — 각 항목은 1~5점 척도입니다. 화살표는 이전 3일 대비 최근 3일의 변화 방향을 나타냅니다.</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -820,7 +831,7 @@ export function StudentMode() {
       <Card className="border border-[#D97757]/25 shadow-sm shadow-[#D97757]/8">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-foreground">주간 변화 추이</CardTitle>
-          <CardDescription className="text-xs">지난 일주일간 변화 그래프</CardDescription>
+          <CardDescription className="text-xs">지난 7일간 성취도 · 적응도 · 인간관계 점수의 흐름입니다. 점수가 지속적으로 하락하면 AI가 위험 신호로 감지합니다.</CardDescription>
         </CardHeader>
         <CardContent className="pl-8 pt-2">
           {isLoading ? (
@@ -839,7 +850,7 @@ export function StudentMode() {
       <Card className="border border-border/60">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold text-foreground">설문 기록</CardTitle>
-          <CardDescription className="text-xs">전체 설문 작성 내역</CardDescription>
+          <CardDescription className="text-xs">날짜별 설문 응답 내역입니다. 매일 꾸준히 기록할수록 AI 분석 정확도가 높아집니다.</CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
           {isLoading ? (
@@ -871,7 +882,7 @@ export function StudentMode() {
                         <td className="py-2.5 px-3 text-foreground text-xs">
                           <div className="flex items-center gap-1.5">
                             <span>{formatFullDate(record.date)}</span>
-                            {index === 0 && (
+                            {record.date === new Date().toISOString().slice(0, 10) && (
                               <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary rounded">오늘</span>
                             )}
                           </div>

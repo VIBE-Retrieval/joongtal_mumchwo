@@ -27,9 +27,26 @@ const roleConfig: Record<UserRole, { icon: React.ReactNode; label: string; descr
 }
 
 const roleDefaults: Record<UserRole, { email: string; birthDate: string }> = {
-  student:     { email: "minjun.kim@demo.com", birthDate: "19980315" },
+  student:     { email: "dohyun.park@demo.com", birthDate: "19990507" },
   interviewer: { email: "interviewer@test.com", birthDate: "19900615" },
   mentor:      { email: "mentor@test.com", birthDate: "19850320" },
+}
+
+type DemoAccount = { name: string; email: string; birthDate: string; desc: string }
+const demoAccounts: Record<UserRole, DemoAccount[]> = {
+  student: [
+    { name: "김민준", email: "minjun.kim@demo.com",   birthDate: "19980315", desc: "위험도 상승 추세" },
+    { name: "이서연", email: "seoyeon.lee@demo.com",  birthDate: "20010822", desc: "초반 적응 중" },
+    { name: "박도현", email: "dohyun.park@demo.com",  birthDate: "19990507", desc: "안정적 참여" },
+    { name: "최유진", email: "yujin.choi@demo.com",   birthDate: "20000214", desc: "회복 중" },
+    { name: "정우성", email: "woosung.jung@demo.com", birthDate: "19971129", desc: "고위험 긴급 개입" },
+  ],
+  interviewer: [
+    { name: "면접관", email: "interviewer@test.com", birthDate: "19900615", desc: "지원자 평가 및 분석" },
+  ],
+  mentor: [
+    { name: "멘토",   email: "mentor@test.com",      birthDate: "19850320", desc: "학생 모니터링 및 개입" },
+  ],
 }
 
 function LoginPageInner() {
@@ -214,6 +231,32 @@ function LoginPageInner() {
                 ) : "로그인"}
               </Button>
             </form>
+
+            {/* Demo accounts */}
+            <div className="mt-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-px flex-1 bg-border/60" />
+                <span className="text-xs text-muted-foreground">데모 계정</span>
+                <div className="h-px flex-1 bg-border/60" />
+              </div>
+              <div className="space-y-1.5">
+                {demoAccounts[selectedRole].map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => { setEmail(acc.email); setBirthDate(acc.birthDate) }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/60 bg-muted/30 hover:bg-muted/60 hover:border-primary/30 transition-colors text-left group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-sm font-medium text-foreground">{acc.name}</span>
+                      <span className="text-xs text-muted-foreground">{acc.email}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">{acc.desc}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 text-center">계정을 클릭하면 자동으로 입력됩니다</p>
+            </div>
           </div>
         </div>
       </div>

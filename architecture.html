@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>중탈멈춰 — 시스템 아키텍처</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-0: #06060b;
+    --bg-1: #0c0c14;
+    --bg-card: rgba(255, 255, 255, 0.035);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --text-1: #f5f5f7;
+    --text-2: #b4b4c0;
+    --text-3: #6f6f7e;
+    --accent: #8b7cff;
+    --accent-2: #5ee9d2;
+    --accent-3: #ff7c9d;
+    --warn: #ffb547;
+    --danger: #ff5c7a;
+    --safe: #5ee9a4;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+    --c-user: #5ee9a4;
+    --c-fe: #5ee9d2;
+    --c-be: #8b7cff;
+    --c-ai: #ff7c9d;
+    --c-db: #ffb547;
+  }
+
+  html, body {
+    width: 100%; height: 100vh;
+    background: var(--bg-0);
+    color: var(--text-1);
+    font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+  }
+
+  body {
+    background:
+      radial-gradient(900px 600px at 12% -10%, rgba(139, 124, 255, 0.18), transparent 60%),
+      radial-gradient(800px 500px at 95% 110%, rgba(94, 233, 210, 0.13), transparent 55%),
+      var(--bg-0);
+    padding: 22px 26px;
+    display: flex; flex-direction: column;
+    gap: 14px;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    z-index: 0;
+  }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px;
+    position: relative; z-index: 1;
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: baseline; gap: 16px; }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #b4a7ff 60%, #5ee9d2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .header .legend {
+    display: flex; gap: 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* Main grid */
+  .arch {
+    flex: 1;
+    display: flex; flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    position: relative; z-index: 1;
+  }
+
+  .layer {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px 12px;
+    backdrop-filter: blur(8px);
+    flex-shrink: 0;
+  }
+
+  .layer-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .layer-head .num {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+  }
+  .layer-head .name {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .layer-head .stack {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    margin-left: auto;
+  }
+  .layer-head .stack b { color: var(--text-2); font-weight: 500; }
+
+  .layer.users { border-left: 2px solid var(--c-user); }
+  .layer.users .layer-head .name, .layer.users .layer-head .num { color: var(--c-user); }
+  .layer.fe { border-left: 2px solid var(--c-fe); }
+  .layer.fe .layer-head .name, .layer.fe .layer-head .num { color: var(--c-fe); }
+  .layer.be { border-left: 2px solid var(--c-be); }
+  .layer.be .layer-head .name, .layer.be .layer-head .num { color: var(--c-be); }
+  .layer.ai { border-left: 2px solid var(--c-ai); }
+  .layer.ai .layer-head .name, .layer.ai .layer-head .num { color: var(--c-ai); }
+  .layer.db { border-left: 2px solid var(--c-db); }
+  .layer.db .layer-head .name, .layer.db .layer-head .num { color: var(--c-db); }
+
+  /* Row of cards */
+  .row { display: grid; gap: 10px; }
+  .row-3 { grid-template-columns: repeat(3, 1fr); }
+  .row-6 { grid-template-columns: repeat(6, 1fr); }
+
+  .mini {
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .mini .name {
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .mini .desc {
+    font-size: 11.5px;
+    color: var(--text-2);
+    line-height: 1.4;
+  }
+
+  /* User cards */
+  .user-card { display: flex; align-items: center; gap: 10px; }
+  .user-card .icon { font-size: 18px; }
+  .user-card .info .role { font-size: 13px; font-weight: 600; }
+  .user-card .info .what { font-size: 11.5px; color: var(--text-3); line-height: 1.35; }
+
+  /* Connector — small */
+  .conn {
+    height: 14px;
+    display: flex; justify-content: center; align-items: center;
+    color: var(--text-3);
+    font-size: 13px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .conn .lbl {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--text-3);
+    background: var(--bg-0);
+    padding: 0 8px;
+    letter-spacing: 0.1em;
+    position: absolute;
+  }
+  .conn::before {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 100%;
+    background: var(--border-strong);
+  }
+  .conn::after {
+    content: '▼';
+    color: var(--border-strong);
+    font-size: 8px;
+    position: absolute;
+    bottom: -2px;
+  }
+
+  /* Bottom: AI + DB side-by-side */
+  .bottom-row {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .layer.ai, .layer.db { display: flex; flex-direction: column; min-height: 0; }
+  .layer.ai .layer-body, .layer.db .layer-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+
+  /* AI Pipeline horizontal stages */
+  .ai-stages {
+    display: grid;
+    grid-template-columns: 1fr 14px 1fr 14px 1fr;
+    gap: 0;
+    align-items: stretch;
+    flex: 1;
+  }
+  .stage {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .stage .tag {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.15em;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .stage h3 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .stage .role { font-size: 10.5px; color: var(--text-3); margin-bottom: 6px; line-height: 1.35; }
+  .stage ul { list-style: none; flex: 1; }
+  .stage li {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-2);
+    line-height: 1.55;
+    padding-left: 9px;
+    position: relative;
+  }
+  .stage li::before { content: '·'; position: absolute; left: 2px; color: var(--text-3); }
+  .stage.ml { border-color: rgba(94, 233, 210, 0.3); }
+  .stage.ml .tag { color: var(--accent-2); }
+  .stage.llm { border-color: rgba(255, 124, 157, 0.3); }
+  .stage.llm .tag { color: var(--accent-3); }
+  .stage.agent { border-color: rgba(255, 181, 71, 0.3); }
+  .stage.agent .tag { color: var(--warn); }
+
+  .arrow { display: flex; align-items: center; justify-content: center; color: var(--text-3); font-size: 13px; }
+
+  /* Action mini */
+  .actions-mini { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+  .action-mini { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9.5px; }
+  .action-mini .d { width: 6px; height: 6px; border-radius: 1px; }
+  .l0 .d { background: var(--text-3); opacity: 0.4; } .l0 span { color: var(--text-3); }
+  .l1 .d { background: var(--accent-2); } .l1 span { color: var(--accent-2); }
+  .l2 .d { background: var(--warn); } .l2 span { color: var(--warn); }
+  .l3 .d { background: var(--accent-3); } .l3 span { color: var(--accent-3); }
+  .l4 .d { background: var(--danger); } .l4 span { color: var(--danger); }
+
+  /* Feedback loop bar */
+  .feedback {
+    border: 1px dashed rgba(255, 181, 71, 0.45);
+    background: rgba(255, 181, 71, 0.04);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .feedback .ic {
+    color: var(--warn);
+    font-size: 16px;
+    width: 24px; text-align: center;
+  }
+  .feedback .txt { font-size: 11.5px; line-height: 1.45; flex: 1; }
+  .feedback .txt b { color: var(--warn); font-weight: 600; }
+  .feedback .txt span {
+    color: var(--text-3); font-family: var(--mono); font-size: 10px; margin-left: 4px;
+  }
+
+  /* DB compact list */
+  .db-list { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .db-item {
+    border: 1px solid rgba(255, 181, 71, 0.18);
+    background: rgba(255, 181, 71, 0.04);
+    border-radius: 7px;
+    padding: 6px 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .db-item .nm {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--warn);
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 145px;
+  }
+  .db-item .rl { font-size: 11px; color: var(--text-2); line-height: 1.3; }
+
+  /* Footer principles */
+  .footer {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.15em;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .footer .principles { display: flex; gap: 16px; flex-wrap: wrap; }
+  .footer .principles span::before { content: '◆'; color: var(--accent); margin-right: 5px; }
+
+  @media (max-height: 720px) {
+    body { padding: 14px 18px; gap: 8px; }
+    .header h1 { font-size: 22px; }
+    .layer { padding: 8px 12px 10px; }
+    .conn { height: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>중탈멈춰<span style="color: var(--accent);">.</span></h1>
+    <div class="sub">SYSTEM ARCHITECTURE</div>
+  </div>
+  <div class="legend">
+    <div class="item"><div class="dot" style="background: var(--c-user);"></div>USER</div>
+    <div class="item"><div class="dot" style="background: var(--c-fe);"></div>FRONTEND</div>
+    <div class="item"><div class="dot" style="background: var(--c-be);"></div>BACKEND</div>
+    <div class="item"><div class="dot" style="background: var(--c-ai);"></div>AI</div>
+    <div class="item"><div class="dot" style="background: var(--c-db);"></div>DB</div>
+  </div>
+</div>
+
+<!-- Architecture -->
+<div class="arch">
+
+  <!-- Users -->
+  <div class="layer users">
+    <div class="layer-head">
+      <div class="num">01</div>
+      <div class="name">USERS</div>
+    </div>
+    <div class="row row-3">
+      <div class="mini user-card">
+        <div class="icon">🎓</div>
+        <div class="info">
+          <div class="role">학생</div>
+          <div class="what">매일 설문 응답 (성취도·적응도·인간관계 1~5점)</div>
+        </div>
+      </div>
+      <div class="mini user-card">
+        <div class="icon">🧑‍🏫</div>
+        <div class="info">
+          <div class="role">멘토</div>
+          <div class="what">대시보드로 위험 학생 확인 → 케어 후 피드백</div>
+        </div>
+      </div>
+      <div class="mini user-card">
+        <div class="icon">📋</div>
+        <div class="info">
+          <div class="role">면접관</div>
+          <div class="what">면접 평가 입력 → 즉시 dropout_risk_score</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn"><div class="lbl">HTTPS</div></div>
+
+  <!-- Frontend -->
+  <div class="layer fe">
+    <div class="layer-head">
+      <div class="num">02</div>
+      <div class="name">FRONTEND</div>
+      <div class="stack"><b>Next.js 16</b> · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui · Recharts · Three.js</div>
+    </div>
+    <div class="row row-3">
+      <div class="mini">
+        <div class="name">학생 대시보드</div>
+        <div class="desc">설문 입력 · 위험도 추이 · 격려 메시지</div>
+      </div>
+      <div class="mini">
+        <div class="name">멘토 대시보드</div>
+        <div class="desc">학생 목록 · 알림 큐 · 면담 일정 · 피드백</div>
+      </div>
+      <div class="mini">
+        <div class="name">면접관 페이지</div>
+        <div class="desc">평가 입력 → 즉시 ML 예측 결과 표시</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn"><div class="lbl">REST · JSON</div></div>
+
+  <!-- Backend -->
+  <div class="layer be">
+    <div class="layer-head">
+      <div class="num">03</div>
+      <div class="name">BACKEND</div>
+      <div class="stack"><b>FastAPI</b> · Python 3.12 · Pydantic 2 · SQLAlchemy 2 · JWT · PyMySQL</div>
+    </div>
+    <div class="row row-3">
+      <div class="mini">
+        <div class="name">Controllers</div>
+        <div class="desc">REST 라우터 + Pydantic 입출력 검증</div>
+      </div>
+      <div class="mini">
+        <div class="name">Services</div>
+        <div class="desc">비즈니스 로직 · AI 파이프라인 오케스트레이션</div>
+      </div>
+      <div class="mini">
+        <div class="name">Repositories</div>
+        <div class="desc">SQLAlchemy ORM · DB 접근 추상화</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom: AI + DB side-by-side -->
+  <div class="bottom-row">
+
+    <!-- AI Pipeline -->
+    <div class="layer ai">
+      <div class="layer-head">
+        <div class="num">04</div>
+        <div class="name">AI PIPELINE</div>
+        <div class="stack"><b>scikit-learn</b> · OpenAI gpt-4o-mini · pandas · joblib</div>
+      </div>
+      <div class="layer-body">
+        <div class="ai-stages">
+          <div class="stage ml">
+            <div class="tag">ML · 계산</div>
+            <h3>위험도 점수</h3>
+            <div class="role">숫자만 계산</div>
+            <ul>
+              <li>면접: RandomForest</li>
+              <li>과정: MLP 4-7-1</li>
+              <li>→ risk_score (0~1)</li>
+              <li>→ LOW / MED / HIGH</li>
+            </ul>
+          </div>
+          <div class="arrow">→</div>
+          <div class="stage llm">
+            <div class="tag">LLM · 해석</div>
+            <h3>자연어 번역</h3>
+            <div class="role">숫자 → 사람의 언어</div>
+            <ul>
+              <li>gpt-4o-mini</li>
+              <li>state_summary</li>
+              <li>risk_reason</li>
+              <li>risk_type</li>
+            </ul>
+          </div>
+          <div class="arrow">→</div>
+          <div class="stage agent">
+            <div class="tag">AGENT · 결정</div>
+            <h3>행동 선택 + 실행</h3>
+            <div class="role">해석 + 과거 이력</div>
+            <div class="actions-mini">
+              <div class="action-mini l0"><div class="d"></div><span>NONE</span></div>
+              <div class="action-mini l1"><div class="d"></div><span>ENCOURAGE_MESSAGE</span></div>
+              <div class="action-mini l2"><div class="d"></div><span>ALERT_MENTOR</span></div>
+              <div class="action-mini l3"><div class="d"></div><span>REQUEST_MEETING</span></div>
+              <div class="action-mini l4"><div class="d"></div><span>EMERGENCY</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="feedback">
+          <div class="ic">↺</div>
+          <div class="txt">
+            <b>자기 개선 루프</b> — 멘토 피드백(recovered / false_alarm) → DB 누적 → Agent 행동 점수 자동 보정 → 다음 판단에 반영.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DB -->
+    <div class="layer db">
+      <div class="layer-head">
+        <div class="num">05</div>
+        <div class="name">MYSQL</div>
+      </div>
+      <div class="layer-body">
+        <div class="db-list">
+          <div class="db-item"><div class="nm">daily_survey</div><div class="rl">학생 일일 설문 원본</div></div>
+          <div class="db-item"><div class="nm">interview_assessment</div><div class="rl">면접 평가 9개 항목</div></div>
+          <div class="db-item"><div class="nm">process_risk_history</div><div class="rl">과정 ML risk_score 시계열</div></div>
+          <div class="db-item"><div class="nm">interview_risk_history</div><div class="rl">면접 ML 예측 이력</div></div>
+          <div class="db-item"><div class="nm">intervention_history</div><div class="rl">Agent 개입 행동 기록</div></div>
+          <div class="db-item"><div class="nm">intervention_feedback</div><div class="rl">멘토 피드백 = 학습 신호</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div>JOONGTAL_MUMCHWO / v1</div>
+  <div class="principles">
+    <span>ML은 계산만</span>
+    <span>LLM은 해석만</span>
+    <span>Agent는 결정만</span>
+    <span>모든 것은 기록된다</span>
+  </div>
+</div>
+
+</body>
+</html>

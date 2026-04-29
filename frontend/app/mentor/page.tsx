@@ -423,6 +423,19 @@ export default function MentorDashboard() {
             <p className="text-sm text-muted-foreground mt-0.5">학생 현황을 한눈에 확인하세요</p>
           </div>
 
+          {/* Inline guide banner */}
+          <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 flex items-start gap-3">
+            <span className="text-lg leading-none mt-0.5 flex-shrink-0">💡</span>
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium text-foreground">사용 안내</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                AI가 학생의 7일 설문 데이터를 분석해 위험도를 자동으로 산출합니다.
+                <span className="text-foreground font-medium"> 케어 필요 학생</span>을 클릭하면 AI가 개입을 권고한 학생 목록을 볼 수 있으며, 피드백을 입력해 ML 모델 재학습에 기여할 수 있습니다.
+                <span className="text-foreground font-medium"> 전체 학생</span>을 클릭하면 개인별 상세 분석 및 메시지·미팅 요청이 가능합니다.
+              </p>
+            </div>
+          </div>
+
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Total Students */}

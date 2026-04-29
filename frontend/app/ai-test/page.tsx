@@ -542,9 +542,84 @@ export default function AITestPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+        {/* Inline guide banner */}
+        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 flex items-start gap-3">
+          <span className="text-lg leading-none mt-0.5 flex-shrink-0">💡</span>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">AI 파이프라인 테스트 안내</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              실제 AI 파이프라인을 직접 실행해볼 수 있는 페이지입니다.
+              <span className="text-foreground font-medium"> ① 데모 계정 선택 →</span> 아래 목록에서 student_id 클릭
+              <span className="text-foreground font-medium"> → ② 1라운드 실행</span> (7일치 설문 데이터 전송 → ML 위험도 산출 → LLM 해석 → Agent 행동 결정)
+              <span className="text-foreground font-medium"> → ③ 케어 피드백</span> 입력 (오탐·회복·관찰 중 선택)
+              <span className="text-foreground font-medium"> → ④ 2라운드 실행</span>으로 피드백 반영 전후 결과를 비교합니다.
+            </p>
+          </div>
+        </div>
+
+        {/* Demo user reference table */}
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <CardTitle>데모 계정 목록</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40">
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">student_id</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">이름</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">이메일</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">생년월일</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">연락처</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">과정</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">학력</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">면접</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { id: "STU_DEMO_001", name: "김민준", email: "minjun.kim@demo.com",   birth: "19980315", phone: "010-1111-2222", course: "AI 개발자 양성 과정", edu: "대학교 졸업", status: "PASSED" },
+                    { id: "STU_DEMO_002", name: "이서연", email: "seoyeon.lee@demo.com",  birth: "20010822", phone: "010-2222-3333", course: "AI 개발자 양성 과정", edu: "대학교 재학", status: "PASSED" },
+                    { id: "STU_DEMO_003", name: "박도현", email: "dohyun.park@demo.com",  birth: "19990507", phone: "010-3333-4444", course: "AI 개발자 양성 과정", edu: "대학교 졸업", status: "PASSED" },
+                    { id: "STU_DEMO_004", name: "최유진", email: "yujin.choi@demo.com",   birth: "20000214", phone: "010-4444-5555", course: "AI 개발자 양성 과정", edu: "대학교 재학", status: "PASSED" },
+                    { id: "STU_DEMO_005", name: "정우성", email: "woosung.jung@demo.com", birth: "19971129", phone: "010-5555-6666", course: "AI 개발자 양성 과정", edu: "대학원 졸업", status: "PASSED" },
+                  ].map((u, i) => (
+                    <tr key={u.id} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/20")}>
+                      <td className="px-4 py-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setStudentId(u.id)}
+                          className="font-mono text-xs text-primary hover:underline focus:outline-none"
+                          title="클릭해서 입력"
+                        >
+                          {u.id}
+                        </button>
+                      </td>
+                      <td className="px-4 py-2.5 font-medium">{u.name}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
+                      <td className="px-4 py-2.5 font-mono text-xs">{u.birth}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground">{u.phone}</td>
+                      <td className="px-4 py-2.5">{u.course}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground">{u.edu}</td>
+                      <td className="px-4 py-2.5">
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-risk-low/15 text-risk-low border border-risk-low/30">
+                          {u.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="px-4 py-2 text-xs text-muted-foreground border-t">student_id를 클릭하면 아래 입력란에 자동으로 채워집니다.</p>
+          </CardContent>
+        </Card>
+
         <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle>공통 입력</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">위 데모 계정 목록에서 student_id를 클릭하거나 직접 입력하세요. 1·2라운드에 동일하게 사용됩니다.</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -561,6 +636,7 @@ export default function AITestPage() {
         <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle>STEP A: 1라운드 - 7일 설문 입력 & 실행</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">7일치 성취도·적응도·관계도 점수를 입력하고 실행하면 하루씩 순차 전송됩니다. 슬라이더로 값을 조정해 다양한 위험 시나리오를 테스트해보세요.</p>
           </CardHeader>
           <CardContent className="space-y-6">
             <SurveyInputTable
@@ -597,6 +673,7 @@ export default function AITestPage() {
         <Card className={cn("border shadow-sm", currentPhase === "round1" && "opacity-60")}>
           <CardHeader>
             <CardTitle>STEP B: 케어 피드백 입력</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">1라운드 결과를 보고 실제 개입 여부를 선택합니다. 이 피드백이 ML 모델 재학습 데이터로 활용되어 2라운드 결과에 반영됩니다.</p>
           </CardHeader>
           <CardContent className="space-y-4">
             {round1Result ? (
@@ -665,6 +742,7 @@ export default function AITestPage() {
         <Card className={cn("border shadow-sm", currentPhase === "round1" || currentPhase === "feedback" ? "opacity-60" : "opacity-100")}>
           <CardHeader>
             <CardTitle>STEP C: 2라운드 - 7일 설문 입력 & 실행</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">피드백이 반영된 두 번째 분석입니다. 1라운드와 다른 점수를 입력해 위험도 변화를 확인하거나, 동일한 값으로 실행해 피드백 전후 결과를 비교해보세요.</p>
           </CardHeader>
           <CardContent className="space-y-6">
             <SurveyInputTable
